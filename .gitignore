@@ -23,4 +23,3 @@ public.key
 LaunchServer.log
 Launcher/resources/yggdrasil_session_pubkey.der
 Launcher/resources/config.bin
-Launcher/runtime
