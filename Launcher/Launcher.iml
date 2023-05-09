@@ -6,12 +6,22 @@
       <sourceFolder url="file://$MODULE_DIR$/source" isTestSource="false" packagePrefix="launcher" />
       <sourceFolder url="file://$MODULE_DIR$/source-testing" isTestSource="true" packagePrefix="launcher" />
       <sourceFolder url="file://$MODULE_DIR$/source-authlib" isTestSource="false" packagePrefix="com.mojang.authlib" />
+      <sourceFolder url="file://$MODULE_DIR$/resources" type="java-resource" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="module-library" scope="PROVIDED">
       <library>
         <CLASSES>
           <root url="jar://$MODULE_DIR$/../build/libraries/gson-2.8.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library" scope="PROVIDED">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../build/libraries/oshi-core-6.4.2-20230427.025644-18.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -39,5 +49,9 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" exported="" scope="PROVIDED" name="jansi-1.18" level="project" />
     <orderEntry type="library" name="jsr305-3.0.2" level="project" />
+    <orderEntry type="library" name="oshi-core-6.4.2-20230427.025644-18" level="project" />
+    <orderEntry type="library" name="jna-5.13.0" level="project" />
+    <orderEntry type="library" name="jna-platform-5.13.0" level="project" />
+    <orderEntry type="library" name="slf4j-api-2.0.7" level="project" />
   </component>
 </module>

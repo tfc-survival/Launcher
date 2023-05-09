@@ -83,8 +83,15 @@ public final class JARLauncherBinary extends LauncherBinary
             }
 
             // Write launcher config file
-            output.putNextEntry(IOHelper.newZipEntry(Launcher.CONFIG_FILE));
-            output.write(launcherConfigBytes);
+            try {
+                output.putNextEntry(IOHelper.newZipEntry(Launcher.CONFIG_FILE));
+                output.write(launcherConfigBytes);
+            }catch (ZipException e){
+                if (e.getMessage().contains("duplicate entry"))
+                    LogHelper.warning(e.getMessage());
+                else
+                    throw e;
+            }
         }
     }
 
@@ -130,7 +137,15 @@ public final class JARLauncherBinary extends LauncherBinary
         public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException
         {
             String dirName = IOHelper.toString(runtimeDir.relativize(dir));
-            output.putNextEntry(newEntry(dirName + '/'));
+            try{
+                output.putNextEntry(newEntry(dirName + '/'));
+            }catch (ZipException e){
+                if (e.getMessage().contains("duplicate entry"))
+                    LogHelper.warning(e.getMessage());
+                else
+                    throw e;
+
+            }
             return super.preVisitDirectory(dir, attrs);
         }
 
@@ -140,9 +155,17 @@ public final class JARLauncherBinary extends LauncherBinary
             String fileName = IOHelper.toString(runtimeDir.relativize(file));
             runtime.put(fileName, SecurityHelper.digest(DigestAlgorithm.MD5, file));
 
-            // Create zip entry and transfer contents
-            output.putNextEntry(newEntry(fileName));
-            IOHelper.transfer(file, output);
+            try{
+                // Create zip entry and transfer contents
+                output.putNextEntry(newEntry(fileName));
+                IOHelper.transfer(file, output);
+            }catch (ZipException e){
+                if (e.getMessage().contains("duplicate entry"))
+                    LogHelper.warning(e.getMessage());
+                else
+                    throw e;
+
+            }
 
             // Return result
             return super.visitFile(file, attrs);

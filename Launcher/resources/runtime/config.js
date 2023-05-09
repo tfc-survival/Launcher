@@ -1,19 +1,19 @@
 // ====== LAUNCHER CONFIG ====== //
 var config = {
-    dir: ".kj-launcher", // Launcher directory
-    title: "KeeperJerry's Launcher", // Window title
+    dir: "tfc-survival2", // Launcher directory
+    title: "TFC-survival launcher", // Window title
     icons: [ "favicon.png" ], // Window icon paths
 
     // Auth config
-    newsURL: "https://launcher.keeperjerry.ru/", // News WebView URL
-    linkText: "Забыли пароль?", // Text for link under "Auth" button
-    linkURL: new java.net.URL("https://mirror.keeperjerry.ru/"), // URL for link under "Auth" button
+    newsURL: "https://tfc-survival.ru/news?banner=true", // News WebView URL
+    linkText: "Наш сайт", // Text for link under "Auth" button
+    linkURL: new java.net.URL("https://tfc-survival.ru"), // URL for link under "Auth" button
 
     // Settings defaults
     settingsMagic: 0xC0DE5, // Ancient magic, don't touch
     autoEnterDefault: false, // Should autoEnter be enabled by default?
     fullScreenDefault: false, // Should fullScreen be enabled by default?
-    ramDefault: 1024 // Default RAM amount (0 for auto)
+    ramDefault: 5120 // Default RAM amount (0 for auto)
 };
 
 // ====== DON'T TOUCH! ====== //

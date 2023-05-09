@@ -30,6 +30,13 @@ public class AuthLimiterConfig extends ConfigObject
     public boolean onlyAllowIp;
 
     @LauncherAPI
+    public String hwidDBAddress;
+    @LauncherAPI
+    public String hwidDBUser;
+    @LauncherAPI
+    public String hwidDBPass;
+
+    @LauncherAPI
     public AuthLimiterConfig(BlockConfigEntry block)
     {
         super(block);

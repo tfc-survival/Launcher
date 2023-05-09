@@ -10,7 +10,7 @@
       <element id="directory" name="launchserver">
         <element id="directory" name="defaults">
           <element id="archive" name="runtime.zip">
-            <element id="dir-copy" path="$PROJECT_DIR$/Launcher/runtime" />
+            <element id="dir-copy" path="$PROJECT_DIR$/Launcher/resources/runtime" />
           </element>
         </element>
       </element>

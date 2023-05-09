@@ -9,6 +9,8 @@ import launchserver.command.CommandException;
 import launchserver.command.auth.*;
 import launchserver.command.basic.*;
 import launchserver.command.hash.*;
+import launchserver.command.hwid.HWIDPardonCommand;
+import launchserver.command.hwid.HWIDBanCommand;
 import launchserver.command.ip.IPAllowCommand;
 import launchserver.command.ip.IPBlockCommand;
 import launchserver.command.legacy.DumpBinaryAuthHandler;
@@ -47,6 +49,10 @@ public abstract class CommandHandler implements Runnable
         // Register IP commands
         registerCommand("allowIp", new IPAllowCommand(server));
         registerCommand("blockIp", new IPBlockCommand(server));
+
+        // Register HWID commands
+        registerCommand("pardonHWID", new HWIDPardonCommand(server));
+        registerCommand("banHWID", new HWIDBanCommand(server));
 
         // Register custom commands
         registerCommand("syncAll", new SyncAllCommand(server));

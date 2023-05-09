@@ -41,13 +41,19 @@ import launcher.serialize.signed.SignedBytesHolder;
 import launcher.serialize.signed.SignedObjectHolder;
 import launcher.serialize.stream.EnumSerializer;
 import launcher.serialize.stream.StreamObject;
+import oshi.SystemInfo;
+import oshi.hardware.CentralProcessor;
+import oshi.hardware.ComputerSystem;
 
 import javax.script.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.NoSuchFileException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.util.*;
@@ -57,6 +63,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public final class Launcher
 {
+
+    public static final boolean dev=true;
     // Version info
     @LauncherAPI
     public static final String VERSION = "1.7.5.2";
@@ -175,6 +183,33 @@ public final class Launcher
         }
     }
 
+    private static final MessageDigest md;
+    static {
+        try {
+            md = MessageDigest.getInstance("SHA-512");
+            md.update(new byte[]{-10, 127, 90, 126, -78, 119, -13, -30, -101, 104, -94, 119, -66, 80, -17, 36,});
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static byte[] hash(String e){
+        return md.digest(e.getBytes(StandardCharsets.UTF_8));
+    }
+
+    @LauncherAPI
+    public static byte[] getHWID(){
+        SystemInfo systemInfo = new SystemInfo();
+        CentralProcessor.ProcessorIdentifier processorIdentifier = systemInfo.getHardware().getProcessor().getProcessorIdentifier();
+        ComputerSystem computerSystem = systemInfo.getHardware().getComputerSystem();
+
+        return
+                hash(processorIdentifier.getProcessorID()+"/"+
+                        processorIdentifier.getName()+"/"+
+                        computerSystem.getHardwareUUID()+"/"+
+                        computerSystem.getBaseboard().getSerialNumber());
+    }
+
     @LauncherAPI
     public static Config getConfig()
     {
@@ -198,17 +233,17 @@ public final class Launcher
     public static URL getResourceURL(String name) throws IOException
     {
         Config config = getConfig();
-        byte[] validDigest = config.runtime.get(name);
-        if (validDigest == null)
-        { // No such resource digest
-            throw new NoSuchFileException(name);
-        }
-
-        // Resolve URL and verify digest
         URL url = IOHelper.getResourceURL(RUNTIME_DIR + '/' + name);
-        if (!Arrays.equals(validDigest, SecurityHelper.digest(DigestAlgorithm.MD5, url)))
-        {
-            throw new NoSuchFileException(name); // Digest mismatch
+        if(!dev) {
+            byte[] validDigest = config.runtime.get(name);
+            if (validDigest == null) { // No such resource digest
+                throw new NoSuchFileException(name);
+            }
+
+            // Resolve URL and verify digest
+            if (!Arrays.equals(validDigest, SecurityHelper.digest(DigestAlgorithm.MD5, url))) {
+                throw new NoSuchFileException(name); // Digest mismatch
+            }
         }
 
         // Return verified URL
@@ -236,7 +271,6 @@ public final class Launcher
         catch (Throwable exc)
         {
             LogHelper.error(exc);
-            return;
         }
     }
 

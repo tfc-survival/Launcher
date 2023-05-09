@@ -1,5 +1,6 @@
 package launcher.request.auth;
 
+import launcher.Launcher;
 import launcher.Launcher.Config;
 import launcher.LauncherAPI;
 import launcher.client.PlayerProfile;
@@ -42,6 +43,7 @@ public final class AuthRequest extends Request<Result>
     {
         output.writeString(login, 255);
         output.writeByteArray(encryptedPassword, SecurityHelper.CRYPTO_MAX_LENGTH);
+        output.writeByteArray(Launcher.getHWID(), SecurityHelper.HWID_MAX_LENGTH);
         output.flush();
 
         // Read UUID and access token

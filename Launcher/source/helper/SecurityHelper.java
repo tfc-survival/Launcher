@@ -1,5 +1,6 @@
 package launcher.helper;
 
+import launcher.Launcher;
 import launcher.LauncherAPI;
 
 import javax.crypto.Cipher;
@@ -43,6 +44,8 @@ public final class SecurityHelper
     public static final int RSA_KEY_LENGTH = RSA_KEY_LENGTH_BITS / Byte.SIZE;
     @LauncherAPI
     public static final int CRYPTO_MAX_LENGTH = 2048;
+    @LauncherAPI
+    public static final int HWID_MAX_LENGTH = 2048;
 
     // Certificate constants
     @LauncherAPI
@@ -145,6 +148,8 @@ public final class SecurityHelper
     @LauncherAPI
     public static boolean isValidCertificates(Class<?> clazz)
     {
+        if(Launcher.dev)
+            return true;
         // Verify META-INF/MANIFEST.MF certificate
         Certificate[] certificates = JVMHelper.getCertificates(JarFile.MANIFEST_NAME);
         if (certificates == null || !isValidCertificates(certificates))
@@ -160,6 +165,8 @@ public final class SecurityHelper
     @LauncherAPI
     public static boolean isValidSign(Path path, byte[] sign, RSAPublicKey publicKey) throws IOException, SignatureException
     {
+        if(Launcher.dev)
+            return true;
         try (InputStream input = IOHelper.newInput(path))
         {
             return isValidSign(input, sign, publicKey);

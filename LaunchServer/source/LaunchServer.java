@@ -19,6 +19,7 @@ import launchserver.auth.handler.AuthHandler;
 import launchserver.auth.handler.CachedAuthHandler;
 import launchserver.auth.handler.FileAuthHandler;
 import launchserver.auth.limiter.AuthLimiterConfig;
+import launchserver.auth.limiter.AuthLimiterHWIDConfig;
 import launchserver.auth.limiter.AuthLimiterIPConfig;
 import launchserver.auth.provider.AuthProvider;
 import launchserver.auth.provider.DigestAuthProvider;
@@ -593,6 +594,8 @@ public final class LaunchServer implements Runnable, AutoCloseable
         public final boolean compress;
         private final StringConfigEntry address;
         private final String bindAddress;
+        @LauncherAPI
+        public final AuthLimiterHWIDConfig hwidHandler;
 
         private Config(BlockConfigEntry block)
         {
@@ -627,6 +630,8 @@ public final class LaunchServer implements Runnable, AutoCloseable
 
             binaryName = block.getEntryValue("binaryName", StringConfigEntry.class);
             compress = block.getEntryValue("compress", BooleanConfigEntry.class);
+
+            hwidHandler = new AuthLimiterHWIDConfig(block.getEntry("hwidDB", BlockConfigEntry.class));
         }
 
         @LauncherAPI

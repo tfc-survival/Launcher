@@ -6,18 +6,22 @@ import launcher.helper.SecurityHelper;
 import launcher.helper.VerifyHelper;
 import launcher.serialize.HInput;
 import launcher.serialize.HOutput;
-import launcher.serialize.config.entry.StringConfigEntry;
 import launchserver.LaunchServer;
 import launchserver.auth.AuthException;
+import launchserver.auth.limiter.AuthLimiterHWIDConfig;
 import launchserver.auth.limiter.AuthLimiterIPConfig;
+import launchserver.helpers.ImmutableByteArray;
 import launchserver.auth.provider.AuthProvider;
 import launchserver.auth.provider.AuthProviderResult;
+import launchserver.helpers.Pair;
 import launchserver.response.Response;
 import launchserver.response.profile.ProfileByUUIDResponse;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
+import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.UUID;
 
 public final class AuthResponse extends Response
@@ -42,6 +46,8 @@ public final class AuthResponse extends Response
     {
         String login = input.readString(255);
         byte[] encryptedPassword = input.readByteArray(SecurityHelper.CRYPTO_MAX_LENGTH);
+
+        byte[] hwid = input.readByteArray(SecurityHelper.HWID_MAX_LENGTH);
 
         // Decrypt password
         String password;
@@ -95,6 +101,9 @@ public final class AuthResponse extends Response
                 AuthProvider.authError(String.format("Illegal result: '%s'", result.username));
                 return;
             }
+
+            checkHWID(result.username,hwid);
+
         }
         catch (AuthException e)
         {
@@ -132,5 +141,25 @@ public final class AuthResponse extends Response
         ProfileByUUIDResponse.getProfile(server, uuid, result.username).write(output);
         output.writeInt(result.accessToken.length());
         output.writeASCII(result.accessToken, -result.accessToken.length());
+    }
+
+    private void checkHWID(String nickname, byte[] hwid) throws AuthException {
+        ImmutableByteArray actualHWID = new ImmutableByteArray(hwid);
+        try {
+            AuthLimiterHWIDConfig hwidHandler = server.config.hwidHandler;
+            Map<ImmutableByteArray, Boolean> knownHWID = hwidHandler.getHardware(nickname);
+            boolean needInsert = !knownHWID.containsKey(actualHWID);
+            boolean banned = knownHWID.values().stream().anyMatch(i -> i);
+            if(needInsert){
+                Pair<Integer, Boolean> id_Banned = hwidHandler.getOrRegisterHWID(hwid, banned);
+                hwidHandler.addHardwareToUser(nickname,id_Banned.left);
+                banned = banned | id_Banned.right;
+            }
+            if(banned)
+                AuthProvider.authError(server.config.authLimitConfig.authBannedString);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            AuthProvider.authError("Internal error");
+        }
     }
 }

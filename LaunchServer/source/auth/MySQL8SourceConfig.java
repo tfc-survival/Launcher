@@ -46,17 +46,18 @@ public final class MySQL8SourceConfig extends ConfigObject implements AutoClosea
     {
         super(block);
         this.poolName = poolName;
-        address = VerifyHelper.verify(block.getEntryValue("address", StringConfigEntry.class),
-                VerifyHelper.NOT_EMPTY, "MySQL address can't be empty");
-        port = VerifyHelper.verifyInt(block.getEntryValue("port", IntegerConfigEntry.class),
-                VerifyHelper.range(0, 65535), "Illegal MySQL port");
-        username = VerifyHelper.verify(block.getEntryValue("username", StringConfigEntry.class),
-                VerifyHelper.NOT_EMPTY, "MySQL username can't be empty");
+        address = VerifyHelper.verify(block.getEntryValue("address", StringConfigEntry.class), VerifyHelper.NOT_EMPTY, "MySQL address can't be empty");
+
+        port = VerifyHelper.verifyInt(block.getEntryValue("port", IntegerConfigEntry.class), VerifyHelper.range(0, 65535), "Illegal MySQL port");
+
+        username = VerifyHelper.verify(block.getEntryValue("username", StringConfigEntry.class), VerifyHelper.NOT_EMPTY, "MySQL username can't be empty");
+
         password = block.getEntryValue("password", StringConfigEntry.class);
-        database = VerifyHelper.verify(block.getEntryValue("database", StringConfigEntry.class),
-                VerifyHelper.NOT_EMPTY, "MySQL database can't be empty");
-        timeZone = block.hasEntry("timezone") ? VerifyHelper.verify(block.getEntryValue("timezone", StringConfigEntry.class),
-                VerifyHelper.NOT_EMPTY, "MySQL time zone can't be empty") : null;
+
+        database = VerifyHelper.verify(block.getEntryValue("database", StringConfigEntry.class), VerifyHelper.NOT_EMPTY, "MySQL database can't be empty");
+
+        timeZone = block.hasEntry("timezone") ? VerifyHelper.verify(block.getEntryValue("timezone", StringConfigEntry.class), VerifyHelper.NOT_EMPTY, "MySQL time zone can't be empty") : null;
+
         useSSL = block.hasEntry("useSSL") ? block.getEntryValue("useSSL", BooleanConfigEntry.class) : true;
 
         // Password shouldn't be verified
@@ -79,6 +80,7 @@ public final class MySQL8SourceConfig extends ConfigObject implements AutoClosea
             MysqlDataSource mysqlSource = new MysqlDataSource();
             mysqlSource.setCharacterEncoding("UTF-8");
             mysqlSource.setUseSSL(useSSL);
+            mysqlSource.setAllowPublicKeyRetrieval(true);
 
             // Prep statements cache
             mysqlSource.setPrepStmtCacheSize(250);
@@ -106,6 +108,7 @@ public final class MySQL8SourceConfig extends ConfigObject implements AutoClosea
 
             // Try using HikariCP
             source = mysqlSource;
+            LogHelper.info("connection to db "+mysqlSource.getUrl());
             try
             {
                 Class.forName("com.zaxxer.hikari.HikariDataSource");

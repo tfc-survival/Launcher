@@ -7,7 +7,8 @@ mv buildnumber.txt buildnumber
 # Build Launcher.jar
 echo Building Launcher.jar...
 jar -uf Launcher.jar buildnumber
-java -jar build/proguard.jar @Launcher.pro
+ java -jar build/proguard.jar @Launcher.pro
+## cp Launcher.jar Launcher-obf.jar
 rm Launcher.jar
 mv Launcher-obf.jar Launcher.jar
 # java -jar build/stringer.jar -configFile Launcher.stringer Launcher.jar Launcher.jar
