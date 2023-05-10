@@ -6,33 +6,28 @@ import launcher.serialize.config.entry.StringConfigEntry;
 
 import java.util.UUID;
 
-public class AuthlibTextureProvider extends TextureProvider
-{
+public class AuthlibTextureProvider extends TextureProvider {
     // Instance
     private final String setProfileURL;
     protected CacheTextureProvider cacheTextureProvider = new CacheTextureProvider();
 
-    public AuthlibTextureProvider(BlockConfigEntry block)
-    {
+    public AuthlibTextureProvider(BlockConfigEntry block) {
         super(block);
         setProfileURL = block.getEntryValue("profileURL", StringConfigEntry.class);
     }
 
     @Override
-    public void close()
-    {
+    public void close() {
         // Do nothing
     }
 
     @Override
-    public synchronized Texture getSkinTexture(UUID uuid, String username)
-    {
+    public synchronized Texture getSkinTexture(UUID uuid, String username) {
         return cacheTextureProvider.getCached(uuid, username, setProfileURL, "Authlib").skin;
     }
 
     @Override
-    public synchronized Texture getCloakTexture(UUID uuid, String username)
-    {
+    public synchronized Texture getCloakTexture(UUID uuid, String username) {
         return cacheTextureProvider.getCached(uuid, username, setProfileURL, "Authlib").cloak;
     }
 }

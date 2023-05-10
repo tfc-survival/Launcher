@@ -12,16 +12,13 @@ import launchserver.response.Response;
 
 import java.io.IOException;
 
-public final class JoinServerResponse extends Response
-{
-    public JoinServerResponse(LaunchServer server, String ip, HInput input, HOutput output)
-    {
+public final class JoinServerResponse extends Response {
+    public JoinServerResponse(LaunchServer server, String ip, HInput input, HOutput output) {
         super(server, ip, input, output);
     }
 
     @Override
-    public void reply() throws IOException
-    {
+    public void reply() throws IOException {
         String username = VerifyHelper.verifyUsername(input.readString(64));
         int length = input.readInt();
         String accessToken = SecurityHelper.verifyToken(input.readASCII(-length));
@@ -30,17 +27,12 @@ public final class JoinServerResponse extends Response
         // Try join server with auth handler
         debug("Username: '%s', Access token: %s, Server ID: %s", username, accessToken, serverID);
         boolean success;
-        try
-        {
+        try {
             success = server.config.authHandler.joinServer(username, accessToken, serverID);
-        }
-        catch (AuthException e)
-        {
+        } catch (AuthException e) {
             requestError(e.getMessage());
             return;
-        }
-        catch (Throwable exc)
-        {
+        } catch (Throwable exc) {
             LogHelper.error(exc);
             requestError("Internal auth handler error");
             return;

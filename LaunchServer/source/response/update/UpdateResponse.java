@@ -20,21 +20,17 @@ import java.util.Deque;
 import java.util.LinkedList;
 import java.util.zip.DeflaterOutputStream;
 
-public final class UpdateResponse extends Response
-{
-    public UpdateResponse(LaunchServer server, String ip, HInput input, HOutput output)
-    {
+public final class UpdateResponse extends Response {
+    public UpdateResponse(LaunchServer server, String ip, HInput input, HOutput output) {
         super(server, ip, input, output);
     }
 
     @Override
-    public void reply() throws IOException
-    {
+    public void reply() throws IOException {
         // Read update dir name
         String updateDirName = IOHelper.verifyFileName(input.readString(255));
         SignedObjectHolder<HashedDir> hdir = server.getUpdateDir(updateDirName);
-        if (hdir == null)
-        {
+        if (hdir == null) {
             requestError(String.format("Unknown update dir: %s", updateDirName));
             return;
         }
@@ -56,28 +52,23 @@ public final class UpdateResponse extends Response
         OutputStream fileOutput = server.config.compress ? new DeflaterOutputStream(output.stream, IOHelper.newDeflater(), IOHelper.BUFFER_SIZE, true) : output.stream;
         Action[] actionsSlice = new Action[UpdateRequest.MAX_QUEUE_SIZE];
         loop:
-        while (true)
-        {
+        while (true) {
             // Read actions slice
             int length = input.readLength(actionsSlice.length);
-            for (int i = 0; i < length; i++)
-            {
+            for (int i = 0; i < length; i++) {
                 actionsSlice[i] = new Action(input);
             }
 
             // Perform actions
-            for (int i = 0; i < length; i++)
-            {
+            for (int i = 0; i < length; i++) {
                 Action action = actionsSlice[i];
-                switch (action.type)
-                {
+                switch (action.type) {
                     case CD:
                         debug("CD '%s'", action.name);
 
                         // Get hashed dir (for validation)
                         HashedEntry hSubdir = dirStack.getLast().getEntry(action.name);
-                        if (hSubdir == null || hSubdir.getType() != Type.DIR)
-                        {
+                        if (hSubdir == null || hSubdir.getType() != Type.DIR) {
                             throw new IOException("Unknown hashed dir: " + action.name);
                         }
                         dirStack.add((HashedDir) hSubdir);
@@ -90,22 +81,19 @@ public final class UpdateResponse extends Response
 
                         // Get hashed file (for validation)
                         HashedEntry hFile = dirStack.getLast().getEntry(action.name);
-                        if (hFile == null || hFile.getType() != Type.FILE)
-                        {
+                        if (hFile == null || hFile.getType() != Type.FILE) {
                             throw new IOException("Unknown hashed file: " + action.name);
                         }
 
                         // Resolve and write file
                         Path file = dir.resolve(action.name);
-                        if (IOHelper.readAttributes(file).size() != hFile.size())
-                        {
+                        if (IOHelper.readAttributes(file).size() != hFile.size()) {
                             fileOutput.write(0x0);
                             fileOutput.flush();
                             throw new IOException("Unknown hashed file: " + action.name);
                         }
                         fileOutput.write(0xFF);
-                        try (InputStream fileInput = IOHelper.newInput(file))
-                        {
+                        try (InputStream fileInput = IOHelper.newInput(file)) {
                             IOHelper.transfer(fileInput, fileOutput);
                         }
                         break;
@@ -114,8 +102,7 @@ public final class UpdateResponse extends Response
 
                         // Remove from hashed dir stack
                         dirStack.removeLast();
-                        if (dirStack.isEmpty())
-                        {
+                        if (dirStack.isEmpty()) {
                             throw new IOException("Empty hDir stack");
                         }
 
@@ -134,8 +121,7 @@ public final class UpdateResponse extends Response
         }
 
         // So we've updated :)
-        if (fileOutput instanceof DeflaterOutputStream)
-        {
+        if (fileOutput instanceof DeflaterOutputStream) {
             ((DeflaterOutputStream) fileOutput).finish();
         }
     }

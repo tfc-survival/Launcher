@@ -12,20 +12,16 @@ import launchserver.response.Response;
 import java.io.IOException;
 import java.util.Collection;
 
-public final class LauncherResponse extends Response
-{
-    public LauncherResponse(LaunchServer server, String ip, HInput input, HOutput output)
-    {
+public final class LauncherResponse extends Response {
+    public LauncherResponse(LaunchServer server, String ip, HInput input, HOutput output) {
         super(server, ip, input, output);
     }
 
     @Override
-    public void reply() throws IOException
-    {
+    public void reply() throws IOException {
         // Resolve launcher binary
         SignedBytesHolder bytes = (input.readBoolean() ? server.launcherEXEBinary : server.launcherBinary).getBytes();
-        if (bytes == null)
-        {
+        if (bytes == null) {
             requestError("Missing launcher binary");
             return;
         }
@@ -34,8 +30,7 @@ public final class LauncherResponse extends Response
         // Update launcher binary
         output.writeByteArray(bytes.getSign(), -SecurityHelper.RSA_KEY_LENGTH);
         output.flush();
-        if (input.readBoolean())
-        {
+        if (input.readBoolean()) {
             output.writeByteArray(bytes.getBytes(), 0);
             return; // Launcher will be restarted
         }
@@ -43,8 +38,7 @@ public final class LauncherResponse extends Response
         // Write clients profiles list
         Collection<SignedObjectHolder<ClientProfile>> profiles = server.getProfiles();
         output.writeLength(profiles.size(), 0);
-        for (SignedObjectHolder<ClientProfile> profile : profiles)
-        {
+        for (SignedObjectHolder<ClientProfile> profile : profiles) {
             profile.write(output);
         }
     }

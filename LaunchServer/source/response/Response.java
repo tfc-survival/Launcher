@@ -9,8 +9,7 @@ import launchserver.LaunchServer;
 
 import java.io.IOException;
 
-public abstract class Response
-{
+public abstract class Response {
     @LauncherAPI
     protected final LaunchServer server;
     @LauncherAPI
@@ -21,8 +20,7 @@ public abstract class Response
     protected final HOutput output;
 
     @LauncherAPI
-    protected Response(LaunchServer server, String ip, HInput input, HOutput output)
-    {
+    protected Response(LaunchServer server, String ip, HInput input, HOutput output) {
         this.server = server;
         this.ip = ip;
         this.input = input;
@@ -30,8 +28,7 @@ public abstract class Response
     }
 
     @LauncherAPI
-    public static void requestError(String message) throws RequestException
-    {
+    public static void requestError(String message) throws RequestException {
         throw new RequestException(message);
     }
 
@@ -39,27 +36,23 @@ public abstract class Response
     public abstract void reply() throws Throwable;
 
     @LauncherAPI
-    protected final void debug(String message)
-    {
+    protected final void debug(String message) {
         LogHelper.subDebug("[%s] %s", ip, message);
     }
 
     @LauncherAPI
-    protected final void debug(String message, Object... args)
-    {
+    protected final void debug(String message, Object... args) {
         debug(String.format(message, args));
     }
 
     @LauncherAPI
     @SuppressWarnings("MethodMayBeStatic") // Intentionally not static
-    protected final void writeNoError(HOutput output) throws IOException
-    {
+    protected final void writeNoError(HOutput output) throws IOException {
         output.writeString("", 0);
     }
 
     @FunctionalInterface
-    public interface Factory
-    {
+    public interface Factory {
         @LauncherAPI
         Response newResponse(LaunchServer server, String ip, HInput input, HOutput output);
     }
