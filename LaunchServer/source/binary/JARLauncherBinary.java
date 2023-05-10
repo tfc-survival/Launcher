@@ -27,14 +27,11 @@ import java.util.zip.*;
 public final class JARLauncherBinary extends LauncherBinary {
     @LauncherAPI
     public final Path runtimeDir;
-    @LauncherAPI
-    public final Path initScriptFile;
 
     @LauncherAPI
     public JARLauncherBinary(LaunchServer server) throws IOException {
         super(server, server.dir.resolve(server.config.binaryName + ".jar"));
         runtimeDir = server.dir.resolve(Launcher.RUNTIME_DIR);
-        initScriptFile = runtimeDir.resolve(Launcher.INIT_SCRIPT_FILE);
         tryUnpackRuntime();
     }
 
@@ -53,11 +50,6 @@ public final class JARLauncherBinary extends LauncherBinary {
             output.setLevel(Deflater.BEST_COMPRESSION);
             try (InputStream input = new GZIPInputStream(IOHelper.newInput(IOHelper.getResourceURL("Launcher.pack.gz")))) {
                 Pack200.newUnpacker().unpack(input, output);
-            }
-
-            // Verify has init script file
-            if (!IOHelper.isFile(initScriptFile)) {
-                throw new IOException(String.format("Missing init script file ('%s')", Launcher.INIT_SCRIPT_FILE));
             }
 
             // Write launcher runtime dir

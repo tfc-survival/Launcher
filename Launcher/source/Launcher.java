@@ -1,56 +1,17 @@
 package launcher;
 
-import javafx.application.Application;
-import launcher.client.ClientLauncher;
-import launcher.client.ClientLauncher.Params;
-import launcher.client.ClientProfile;
-import launcher.client.ClientProfile.Version;
-import launcher.client.PlayerProfile;
-import launcher.client.PlayerProfile.Texture;
-import launcher.client.ServerPinger;
-import launcher.hasher.FileNameMatcher;
-import launcher.hasher.HashedDir;
-import launcher.hasher.HashedEntry;
-import launcher.hasher.HashedFile;
 import launcher.helper.*;
-import launcher.helper.JVMHelper.OS;
-import launcher.helper.LogHelper.Output;
 import launcher.helper.SecurityHelper.DigestAlgorithm;
-import launcher.helper.js.JSApplication;
-import launcher.request.CustomRequest;
-import launcher.request.PingRequest;
-import launcher.request.Request;
-import launcher.request.RequestException;
-import launcher.request.auth.AuthRequest;
-import launcher.request.auth.CheckServerRequest;
-import launcher.request.auth.JoinServerRequest;
-import launcher.request.update.LauncherRequest;
-import launcher.request.update.UpdateRequest;
-import launcher.request.uuid.BatchProfileByUsernameRequest;
-import launcher.request.uuid.ProfileByUUIDRequest;
-import launcher.request.uuid.ProfileByUsernameRequest;
 import launcher.runtime.Init;
 import launcher.serialize.HInput;
 import launcher.serialize.HOutput;
-import launcher.serialize.config.ConfigObject;
-import launcher.serialize.config.ConfigObject.Adapter;
-import launcher.serialize.config.TextConfigReader;
-import launcher.serialize.config.TextConfigWriter;
-import launcher.serialize.config.entry.*;
-import launcher.serialize.config.entry.ConfigEntry.Type;
-import launcher.serialize.signed.SignedBytesHolder;
-import launcher.serialize.signed.SignedObjectHolder;
-import launcher.serialize.stream.EnumSerializer;
 import launcher.serialize.stream.StreamObject;
 import oshi.SystemInfo;
 import oshi.hardware.CentralProcessor;
 import oshi.hardware.ComputerSystem;
 
-import javax.script.Bindings;
-import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URL;
@@ -85,86 +46,8 @@ public final class Launcher {
     private static final AtomicReference<Config> CONFIG = new AtomicReference<>();
     // Instance
     private final AtomicBoolean started = new AtomicBoolean(false);
-    private final ScriptEngine engine = CommonHelper.newScriptEngine();
 
     private Launcher() {
-        setScriptBindings();
-    }
-
-    @LauncherAPI
-    public static void addLauncherClassBindings(ScriptEngine engine, Map<String, Object> bindings) {
-        addClassBinding(engine, bindings, "Launcher", Launcher.class);
-        addClassBinding(engine, bindings, "Config", Config.class);
-
-        // Set client class bindings
-        addClassBinding(engine, bindings, "PlayerProfile", PlayerProfile.class);
-        addClassBinding(engine, bindings, "PlayerProfileTexture", Texture.class);
-        addClassBinding(engine, bindings, "ClientProfile", ClientProfile.class);
-        addClassBinding(engine, bindings, "ClientProfileVersion", Version.class);
-        addClassBinding(engine, bindings, "ClientLauncher", ClientLauncher.class);
-        addClassBinding(engine, bindings, "ClientLauncherParams", Params.class);
-        addClassBinding(engine, bindings, "ServerPinger", ServerPinger.class);
-
-        // Set request class bindings
-        addClassBinding(engine, bindings, "Request", Request.class);
-        addClassBinding(engine, bindings, "RequestType", Request.Type.class);
-        addClassBinding(engine, bindings, "RequestException", RequestException.class);
-        addClassBinding(engine, bindings, "CustomRequest", CustomRequest.class);
-        addClassBinding(engine, bindings, "PingRequest", PingRequest.class);
-        addClassBinding(engine, bindings, "AuthRequest", AuthRequest.class);
-        addClassBinding(engine, bindings, "JoinServerRequest", JoinServerRequest.class);
-        addClassBinding(engine, bindings, "CheckServerRequest", CheckServerRequest.class);
-        addClassBinding(engine, bindings, "UpdateRequest", UpdateRequest.class);
-        addClassBinding(engine, bindings, "LauncherRequest", LauncherRequest.class);
-        addClassBinding(engine, bindings, "ProfileByUsernameRequest", ProfileByUsernameRequest.class);
-        addClassBinding(engine, bindings, "ProfileByUUIDRequest", ProfileByUUIDRequest.class);
-        addClassBinding(engine, bindings, "BatchProfileByUsernameRequest", BatchProfileByUsernameRequest.class);
-
-        // Set hasher class bindings
-        addClassBinding(engine, bindings, "FileNameMatcher", FileNameMatcher.class);
-        addClassBinding(engine, bindings, "HashedDir", HashedDir.class);
-        addClassBinding(engine, bindings, "HashedFile", HashedFile.class);
-        addClassBinding(engine, bindings, "HashedEntryType", HashedEntry.Type.class);
-
-        // Set serialization class bindings
-        addClassBinding(engine, bindings, "HInput", HInput.class);
-        addClassBinding(engine, bindings, "HOutput", HOutput.class);
-        addClassBinding(engine, bindings, "StreamObject", StreamObject.class);
-        addClassBinding(engine, bindings, "StreamObjectAdapter", StreamObject.Adapter.class);
-        addClassBinding(engine, bindings, "SignedBytesHolder", SignedBytesHolder.class);
-        addClassBinding(engine, bindings, "SignedObjectHolder", SignedObjectHolder.class);
-        addClassBinding(engine, bindings, "EnumSerializer", EnumSerializer.class);
-
-        // Set config serialization class bindings
-        addClassBinding(engine, bindings, "ConfigObject", ConfigObject.class);
-        addClassBinding(engine, bindings, "ConfigObjectAdapter", Adapter.class);
-        addClassBinding(engine, bindings, "BlockConfigEntry", BlockConfigEntry.class);
-        addClassBinding(engine, bindings, "BooleanConfigEntry", BooleanConfigEntry.class);
-        addClassBinding(engine, bindings, "IntegerConfigEntry", IntegerConfigEntry.class);
-        addClassBinding(engine, bindings, "ListConfigEntry", ListConfigEntry.class);
-        addClassBinding(engine, bindings, "StringConfigEntry", StringConfigEntry.class);
-        addClassBinding(engine, bindings, "ConfigEntryType", Type.class);
-        addClassBinding(engine, bindings, "TextConfigReader", TextConfigReader.class);
-        addClassBinding(engine, bindings, "TextConfigWriter", TextConfigWriter.class);
-
-        // Set helper class bindings
-        addClassBinding(engine, bindings, "CommonHelper", CommonHelper.class);
-        addClassBinding(engine, bindings, "IOHelper", IOHelper.class);
-        addClassBinding(engine, bindings, "JVMHelper", JVMHelper.class);
-        addClassBinding(engine, bindings, "JVMHelperOS", OS.class);
-        addClassBinding(engine, bindings, "LogHelper", LogHelper.class);
-        addClassBinding(engine, bindings, "LogHelperOutput", Output.class);
-        addClassBinding(engine, bindings, "SecurityHelper", SecurityHelper.class);
-        addClassBinding(engine, bindings, "DigestAlgorithm", DigestAlgorithm.class);
-        addClassBinding(engine, bindings, "VerifyHelper", VerifyHelper.class);
-
-        // Load JS API if available
-        try {
-            addClassBinding(engine, bindings, "Application", Application.class);
-            addClassBinding(engine, bindings, "JSApplication", JSApplication.class);
-        } catch (Throwable ignored) {
-            LogHelper.error("JavaFX API isn't available");
-        }
     }
 
     @LauncherAPI
@@ -267,14 +150,6 @@ public final class Launcher {
     }
 
     @LauncherAPI
-    public Object loadScript(URL url) throws IOException, ScriptException {
-        LogHelper.debug("Loading script: '%s'", url);
-        try (BufferedReader reader = IOHelper.newReader(url)) {
-            return engine.eval(reader);
-        }
-    }
-
-    @LauncherAPI
     public void start(String... args) throws Throwable {
         Objects.requireNonNull(args, "args");
         if (started.getAndSet(true)) {
@@ -282,18 +157,8 @@ public final class Launcher {
         }
 
         // Load init.js script
-        loadScript(getResourceURL(INIT_SCRIPT_FILE));
         LogHelper.info("Invoking start() function");
         Init.start(args);
-    }
-
-    private void setScriptBindings() {
-        LogHelper.info("Setting up script engine bindings");
-        Bindings bindings = engine.getBindings(ScriptContext.ENGINE_SCOPE);
-        bindings.put("launcher", this);
-
-        // Add launcher class bindings
-        addLauncherClassBindings(engine, bindings);
     }
 
     public static final class Config extends StreamObject {

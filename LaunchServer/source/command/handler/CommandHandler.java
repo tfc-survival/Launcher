@@ -31,7 +31,6 @@ public abstract class CommandHandler implements Runnable {
         registerCommand("rebind", new RebindCommand(server));
         registerCommand("debug", new DebugCommand(server));
         registerCommand("clear", new ClearCommand(server));
-        registerCommand("eval", new EvalCommand(server));
         registerCommand("gc", new GCCommand(server));
         registerCommand("logConnections", new LogConnectionsCommand(server));
 

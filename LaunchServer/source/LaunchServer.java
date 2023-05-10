@@ -36,7 +36,7 @@ import launchserver.response.ServerSocketHandler;
 import launchserver.response.ServerSocketHandler.Listener;
 import launchserver.texture.TextureProvider;
 
-import javax.script.*;
+import javax.script.ScriptEngine;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -95,8 +95,7 @@ public final class LaunchServer implements Runnable, AutoCloseable {
     public final CommandHandler commandHandler;
     @LauncherAPI
     public final ServerSocketHandler serverSocketHandler;
-    @LauncherAPI
-    public final ScriptEngine engine = CommonHelper.newScriptEngine();
+
     private final AtomicBoolean started = new AtomicBoolean(false);
 
     // Updates and profiles
@@ -104,7 +103,6 @@ public final class LaunchServer implements Runnable, AutoCloseable {
     private volatile Map<String, SignedObjectHolder<HashedDir>> updatesDirMap;
 
     public LaunchServer(Path dir, boolean portable) throws IOException, InvalidKeySpecException {
-        setScriptBindings();
         this.portable = portable;
 
         // Setup config locations
@@ -289,15 +287,6 @@ public final class LaunchServer implements Runnable, AutoCloseable {
             LogHelper.error(e);
         }
 
-        // Notify script about closing
-        try {
-            ((Invocable) engine).invokeFunction("close");
-        } catch (NoSuchMethodException ignored) {
-            // Do nothing if method simply doesn't exist
-        } catch (Throwable exc) {
-            LogHelper.error(exc);
-        }
-
         // Print last message before death :(
         LogHelper.info("LaunchServer stopped");
     }
@@ -306,17 +295,6 @@ public final class LaunchServer implements Runnable, AutoCloseable {
     public void run() {
         if (started.getAndSet(true)) {
             throw new IllegalStateException("LaunchServer has been already started");
-        }
-
-        // Load plugin script if exist
-        Path scriptFile = dir.resolve("plugin.js");
-        if (IOHelper.isFile(scriptFile)) {
-            LogHelper.info("Loading plugin.js script");
-            try {
-                loadScript(IOHelper.toURL(scriptFile));
-            } catch (Throwable exc) {
-                throw new RuntimeException("Error while loading plugin.js", exc);
-            }
         }
 
         // Add shutdown hook, then start LaunchServer
@@ -352,14 +330,6 @@ public final class LaunchServer implements Runnable, AutoCloseable {
     @LauncherAPI
     public Set<Entry<String, SignedObjectHolder<HashedDir>>> getUpdateDirs() {
         return updatesDirMap.entrySet();
-    }
-
-    @LauncherAPI
-    public Object loadScript(URL url) throws IOException, ScriptException {
-        LogHelper.debug("Loading server script: '%s'", url);
-        try (BufferedReader reader = IOHelper.newReader(url)) {
-            return engine.eval(reader);
-        }
     }
 
     @LauncherAPI
@@ -462,16 +432,6 @@ public final class LaunchServer implements Runnable, AutoCloseable {
         try (BufferedWriter writer = IOHelper.newWriter(configFile)) {
             TextConfigWriter.write(newConfig.block, writer, true);
         }
-    }
-
-    private void setScriptBindings() {
-        LogHelper.info("Setting up server script engine bindings");
-        Bindings bindings = engine.getBindings(ScriptContext.ENGINE_SCOPE);
-        bindings.put("server", this);
-
-        // Add launcher and launchserver class bindings
-        Launcher.addLauncherClassBindings(engine, bindings);
-        addLaunchServerClassBindings(engine, bindings);
     }
 
     public static final class Config extends ConfigObject {
