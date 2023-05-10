@@ -10,9 +10,9 @@ import launchserver.LaunchServer;
 import launchserver.auth.AuthException;
 import launchserver.auth.limiter.AuthLimiterHWIDConfig;
 import launchserver.auth.limiter.AuthLimiterIPConfig;
-import launchserver.helpers.ImmutableByteArray;
 import launchserver.auth.provider.AuthProvider;
 import launchserver.auth.provider.AuthProviderResult;
+import launchserver.helpers.ImmutableByteArray;
 import launchserver.helpers.Pair;
 import launchserver.response.Response;
 import launchserver.response.profile.ProfileByUUIDResponse;
@@ -24,26 +24,22 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.UUID;
 
-public final class AuthResponse extends Response
-{
+public final class AuthResponse extends Response {
     private final String ip;
 
-    public AuthResponse(LaunchServer server, HInput input, HOutput output, String ip)
-    {
+    public AuthResponse(LaunchServer server, HInput input, HOutput output, String ip) {
         super(server, ip, input, output);
         this.ip = ip;
     }
 
-    private static String echo(int length)
-    {
+    private static String echo(int length) {
         char[] chars = new char[length];
         Arrays.fill(chars, '*');
         return new String(chars);
     }
 
     @Override
-    public void reply() throws Throwable
-    {
+    public void reply() throws Throwable {
         String login = input.readString(255);
         byte[] encryptedPassword = input.readByteArray(SecurityHelper.CRYPTO_MAX_LENGTH);
 
@@ -51,13 +47,10 @@ public final class AuthResponse extends Response
 
         // Decrypt password
         String password;
-        try
-        {
+        try {
             password = IOHelper.decode(SecurityHelper.newRSADecryptCipher(server.privateKey).
                     doFinal(encryptedPassword));
-        }
-        catch (IllegalBlockSizeException | BadPaddingException ignored)
-        {
+        } catch (IllegalBlockSizeException | BadPaddingException ignored) {
             requestError("Password decryption error");
             return;
         }
@@ -65,29 +58,22 @@ public final class AuthResponse extends Response
         // Authenticate
         debug("Login: '%s', Password: '%s'", login, echo(password.length()));
         AuthProviderResult result;
-        try
-        {
+        try {
             // Лесенка чтоб ее
-            if (server.config.authLimit)
-            {
-                if (AuthLimiterIPConfig.Instance.getBlockIp().stream().anyMatch(s -> s.equals(ip)) && server.config.authLimitConfig.useBlockIp)
-                {
+            if (server.config.authLimit) {
+                if (AuthLimiterIPConfig.Instance.getBlockIp().stream().anyMatch(s -> s.equals(ip)) && server.config.authLimitConfig.useBlockIp) {
                     AuthProvider.authError(server.config.authLimitConfig.authBannedString);
                     return;
                 }
 
-                if (AuthLimiterIPConfig.Instance.getAllowIp().stream().noneMatch(s -> s.equals(ip)))
-                {
-                    if (server.config.authLimitConfig.onlyAllowIp)
-                    {
+                if (AuthLimiterIPConfig.Instance.getAllowIp().stream().noneMatch(s -> s.equals(ip))) {
+                    if (server.config.authLimitConfig.onlyAllowIp) {
                         AuthProvider.authError(server.config.authLimitConfig.authNotWhitelistString);
                         return;
                     }
 
-                    if (server.config.authLimitConfig.useAllowIp)
-                    {
-                        if (server.limiter.isLimit(ip))
-                        {
+                    if (server.config.authLimitConfig.useAllowIp) {
+                        if (server.limiter.isLimit(ip)) {
                             AuthProvider.authError(server.config.authLimitConfig.authRejectString);
                             return;
                         }
@@ -96,22 +82,17 @@ public final class AuthResponse extends Response
             }
 
             result = server.config.authProvider.auth(login, password, ip);
-            if (!VerifyHelper.isValidUsername(result.username))
-            {
+            if (!VerifyHelper.isValidUsername(result.username)) {
                 AuthProvider.authError(String.format("Illegal result: '%s'", result.username));
                 return;
             }
 
-            checkHWID(result.username,hwid);
+            checkHWID(result.username, hwid);
 
-        }
-        catch (AuthException e)
-        {
+        } catch (AuthException e) {
             requestError(e.getMessage());
             return;
-        }
-        catch (Throwable exc)
-        {
+        } catch (Throwable exc) {
             LogHelper.error(exc);
             requestError("Internal auth provider error");
             return;
@@ -120,17 +101,12 @@ public final class AuthResponse extends Response
 
         // Authenticate on server (and get UUID)
         UUID uuid;
-        try
-        {
+        try {
             uuid = server.config.authHandler.auth(result);
-        }
-        catch (AuthException e)
-        {
+        } catch (AuthException e) {
             requestError(e.getMessage());
             return;
-        }
-        catch (Throwable exc)
-        {
+        } catch (Throwable exc) {
             LogHelper.error(exc);
             requestError("Internal auth handler error");
             return;
@@ -150,12 +126,12 @@ public final class AuthResponse extends Response
             Map<ImmutableByteArray, Boolean> knownHWID = hwidHandler.getHardware(nickname);
             boolean needInsert = !knownHWID.containsKey(actualHWID);
             boolean banned = knownHWID.values().stream().anyMatch(i -> i);
-            if(needInsert){
+            if (needInsert) {
                 Pair<Integer, Boolean> id_Banned = hwidHandler.getOrRegisterHWID(hwid, banned);
-                hwidHandler.addHardwareToUser(nickname,id_Banned.left);
+                hwidHandler.addHardwareToUser(nickname, id_Banned.left);
                 banned = banned | id_Banned.right;
             }
-            if(banned)
+            if (banned)
                 AuthProvider.authError(server.config.authLimitConfig.authBannedString);
         } catch (SQLException e) {
             e.printStackTrace();

@@ -14,8 +14,7 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-public final class MySQLSourceConfig extends ConfigObject implements AutoCloseable, SQLSourceConfig
-{
+public final class MySQLSourceConfig extends ConfigObject implements AutoCloseable, SQLSourceConfig {
     @LauncherAPI
     public static final int TIMEOUT = VerifyHelper.verifyInt(
             Integer.parseInt(System.getProperty("launcher.mysql.idleTimeout", Integer.toString(5000))),
@@ -39,8 +38,7 @@ public final class MySQLSourceConfig extends ConfigObject implements AutoCloseab
     private boolean hikari;
 
     @LauncherAPI
-    public MySQLSourceConfig(String poolName, BlockConfigEntry block)
-    {
+    public MySQLSourceConfig(String poolName, BlockConfigEntry block) {
         super(block);
         this.poolName = poolName;
         address = VerifyHelper.verify(block.getEntryValue("address", StringConfigEntry.class),
@@ -57,19 +55,15 @@ public final class MySQLSourceConfig extends ConfigObject implements AutoCloseab
     }
 
     @Override
-    public synchronized void close()
-    {
-        if (hikari)
-        { // Shutdown hikari pool
+    public synchronized void close() {
+        if (hikari) { // Shutdown hikari pool
             ((HikariDataSource) source).close();
         }
     }
 
     @LauncherAPI
-    public synchronized Connection getConnection() throws SQLException
-    {
-        if (source == null)
-        { // New data source
+    public synchronized Connection getConnection() throws SQLException {
+        if (source == null) { // New data source
             MysqlDataSource mysqlSource = new MysqlDataSource();
             mysqlSource.setCharacterEncoding("UTF-8");
             mysqlSource.setUseSSL(false);
@@ -98,8 +92,7 @@ public final class MySQLSourceConfig extends ConfigObject implements AutoCloseab
 
             // Try using HikariCP
             source = mysqlSource;
-            try
-            {
+            try {
                 Class.forName("com.zaxxer.hikari.HikariDataSource");
                 hikari = true; // Used for shutdown. Not instanceof because of possible classpath error
 
@@ -116,9 +109,7 @@ public final class MySQLSourceConfig extends ConfigObject implements AutoCloseab
                 // Replace source with hds
                 source = hikariSource;
                 LogHelper.info("HikariCP pooling enabled for '%s'", poolName);
-            }
-            catch (ClassNotFoundException ignored)
-            {
+            } catch (ClassNotFoundException ignored) {
                 LogHelper.warning("HikariCP isn't in classpath for '%s'", poolName);
             }
         }

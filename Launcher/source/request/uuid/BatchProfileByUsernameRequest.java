@@ -11,50 +11,42 @@ import launcher.serialize.HOutput;
 
 import java.io.IOException;
 
-public final class BatchProfileByUsernameRequest extends Request<PlayerProfile[]>
-{
+public final class BatchProfileByUsernameRequest extends Request<PlayerProfile[]> {
     @LauncherAPI
     public static final int MAX_BATCH_SIZE = 128;
     private final String[] usernames;
 
     @LauncherAPI
-    public BatchProfileByUsernameRequest(Config config, String... usernames) throws IOException
-    {
+    public BatchProfileByUsernameRequest(Config config, String... usernames) throws IOException {
         super(config);
         this.usernames = usernames.clone();
         IOHelper.verifyLength(this.usernames.length, MAX_BATCH_SIZE);
-        for (String username : this.usernames)
-        {
+        for (String username : this.usernames) {
             VerifyHelper.verifyUsername(username);
         }
     }
 
     @LauncherAPI
-    public BatchProfileByUsernameRequest(String... usernames) throws IOException
-    {
+    public BatchProfileByUsernameRequest(String... usernames) throws IOException {
         this(null, usernames);
     }
 
     @Override
-    public Type getType()
-    {
+    public Type getType() {
         return Type.BATCH_PROFILE_BY_USERNAME;
     }
 
     @Override
-    protected PlayerProfile[] requestDo(HInput input, HOutput output) throws IOException
-    {
+    protected PlayerProfile[] requestDo(HInput input, HOutput output) throws IOException {
         output.writeLength(usernames.length, MAX_BATCH_SIZE);
-        for (String username : usernames)
-        {
+        for (String username : usernames) {
             output.writeString(username, 64);
         }
         output.flush();
 
         // Read profiles response
         PlayerProfile[] profiles = new PlayerProfile[usernames.length];
-        for (int i = 0; i < profiles.length; i++)
-        {
+        for (int i = 0; i < profiles.length; i++) {
             profiles[i] = input.readBoolean() ? new PlayerProfile(input) : null;
         }
 

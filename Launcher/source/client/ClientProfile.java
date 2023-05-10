@@ -14,8 +14,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 
 @SuppressWarnings("ComparableImplementedButEqualsNotOverridden")
-public final class ClientProfile extends ConfigObject implements Comparable<ClientProfile>
-{
+public final class ClientProfile extends ConfigObject implements Comparable<ClientProfile> {
     @LauncherAPI
     public static final StreamObject.Adapter<ClientProfile> RO_ADAPTER = input -> new ClientProfile(input, true);
     private static final FileNameMatcher ASSET_MATCHER = new FileNameMatcher(
@@ -45,8 +44,7 @@ public final class ClientProfile extends ConfigObject implements Comparable<Clie
     private final ListConfigEntry clientArgs;
 
     @LauncherAPI
-    public ClientProfile(BlockConfigEntry block)
-    {
+    public ClientProfile(BlockConfigEntry block) {
         super(block);
 
         // Version
@@ -74,56 +72,47 @@ public final class ClientProfile extends ConfigObject implements Comparable<Clie
     }
 
     @LauncherAPI
-    public ClientProfile(HInput input, boolean ro) throws IOException
-    {
+    public ClientProfile(HInput input, boolean ro) throws IOException {
         this(new BlockConfigEntry(input, ro));
     }
 
     @Override
-    public int compareTo(ClientProfile o)
-    {
+    public int compareTo(ClientProfile o) {
         return Integer.compare(getSortIndex(), o.getSortIndex());
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return title.getValue();
     }
 
     @LauncherAPI
-    public String getAssetIndex()
-    {
+    public String getAssetIndex() {
         return assetIndex.getValue();
     }
 
     @LauncherAPI
-    public void setAssetIndex(String version)
-    {
+    public void setAssetIndex(String version) {
         this.assetIndex.setValue(version);
     }
 
     @LauncherAPI
-    public FileNameMatcher getAssetUpdateMatcher()
-    {
+    public FileNameMatcher getAssetUpdateMatcher() {
         return Version.compare(getVersion(), "1.7.3") >= 0 ? ASSET_MATCHER : null;
     }
 
     @LauncherAPI
-    public String[] getClassPath()
-    {
+    public String[] getClassPath() {
         return classPath.stream(StringConfigEntry.class).toArray(String[]::new);
     }
 
     @LauncherAPI
-    public String[] getClientArgs()
-    {
+    public String[] getClientArgs() {
         return clientArgs.stream(StringConfigEntry.class).toArray(String[]::new);
     }
 
     @LauncherAPI
-    public FileNameMatcher getClientUpdateMatcher()
-    {
+    public FileNameMatcher getClientUpdateMatcher() {
         String[] updateArray = update.stream(StringConfigEntry.class).toArray(String[]::new);
         String[] verifyArray = updateVerify.stream(StringConfigEntry.class).toArray(String[]::new);
         String[] exclusionsArray = updateExclusions.stream(StringConfigEntry.class).toArray(String[]::new);
@@ -136,74 +125,62 @@ public final class ClientProfile extends ConfigObject implements Comparable<Clie
     }
 
     @LauncherAPI
-    public String[] getJvmArgs()
-    {
+    public String[] getJvmArgs() {
         return jvmArgs.stream(StringConfigEntry.class).toArray(String[]::new);
     }
 
     @LauncherAPI
-    public String getMainClass()
-    {
+    public String getMainClass() {
         return mainClass.getValue();
     }
 
     @LauncherAPI
-    public String getServerAddress()
-    {
+    public String getServerAddress() {
         return serverAddress.getValue();
     }
 
     @LauncherAPI
-    public int getServerPort()
-    {
+    public int getServerPort() {
         return serverPort.getValue();
     }
 
     @LauncherAPI
-    public InetSocketAddress getServerSocketAddress()
-    {
+    public InetSocketAddress getServerSocketAddress() {
         return InetSocketAddress.createUnresolved(getServerAddress(), getServerPort());
     }
 
     @LauncherAPI
-    public int getSortIndex()
-    {
+    public int getSortIndex() {
         return sortIndex.getValue();
     }
 
     @LauncherAPI
-    public String getTitle()
-    {
+    public String getTitle() {
         return title.getValue();
     }
 
     @LauncherAPI
-    public void setTitle(String title)
-    {
+    public void setTitle(String title) {
         this.title.setValue(title);
     }
 
     @LauncherAPI
-    public String getVersion()
-    {
+    public String getVersion() {
         return version.getValue();
     }
 
     @LauncherAPI
-    public void setVersion(String version)
-    {
+    public void setVersion(String version) {
         this.version.setValue(version);
     }
 
     @LauncherAPI
-    public boolean isUpdateFastCheck()
-    {
+    public boolean isUpdateFastCheck() {
         return updateFastCheck.getValue();
     }
 
     @LauncherAPI
-    public void verify()
-    {
+    public void verify() {
         // Version
         VerifyHelper.verify(getVersion(), VerifyHelper.NOT_EMPTY, "Game version can't be empty");
         IOHelper.verifyFileName(getAssetIndex()); // А в смысле, там же версия, какой нахуй FileName?
@@ -232,11 +209,11 @@ public final class ClientProfile extends ConfigObject implements Comparable<Clie
             String[] originVersionParts = originVersion.split("\\.");
             String[] comparedVersionParts = comparedVersion.split("\\.");
             int length = Math.max(originVersionParts.length, comparedVersionParts.length);
-            for(int i = 0; i < length; i++) {
+            for (int i = 0; i < length; i++) {
                 int originVersionPart = i < originVersionParts.length ? Integer.parseInt(originVersionParts[i]) : 0;
                 int comparedVersionPart = i < comparedVersionParts.length ? Integer.parseInt(comparedVersionParts[i]) : 0;
-                if(originVersionPart < comparedVersionPart) return -1;
-                if(originVersionPart > comparedVersionPart) return 1;
+                if (originVersionPart < comparedVersionPart) return -1;
+                if (originVersionPart > comparedVersionPart) return 1;
             }
             return 0;
         }

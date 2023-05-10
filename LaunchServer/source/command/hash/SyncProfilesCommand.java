@@ -6,28 +6,23 @@ import launchserver.command.Command;
 
 import java.io.IOException;
 
-public final class SyncProfilesCommand extends Command
-{
-    public SyncProfilesCommand(LaunchServer server)
-    {
+public final class SyncProfilesCommand extends Command {
+    public SyncProfilesCommand(LaunchServer server) {
         super(server);
     }
 
     @Override
-    public String getArgsDescription()
-    {
+    public String getArgsDescription() {
         return null;
     }
 
     @Override
-    public String getUsageDescription()
-    {
+    public String getUsageDescription() {
         return "Resync profiles dir";
     }
 
     @Override
-    public void invoke(String... args) throws IOException
-    {
+    public void invoke(String... args) throws IOException {
         server.syncProfilesDir();
         LogHelper.subInfo("Profiles successfully resynced");
     }

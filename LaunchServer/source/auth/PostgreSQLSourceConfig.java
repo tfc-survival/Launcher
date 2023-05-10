@@ -1,6 +1,5 @@
 package launchserver.auth;
 
-import org.postgresql.ds.PGSimpleDataSource;
 import com.zaxxer.hikari.HikariDataSource;
 import launcher.LauncherAPI;
 import launcher.helper.LogHelper;
@@ -9,13 +8,13 @@ import launcher.serialize.config.ConfigObject;
 import launcher.serialize.config.entry.BlockConfigEntry;
 import launcher.serialize.config.entry.IntegerConfigEntry;
 import launcher.serialize.config.entry.StringConfigEntry;
+import org.postgresql.ds.PGSimpleDataSource;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-public final class PostgreSQLSourceConfig extends ConfigObject implements AutoCloseable, SQLSourceConfig
-{
+public final class PostgreSQLSourceConfig extends ConfigObject implements AutoCloseable, SQLSourceConfig {
     @LauncherAPI
     public static final int TIMEOUT = VerifyHelper.verifyInt(
             Integer.parseInt(System.getProperty("launcher.postgresql.idleTimeout", Integer.toString(5000))),
@@ -39,8 +38,7 @@ public final class PostgreSQLSourceConfig extends ConfigObject implements AutoCl
     private boolean hikari;
 
     @LauncherAPI
-    public PostgreSQLSourceConfig(String poolName, BlockConfigEntry block)
-    {
+    public PostgreSQLSourceConfig(String poolName, BlockConfigEntry block) {
         super(block);
         this.poolName = poolName;
         address = VerifyHelper.verify(block.getEntryValue("address", StringConfigEntry.class),
@@ -57,10 +55,8 @@ public final class PostgreSQLSourceConfig extends ConfigObject implements AutoCl
     }
 
     @Override
-    public synchronized void close()
-    {
-        if (hikari)
-        { // Shutdown hikari pool
+    public synchronized void close() {
+        if (hikari) { // Shutdown hikari pool
             ((HikariDataSource) source).close();
         }
     }

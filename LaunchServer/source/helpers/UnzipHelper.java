@@ -10,14 +10,10 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 public class UnzipHelper {
-    private static void unpack(URL url, Path dir) throws IOException
-    {
-        try (ZipInputStream input = IOHelper.newZipInput(url))
-        {
-            for (ZipEntry entry = input.getNextEntry(); entry != null; entry = input.getNextEntry())
-            {
-                if (entry.isDirectory())
-                {
+    private static void unpack(URL url, Path dir) throws IOException {
+        try (ZipInputStream input = IOHelper.newZipInput(url)) {
+            for (ZipEntry entry = input.getNextEntry(); entry != null; entry = input.getNextEntry()) {
+                if (entry.isDirectory()) {
                     continue; // Skip directories
                 }
 

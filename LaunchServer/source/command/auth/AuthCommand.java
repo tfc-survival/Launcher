@@ -7,28 +7,23 @@ import launchserver.command.Command;
 
 import java.util.UUID;
 
-public final class AuthCommand extends Command
-{
-    public AuthCommand(LaunchServer server)
-    {
+public final class AuthCommand extends Command {
+    public AuthCommand(LaunchServer server) {
         super(server);
     }
 
     @Override
-    public String getArgsDescription()
-    {
+    public String getArgsDescription() {
         return "<login> <password>";
     }
 
     @Override
-    public String getUsageDescription()
-    {
+    public String getUsageDescription() {
         return "Try to auth with specified login and password";
     }
 
     @Override
-    public void invoke(String... args) throws Throwable
-    {
+    public void invoke(String... args) throws Throwable {
         verifyArgs(args, 2);
         String login = args[0];
         String password = args[1];

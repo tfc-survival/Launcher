@@ -14,27 +14,23 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public abstract class Request<R>
-{
+public abstract class Request<R> {
     @LauncherAPI
     protected final Config config;
     private final AtomicBoolean started = new AtomicBoolean(false);
 
     @LauncherAPI
-    protected Request(Config config)
-    {
+    protected Request(Config config) {
         this.config = config == null ? Launcher.getConfig() : config;
     }
 
     @LauncherAPI
-    protected Request()
-    {
+    protected Request() {
         this(null);
     }
 
     @LauncherAPI
-    public static void requestError(String message) throws RequestException
-    {
+    public static void requestError(String message) throws RequestException {
         throw new RequestException(message);
     }
 
@@ -46,20 +42,16 @@ public abstract class Request<R>
 
     @LauncherAPI
     @SuppressWarnings("DesignForExtension")
-    public R request() throws Throwable
-    {
-        if (!started.compareAndSet(false, true))
-        {
+    public R request() throws Throwable {
+        if (!started.compareAndSet(false, true)) {
             throw new IllegalStateException("Request already started");
         }
 
         // Make request to LaunchServer
-        try (Socket socket = IOHelper.newSocket())
-        {
+        try (Socket socket = IOHelper.newSocket()) {
             socket.connect(IOHelper.resolve(config.address));
             try (HInput input = new HInput(IOHelper.newBufferedInputStream(socket.getInputStream()));
-                 HOutput output = new HOutput(IOHelper.newBufferedOutStream(socket.getOutputStream())))
-            {
+                 HOutput output = new HOutput(IOHelper.newBufferedOutStream(socket.getOutputStream()))) {
                 writeHandshake(input, output);
                 return requestDo(input, output);
             }
@@ -67,17 +59,14 @@ public abstract class Request<R>
     }
 
     @LauncherAPI
-    protected final void readError(HInput input) throws IOException
-    {
+    protected final void readError(HInput input) throws IOException {
         String error = input.readString(0);
-        if (!error.isEmpty())
-        {
+        if (!error.isEmpty()) {
             requestError(error);
         }
     }
 
-    private void writeHandshake(HInput input, HOutput output) throws IOException
-    {
+    private void writeHandshake(HInput input, HOutput output) throws IOException {
         // Write handshake
         output.writeInt(Launcher.PROTOCOL_MAGIC);
         output.writeBigInteger(config.publicKey.getModulus(), SecurityHelper.RSA_KEY_LENGTH + 1);
@@ -85,15 +74,13 @@ public abstract class Request<R>
         output.flush();
 
         // Verify is accepted
-        if (!input.readBoolean())
-        {
+        if (!input.readBoolean()) {
             requestError("Serverside not accepted this connection");
         }
     }
 
     @LauncherAPI
-    public enum Type implements Itf
-    {
+    public enum Type implements Itf {
         PING(0), // Ping request
         LAUNCHER(1), UPDATE(2), UPDATE_LIST(3), // Update requests
         AUTH(4), JOIN_SERVER(5), CHECK_SERVER(6), // Auth requests
@@ -102,20 +89,17 @@ public abstract class Request<R>
         private static final EnumSerializer<Type> SERIALIZER = new EnumSerializer<>(Type.class);
         private final int n;
 
-        Type(int n)
-        {
+        Type(int n) {
             this.n = n;
         }
 
         @LauncherAPI
-        public static Type read(HInput input) throws IOException
-        {
+        public static Type read(HInput input) throws IOException {
             return SERIALIZER.read(input);
         }
 
         @Override
-        public int getNumber()
-        {
+        public int getNumber() {
             return n;
         }
     }

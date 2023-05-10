@@ -1,6 +1,5 @@
 package launchserver.auth;
 
-import org.mariadb.jdbc.MariaDbDataSource;
 import com.zaxxer.hikari.HikariDataSource;
 import launcher.LauncherAPI;
 import launcher.helper.LogHelper;
@@ -9,13 +8,13 @@ import launcher.serialize.config.ConfigObject;
 import launcher.serialize.config.entry.BlockConfigEntry;
 import launcher.serialize.config.entry.IntegerConfigEntry;
 import launcher.serialize.config.entry.StringConfigEntry;
+import org.mariadb.jdbc.MariaDbDataSource;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-public final class MariaDBSourceConfig extends ConfigObject implements AutoCloseable, SQLSourceConfig
-{
+public final class MariaDBSourceConfig extends ConfigObject implements AutoCloseable, SQLSourceConfig {
     @LauncherAPI
     public static final int TIMEOUT = VerifyHelper.verifyInt(
             Integer.parseInt(System.getProperty("launcher.mysql.idleTimeout", Integer.toString(5000))),
@@ -39,8 +38,7 @@ public final class MariaDBSourceConfig extends ConfigObject implements AutoClose
     private boolean hikari;
 
     @LauncherAPI
-    public MariaDBSourceConfig(String poolName, BlockConfigEntry block)
-    {
+    public MariaDBSourceConfig(String poolName, BlockConfigEntry block) {
         super(block);
         this.poolName = poolName;
         address = VerifyHelper.verify(block.getEntryValue("address", StringConfigEntry.class),
@@ -57,19 +55,15 @@ public final class MariaDBSourceConfig extends ConfigObject implements AutoClose
     }
 
     @Override
-    public synchronized void close()
-    {
-        if (hikari)
-        { // Shutdown hikari pool
+    public synchronized void close() {
+        if (hikari) { // Shutdown hikari pool
             ((HikariDataSource) source).close();
         }
     }
 
     @LauncherAPI
-    public synchronized Connection getConnection() throws SQLException
-    {
-        if (source == null)
-        { // New data source
+    public synchronized Connection getConnection() throws SQLException {
+        if (source == null) { // New data source
             MariaDbDataSource mariaDbSource = new MariaDbDataSource();
 
             // Нету такого функционала у конектора MariaDB, попробуем так
@@ -100,8 +94,7 @@ public final class MariaDBSourceConfig extends ConfigObject implements AutoClose
 
             // Try using HikariCP
             source = mariaDbSource;
-            try
-            {
+            try {
                 Class.forName("com.zaxxer.hikari.HikariDataSource");
                 hikari = true; // Used for shutdown. Not instanceof because of possible classpath error
 
@@ -118,9 +111,7 @@ public final class MariaDBSourceConfig extends ConfigObject implements AutoClose
                 // Replace source with hds
                 source = hikariSource;
                 LogHelper.info("HikariCP pooling enabled for '%s'", poolName);
-            }
-            catch (ClassNotFoundException ignored)
-            {
+            } catch (ClassNotFoundException ignored) {
                 LogHelper.warning("HikariCP isn't in classpath for '%s'", poolName);
             }
         }

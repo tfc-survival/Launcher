@@ -8,20 +8,16 @@ import launcher.serialize.HOutput;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-public abstract class StreamObject
-{
+public abstract class StreamObject {
     /* public StreamObject(HInput input) */
 
     @LauncherAPI
     public abstract void write(HOutput output) throws IOException;
 
     @LauncherAPI
-    public final byte[] write() throws IOException
-    {
-        try (ByteArrayOutputStream array = IOHelper.newByteArrayOutput())
-        {
-            try (HOutput output = new HOutput(array))
-            {
+    public final byte[] write() throws IOException {
+        try (ByteArrayOutputStream array = IOHelper.newByteArrayOutput()) {
+            try (HOutput output = new HOutput(array)) {
                 write(output);
             }
             return array.toByteArray();
@@ -29,8 +25,7 @@ public abstract class StreamObject
     }
 
     @FunctionalInterface
-    public interface Adapter<O extends StreamObject>
-    {
+    public interface Adapter<O extends StreamObject> {
         @LauncherAPI
         O convert(HInput input) throws IOException;
     }

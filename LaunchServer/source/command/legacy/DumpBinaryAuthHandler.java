@@ -19,15 +19,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-public final class DumpBinaryAuthHandler extends Command
-{
-    public DumpBinaryAuthHandler(LaunchServer server)
-    {
+public final class DumpBinaryAuthHandler extends Command {
+    public DumpBinaryAuthHandler(LaunchServer server) {
         super(server);
     }
 
-    private static StringConfigEntry cc(String value)
-    {
+    private static StringConfigEntry cc(String value) {
         StringConfigEntry entry = new StringConfigEntry(value, true, 4);
         entry.setComment(0, "\n\t"); // Pre-name
         entry.setComment(2, " "); // Pre-value
@@ -35,20 +32,17 @@ public final class DumpBinaryAuthHandler extends Command
     }
 
     @Override
-    public String getArgsDescription()
-    {
+    public String getArgsDescription() {
         return null;
     }
 
     @Override
-    public String getUsageDescription()
-    {
+    public String getUsageDescription() {
         return "Dumps BinaryAuthHandler to text file";
     }
 
     @Override
-    public void invoke(String... args)
-    {
+    public void invoke(String... args) {
         LogHelper.subInfo("Dumping BinaryAuthHandler file...");
         BinaryFileAuthHandler handler = (BinaryFileAuthHandler) server.config.authHandler;
         boolean next = false;
@@ -56,8 +50,7 @@ public final class DumpBinaryAuthHandler extends Command
         // Write auth blocks to map
         Set<Map.Entry<UUID, Entry>> entrySet = handler.entrySet();
         Map<String, ConfigEntry<?>> map = new LinkedHashMap<>(entrySet.size());
-        for (Map.Entry<UUID, Entry> entry : entrySet)
-        {
+        for (Map.Entry<UUID, Entry> entry : entrySet) {
             UUID uuid = entry.getKey();
             Entry auth = entry.getValue();
 
@@ -65,24 +58,19 @@ public final class DumpBinaryAuthHandler extends Command
             Map<String, ConfigEntry<?>> authMap = new LinkedHashMap<>(entrySet.size());
             authMap.put("username", cc(auth.getUsername()));
             String accessToken = auth.getAccessToken();
-            if (accessToken != null)
-            {
+            if (accessToken != null) {
                 authMap.put("accessToken", cc(accessToken));
             }
             String serverID = auth.getServerID();
-            if (serverID != null)
-            {
+            if (serverID != null) {
                 authMap.put("serverID", cc(serverID));
             }
 
             // Create and add auth block
             BlockConfigEntry authBlock = new BlockConfigEntry(authMap, true, 5);
-            if (next)
-            {
+            if (next) {
                 authBlock.setComment(0, "\n"); // Pre-name
-            }
-            else
-            {
+            } else {
                 next = true;
             }
             authBlock.setComment(2, " "); // Pre-value
@@ -91,14 +79,11 @@ public final class DumpBinaryAuthHandler extends Command
         }
 
         // Write auth handler file
-        try (BufferedWriter writer = IOHelper.newWriter(Paths.get("authHandler.dump.cfg")))
-        {
+        try (BufferedWriter writer = IOHelper.newWriter(Paths.get("authHandler.dump.cfg"))) {
             BlockConfigEntry authFile = new BlockConfigEntry(map, true, 1);
             authFile.setComment(0, "\n");
             TextConfigWriter.write(authFile, writer, true);
-        }
-        catch (IOException e)
-        {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }

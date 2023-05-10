@@ -2,25 +2,21 @@ package launchserver.command;
 
 import launcher.LauncherAPI;
 
-public final class CommandException extends Exception
-{
+public final class CommandException extends Exception {
     private static final long serialVersionUID = -6588814993972117772L;
 
     @LauncherAPI
-    public CommandException(String message)
-    {
+    public CommandException(String message) {
         super(message);
     }
 
     @LauncherAPI
-    public CommandException(Throwable exc)
-    {
+    public CommandException(Throwable exc) {
         super(exc);
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return getMessage();
     }
 }

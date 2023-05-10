@@ -3,28 +3,23 @@ package launchserver.command.basic;
 import launchserver.LaunchServer;
 import launchserver.command.Command;
 
-public final class RebindCommand extends Command
-{
-    public RebindCommand(LaunchServer server)
-    {
+public final class RebindCommand extends Command {
+    public RebindCommand(LaunchServer server) {
         super(server);
     }
 
     @Override
-    public String getArgsDescription()
-    {
+    public String getArgsDescription() {
         return null;
     }
 
     @Override
-    public String getUsageDescription()
-    {
+    public String getUsageDescription() {
         return "Rebind server socket";
     }
 
     @Override
-    public void invoke(String... args)
-    {
+    public void invoke(String... args) {
         server.rebindServerSocket();
     }
 }

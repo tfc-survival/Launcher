@@ -10,34 +10,29 @@ import launcher.serialize.HOutput;
 
 import java.io.IOException;
 
-public final class CheckServerRequest extends Request<PlayerProfile>
-{
+public final class CheckServerRequest extends Request<PlayerProfile> {
     private final String username;
     private final String serverID;
 
     @LauncherAPI
-    public CheckServerRequest(Config config, String username, String serverID)
-    {
+    public CheckServerRequest(Config config, String username, String serverID) {
         super(config);
         this.username = VerifyHelper.verifyUsername(username);
         this.serverID = JoinServerRequest.verifyServerID(serverID);
     }
 
     @LauncherAPI
-    public CheckServerRequest(String username, String serverID)
-    {
+    public CheckServerRequest(String username, String serverID) {
         this(null, username, serverID);
     }
 
     @Override
-    public Type getType()
-    {
+    public Type getType() {
         return Type.CHECK_SERVER;
     }
 
     @Override
-    protected PlayerProfile requestDo(HInput input, HOutput output) throws IOException
-    {
+    protected PlayerProfile requestDo(HInput input, HOutput output) throws IOException {
         output.writeString(username, 64);
         output.writeASCII(serverID, 41); // 1 char for minus sign
         output.flush();

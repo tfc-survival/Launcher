@@ -19,8 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
-public final class ServerPinger
-{
+public final class ServerPinger {
     // Constants
     private static final String LEGACY_PING_HOST_MAGIC = "§1";
     private static final String LEGACY_PING_HOST_CHANNEL = "MC|PingHost";
@@ -38,52 +37,40 @@ public final class ServerPinger
     private long cacheUntil = Long.MIN_VALUE;
 
     @LauncherAPI
-    public ServerPinger(InetSocketAddress address, String version)
-    {
+    public ServerPinger(InetSocketAddress address, String version) {
         this.address = Objects.requireNonNull(address, "address");
         this.version = Objects.requireNonNull(version, "version");
     }
 
-    private static String readUTF16String(HInput input) throws IOException
-    {
+    private static String readUTF16String(HInput input) throws IOException {
         int length = input.readUnsignedShort() << 1;
         byte[] encoded = input.readByteArray(-length);
         return new String(encoded, StandardCharsets.UTF_16BE);
     }
 
-    private static void writeUTF16String(HOutput output, String s) throws IOException
-    {
+    private static void writeUTF16String(HOutput output, String s) throws IOException {
         output.writeShort((short) s.length());
         output.stream.write(s.getBytes(StandardCharsets.UTF_16BE));
     }
 
     @LauncherAPI
-    public Result ping()
-    {
-        synchronized (cacheLock)
-        {
+    public Result ping() {
+        synchronized (cacheLock) {
             // Update ping cache
-            if (System.currentTimeMillis() >= cacheUntil)
-            {
-                try
-                {
+            if (System.currentTimeMillis() >= cacheUntil) {
+                try {
                     cache = doPing();
                     cacheError = null;
-                }
-                catch (Throwable exc)
-                {
+                } catch (Throwable exc) {
                     cache = null;
                     cacheError = exc;
-                }
-                finally
-                {
+                } finally {
                     cacheUntil = System.currentTimeMillis() + IOHelper.SOCKET_TIMEOUT;
                 }
             }
 
             // Verify is result available
-            if (cacheError != null)
-            {
+            if (cacheError != null) {
                 JVMHelper.UNSAFE.throwException(cacheError);
             }
 
@@ -92,34 +79,27 @@ public final class ServerPinger
         }
     }
 
-    private Result doPing() throws IOException
-    {
-        try (Socket socket = IOHelper.newSocket())
-        {
+    private Result doPing() throws IOException {
+        try (Socket socket = IOHelper.newSocket()) {
             socket.connect(IOHelper.resolve(address), IOHelper.SOCKET_TIMEOUT);
             try (HInput input = new HInput(socket.getInputStream());
-                 HOutput output = new HOutput(socket.getOutputStream()))
-            {
+                 HOutput output = new HOutput(socket.getOutputStream())) {
                 return Version.compare(version, "1.7") >= 0 ? modernPing(input, output) : legacyPing(input, output, Version.compare(version, "1.6") >= 0);
             }
         }
     }
 
-    private Result legacyPing(HInput input, HOutput output, boolean mc16) throws IOException
-    {
+    private Result legacyPing(HInput input, HOutput output, boolean mc16) throws IOException {
         output.writeUnsignedByte(0xFE); // 254 packet ID, Server list ping
         output.writeUnsignedByte(0x01); // Server ping payload
-        if (mc16)
-        {
+        if (mc16) {
             output.writeUnsignedByte(0xFA); // 250 packet ID, Custom payload
             writeUTF16String(output, LEGACY_PING_HOST_CHANNEL); // Custom payload name
 
             // Prepare custom payload packet
             byte[] customPayloadPacket;
-            try (ByteArrayOutputStream packetArray = IOHelper.newByteArrayOutput())
-            {
-                try (HOutput packetOutput = new HOutput(packetArray))
-                {
+            try (ByteArrayOutputStream packetArray = IOHelper.newByteArrayOutput()) {
+                try (HOutput packetOutput = new HOutput(packetArray)) {
                     packetOutput.writeUnsignedByte(78); // Protocol version // Для пинга можно указывать любой (здесь с 1.6.4)
                     writeUTF16String(packetOutput, address.getHostString()); // Server address
                     packetOutput.writeInt(address.getPort()); // Server port
@@ -135,8 +115,7 @@ public final class ServerPinger
 
         // Raed kick (response) packet
         int kickPacketID = input.readUnsignedByte();
-        if (kickPacketID != 0xFF)
-        {
+        if (kickPacketID != 0xFF) {
             throw new IOException("Illegal kick packet ID: " + kickPacketID);
         }
 
@@ -144,15 +123,13 @@ public final class ServerPinger
         String response = readUTF16String(input);
         LogHelper.debug("Ping response (legacy): '%s'", response);
         String[] splitted = LEGACY_PING_HOST_DELIMETER.split(response);
-        if (splitted.length != 6)
-        {
+        if (splitted.length != 6) {
             throw new IOException("Tokens count mismatch");
         }
 
         // Verify all parts
         String magic = splitted[0];
-        if (!magic.equals(LEGACY_PING_HOST_MAGIC))
-        {
+        if (!magic.equals(LEGACY_PING_HOST_MAGIC)) {
             throw new IOException("Magic string mismatch: " + magic);
         }
         int protocol = Integer.parseInt(splitted[1]);
@@ -161,8 +138,7 @@ public final class ServerPinger
             throw new IOException("Protocol mismatch: " + protocol);
         }
         String clientVersion = splitted[2];
-        if (!clientVersion.equals(version))
-        {
+        if (!clientVersion.equals(version)) {
             throw new IOException(String.format("Version mismatch: '%s'", clientVersion));
         }
         int onlinePlayers = VerifyHelper.verifyInt(Integer.parseInt(splitted[4]),
@@ -174,14 +150,11 @@ public final class ServerPinger
         return new Result(onlinePlayers, maxPlayers, response);
     }
 
-    private Result modernPing(HInput input, HOutput output) throws IOException
-    {
+    private Result modernPing(HInput input, HOutput output) throws IOException {
         // Prepare handshake packet
         byte[] handshakePacket;
-        try (ByteArrayOutputStream packetArray = IOHelper.newByteArrayOutput())
-        {
-            try (HOutput packetOutput = new HOutput(packetArray))
-            {
+        try (ByteArrayOutputStream packetArray = IOHelper.newByteArrayOutput()) {
+            try (HOutput packetOutput = new HOutput(packetArray)) {
                 packetOutput.writeVarInt(0x0); // Handshake packet ID
                 packetOutput.writeVarInt(-1); // Protocol version // Опять же для пинга версия протокола не важна
                 packetOutput.writeString(address.getHostString(), 0); // Server address
@@ -201,19 +174,16 @@ public final class ServerPinger
 
         // ab is a dirty fix for some servers (noticed KCauldron 1.7.10)
         int ab = 0;
-        while (ab <= 0)
-        {
+        while (ab <= 0) {
             ab = IOHelper.verifyLength(input.readVarInt(), PACKET_LENGTH);
         }
 
         // Read outer status response packet ID
         String response;
         byte[] statusPacket = input.readByteArray(-ab);
-        try (HInput packetInput = new HInput(statusPacket))
-        {
+        try (HInput packetInput = new HInput(statusPacket)) {
             int statusPacketID = packetInput.readVarInt();
-            if (statusPacketID != 0x0)
-            {
+            if (statusPacketID != 0x0) {
                 throw new IOException("Illegal status packet ID: " + statusPacketID);
             }
             response = packetInput.readString(PACKET_LENGTH);
@@ -230,8 +200,7 @@ public final class ServerPinger
         return new Result(online, max, response);
     }
 
-    public static final class Result
-    {
+    public static final class Result {
         @LauncherAPI
         public final int onlinePlayers;
         @LauncherAPI
@@ -239,8 +208,7 @@ public final class ServerPinger
         @LauncherAPI
         public final String raw;
 
-        public Result(int onlinePlayers, int maxPlayers, String raw)
-        {
+        public Result(int onlinePlayers, int maxPlayers, String raw) {
             this.onlinePlayers = VerifyHelper.verifyInt(onlinePlayers,
                     VerifyHelper.NOT_NEGATIVE, "onlinePlayers can't be < 0");
             this.maxPlayers = VerifyHelper.verifyInt(maxPlayers,
@@ -249,8 +217,7 @@ public final class ServerPinger
         }
 
         @LauncherAPI
-        public boolean isOverfilled()
-        {
+        public boolean isOverfilled() {
             return onlinePlayers >= maxPlayers;
         }
     }

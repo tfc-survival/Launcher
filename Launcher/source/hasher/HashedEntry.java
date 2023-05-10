@@ -8,8 +8,7 @@ import launcher.serialize.stream.StreamObject;
 
 import java.io.IOException;
 
-public abstract class HashedEntry extends StreamObject
-{
+public abstract class HashedEntry extends StreamObject {
     @LauncherAPI
     public boolean flag; // For external usage
 
@@ -20,25 +19,21 @@ public abstract class HashedEntry extends StreamObject
     public abstract long size();
 
     @LauncherAPI
-    public enum Type implements Itf
-    {
+    public enum Type implements Itf {
         DIR(1), FILE(2);
         private static final EnumSerializer<Type> SERIALIZER = new EnumSerializer<>(Type.class);
         private final int n;
 
-        Type(int n)
-        {
+        Type(int n) {
             this.n = n;
         }
 
-        public static Type read(HInput input) throws IOException
-        {
+        public static Type read(HInput input) throws IOException {
             return SERIALIZER.read(input);
         }
 
         @Override
-        public int getNumber()
-        {
+        public int getNumber() {
             return n;
         }
     }

@@ -18,28 +18,23 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 
-public final class DownloadClientCommand extends Command
-{
-    public DownloadClientCommand(LaunchServer server)
-    {
+public final class DownloadClientCommand extends Command {
+    public DownloadClientCommand(LaunchServer server) {
         super(server);
     }
 
     @Override
-    public String getArgsDescription()
-    {
+    public String getArgsDescription() {
         return "<version> <dir>";
     }
 
     @Override
-    public String getUsageDescription()
-    {
+    public String getUsageDescription() {
         return "Download client dir";
     }
 
     @Override
-    public void invoke(String... args) throws Throwable
-    {
+    public void invoke(String... args) throws Throwable {
         verifyArgs(args, 2);
         String version = args[0];
         if (version.contains("-")) version = version.split("-")[0];
@@ -49,8 +44,7 @@ public final class DownloadClientCommand extends Command
         String clientMask = String.format("clients/%s.zip", args[0]);
         String profileMask = String.format("clients/%s.cfg", args[0]);
 
-        for (String mirror : mirrors)
-        {
+        for (String mirror : mirrors) {
             URL clientUrl = new URL(mirror + clientMask);
             URL profileUrl = new URL(mirror + profileMask);
 
@@ -63,10 +57,9 @@ public final class DownloadClientCommand extends Command
             // Download required client
             LogHelper.subInfo("Downloading client, it may take some time");
             Files.createDirectory(clientDir);
-            if(!UnzipHelper.downloadZip(clientUrl, clientDir)) return;
+            if (!UnzipHelper.downloadZip(clientUrl, clientDir)) return;
 
-            try (BufferedReader reader = IOHelper.newReader(profileUrl))
-            {
+            try (BufferedReader reader = IOHelper.newReader(profileUrl)) {
                 client = new ClientProfile(TextConfigReader.read(reader, false));
             }
             client.setTitle(dirName);
@@ -74,8 +67,7 @@ public final class DownloadClientCommand extends Command
             client.setAssetIndex(version);
             client.block.getEntry("dir", StringConfigEntry.class).setValue(dirName);
             try (BufferedWriter writer = IOHelper.newWriter(IOHelper.resolveIncremental(server.profilesDir,
-                    dirName, "cfg")))
-            {
+                    dirName, "cfg"))) {
                 TextConfigWriter.write(client.block, writer, true);
             }
 

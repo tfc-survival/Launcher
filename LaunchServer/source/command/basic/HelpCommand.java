@@ -7,36 +7,29 @@ import launchserver.command.CommandException;
 
 import java.util.Map.Entry;
 
-public final class HelpCommand extends Command
-{
-    public HelpCommand(LaunchServer server)
-    {
+public final class HelpCommand extends Command {
+    public HelpCommand(LaunchServer server) {
         super(server);
     }
 
-    private static void printCommand(String name, Command command)
-    {
+    private static void printCommand(String name, Command command) {
         String args = command.getArgsDescription();
         LogHelper.subInfo("%s %s - %s", name, args == null ? "[nothing]" : args, command.getUsageDescription());
     }
 
     @Override
-    public String getArgsDescription()
-    {
+    public String getArgsDescription() {
         return "[command name]";
     }
 
     @Override
-    public String getUsageDescription()
-    {
+    public String getUsageDescription() {
         return "Print command usage";
     }
 
     @Override
-    public void invoke(String... args) throws CommandException
-    {
-        if (args.length < 1)
-        {
+    public void invoke(String... args) throws CommandException {
+        if (args.length < 1) {
             printCommands();
             return;
         }
@@ -45,15 +38,12 @@ public final class HelpCommand extends Command
         printCommand(args[0]);
     }
 
-    private void printCommand(String name) throws CommandException
-    {
+    private void printCommand(String name) throws CommandException {
         printCommand(name, server.commandHandler.lookup(name));
     }
 
-    private void printCommands()
-    {
-        for (Entry<String, Command> entry : server.commandHandler.commandsMap().entrySet())
-        {
+    private void printCommands() {
+        for (Entry<String, Command> entry : server.commandHandler.commandsMap().entrySet()) {
             printCommand(entry.getKey(), entry.getValue());
         }
     }

@@ -7,7 +7,6 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.CLASS)
 @Target({ElementType.TYPE, ElementType.FIELD, ElementType.CONSTRUCTOR, ElementType.METHOD})
-public @interface LauncherAPI
-{
+public @interface LauncherAPI {
     /* This annotation implies that method/field/class should not be renamed or obfuscated */
 }

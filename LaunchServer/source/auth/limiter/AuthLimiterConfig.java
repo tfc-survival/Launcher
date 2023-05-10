@@ -3,11 +3,13 @@ package launchserver.auth.limiter;
 import launcher.LauncherAPI;
 import launcher.helper.VerifyHelper;
 import launcher.serialize.config.ConfigObject;
-import launcher.serialize.config.entry.*;
+import launcher.serialize.config.entry.BlockConfigEntry;
+import launcher.serialize.config.entry.BooleanConfigEntry;
+import launcher.serialize.config.entry.IntegerConfigEntry;
+import launcher.serialize.config.entry.StringConfigEntry;
 import launchserver.LaunchServer;
 
-public class AuthLimiterConfig extends ConfigObject
-{
+public class AuthLimiterConfig extends ConfigObject {
     @LauncherAPI
     public LaunchServer server;
     @LauncherAPI
@@ -37,8 +39,7 @@ public class AuthLimiterConfig extends ConfigObject
     public String hwidDBPass;
 
     @LauncherAPI
-    public AuthLimiterConfig(BlockConfigEntry block)
-    {
+    public AuthLimiterConfig(BlockConfigEntry block) {
         super(block);
         authRateLimit = VerifyHelper.verifyInt(block.getEntryValue("authRateLimit", IntegerConfigEntry.class),
                 VerifyHelper.range(0, 1000000), "Illegal authRateLimit");

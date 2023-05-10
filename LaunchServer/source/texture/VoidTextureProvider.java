@@ -5,28 +5,23 @@ import launcher.serialize.config.entry.BlockConfigEntry;
 
 import java.util.UUID;
 
-public final class VoidTextureProvider extends TextureProvider
-{
-    public VoidTextureProvider(BlockConfigEntry block)
-    {
+public final class VoidTextureProvider extends TextureProvider {
+    public VoidTextureProvider(BlockConfigEntry block) {
         super(block);
     }
 
     @Override
-    public void close()
-    {
+    public void close() {
         // Do nothing
     }
 
     @Override
-    public Texture getCloakTexture(UUID uuid, String username)
-    {
+    public Texture getCloakTexture(UUID uuid, String username) {
         return null; // Always nothing
     }
 
     @Override
-    public Texture getSkinTexture(UUID uuid, String username)
-    {
+    public Texture getSkinTexture(UUID uuid, String username) {
         return null; // Always nothing
     }
 }

@@ -8,13 +8,14 @@ import com.google.gson.annotations.Expose;
 import launcher.helper.IOHelper;
 import launcher.helper.LogHelper;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AuthLimiterIPConfig
-{
+public class AuthLimiterIPConfig {
     public static Path ipConfigPath;
     public static Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
     public static AuthLimiterIPConfig Instance;
@@ -28,16 +29,13 @@ public class AuthLimiterIPConfig
         ipConfigPath = file;
         if (IOHelper.exists(ipConfigPath)) {
             LogHelper.subDebug("IP List file found! Loading...");
-            try
-            {
+            try {
                 Instance = gson.fromJson(IOHelper.newReader(ipConfigPath), AuthLimiterIPConfig.class);
                 return;
-            }
-            catch (JsonIOException | IOException error) {
+            } catch (JsonIOException | IOException error) {
                 LogHelper.subWarning("Ip List not reading!");
                 if (LogHelper.isDebugEnabled()) LogHelper.error(error);
-            }
-            catch (JsonSyntaxException error) {
+            } catch (JsonSyntaxException error) {
                 LogHelper.subWarning("Invalid file syntax!");
                 if (LogHelper.isDebugEnabled()) LogHelper.error(error);
             }
@@ -48,8 +46,7 @@ public class AuthLimiterIPConfig
         Instance.saveIPConfig();
     }
 
-    public void saveIPConfig() throws Exception
-    {
+    public void saveIPConfig() throws Exception {
         File ipConfigFile = ipConfigPath.toFile();
         if (!ipConfigFile.exists()) ipConfigFile.createNewFile();
 

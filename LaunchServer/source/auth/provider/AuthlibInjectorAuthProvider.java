@@ -12,29 +12,23 @@ import java.net.URL;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
-public class AuthlibInjectorAuthProvider extends AuthProvider
-{
+public class AuthlibInjectorAuthProvider extends AuthProvider {
     private static final Pattern UUID_REGEX = Pattern.compile("(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})");
     private static URL URL;
     private static String urlApiInjector;
 
-    AuthlibInjectorAuthProvider(BlockConfigEntry block)
-    {
+    AuthlibInjectorAuthProvider(BlockConfigEntry block) {
         super(block);
         urlApiInjector = block.getEntryValue("urlApiInjector", StringConfigEntry.class);
-        try
-        {
+        try {
             URL = new URL(urlApiInjector + "/authserver/authenticate");
-        }
-        catch (MalformedURLException e)
-        {
+        } catch (MalformedURLException e) {
             throw new InternalError(e);
         }
     }
 
     @Override
-    public AuthProviderResult auth(String login, String password, String ip) throws Throwable
-    {
+    public AuthProviderResult auth(String login, String password, String ip) throws Throwable {
         String clientToken = UUID.randomUUID().toString().replaceAll("-", "");
 
         // https://wiki.vg/Authentication#Payload
@@ -44,13 +38,11 @@ public class AuthlibInjectorAuthProvider extends AuthProvider
 
         // Verify there's no error
         JsonObject response = HTTPRequestHelper.makeAuthlibRequest(URL, request, "Authlib-Injector");
-        if (response == null)
-        {
+        if (response == null) {
             authError("Empty Authlib-Injector response");
         }
         JsonValue errorMessage = response.get("errorMessage");
-        if (errorMessage != null)
-        {
+        if (errorMessage != null) {
             authError(errorMessage.asString());
         }
 
@@ -66,8 +58,7 @@ public class AuthlibInjectorAuthProvider extends AuthProvider
     }
 
     @Override
-    public void close()
-    {
+    public void close() {
         // Do nothing
     }
 }

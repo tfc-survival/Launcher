@@ -16,8 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-public final class FileAuthProvider extends DigestAuthProvider
-{
+public final class FileAuthProvider extends DigestAuthProvider {
     private final Path file;
 
     // Cache
@@ -25,36 +24,29 @@ public final class FileAuthProvider extends DigestAuthProvider
     private final Object cacheLock = new Object();
     private FileTime cacheLastModified;
 
-    FileAuthProvider(BlockConfigEntry block)
-    {
+    FileAuthProvider(BlockConfigEntry block) {
         super(block);
         file = IOHelper.toPath(block.getEntryValue("file", StringConfigEntry.class));
 
         // Try to update cache
-        try
-        {
+        try {
             updateCache();
-        }
-        catch (IOException e)
-        {
+        } catch (IOException e) {
             LogHelper.error(e);
         }
     }
 
     @Override
-    public AuthProviderResult auth(String login, String password, String ip) throws IOException
-    {
+    public AuthProviderResult auth(String login, String password, String ip) throws IOException {
         Entry entry;
-        synchronized (cacheLock)
-        {
+        synchronized (cacheLock) {
             updateCache();
             entry = entries.get(CommonHelper.low(login));
         }
 
         // Verify digest and return true username
         verifyDigest(entry == null ? null : entry.password, password);
-        if (entry == null || entry.ip != null && !entry.ip.equals(ip))
-        {
+        if (entry == null || entry.ip != null && !entry.ip.equals(ip)) {
             authError("Authentication from this IP is not allowed");
         }
 
@@ -63,32 +55,27 @@ public final class FileAuthProvider extends DigestAuthProvider
     }
 
     @Override
-    public void close()
-    {
+    public void close() {
         // Do nothing
     }
 
-    private void updateCache() throws IOException
-    {
+    private void updateCache() throws IOException {
         FileTime lastModified = IOHelper.readAttributes(file).lastModifiedTime();
-        if (lastModified.equals(cacheLastModified))
-        {
+        if (lastModified.equals(cacheLastModified)) {
             return; // Not modified, so cache is up-to-date
         }
 
         // Read file
         LogHelper.info("Recaching auth provider file: '%s'", file);
         BlockConfigEntry authFile;
-        try (BufferedReader reader = IOHelper.newReader(file))
-        {
+        try (BufferedReader reader = IOHelper.newReader(file)) {
             authFile = TextConfigReader.read(reader, false);
         }
 
         // Read entries from config block
         entries.clear();
         Set<Map.Entry<String, ConfigEntry<?>>> entrySet = authFile.getValue().entrySet();
-        for (Map.Entry<String, ConfigEntry<?>> entry : entrySet)
-        {
+        for (Map.Entry<String, ConfigEntry<?>> entry : entrySet) {
             String login = entry.getKey();
             ConfigEntry<?> value = VerifyHelper.verify(entry.getValue(), v -> v.getType() == Type.BLOCK,
                     String.format("Illegal config entry type: '%s'", login));
@@ -103,14 +90,12 @@ public final class FileAuthProvider extends DigestAuthProvider
         cacheLastModified = lastModified;
     }
 
-    private static final class Entry extends ConfigObject
-    {
+    private static final class Entry extends ConfigObject {
         private final String username;
         private final String password;
         private final String ip;
 
-        private Entry(BlockConfigEntry block)
-        {
+        private Entry(BlockConfigEntry block) {
             super(block);
             username = VerifyHelper.verifyUsername(block.getEntryValue("username", StringConfigEntry.class));
             password = VerifyHelper.verify(block.getEntryValue("password", StringConfigEntry.class),

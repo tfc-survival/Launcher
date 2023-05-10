@@ -16,8 +16,7 @@ import java.net.URL;
 import java.util.Objects;
 import java.util.UUID;
 
-public final class PlayerProfile extends StreamObject
-{
+public final class PlayerProfile extends StreamObject {
     @LauncherAPI
     public final UUID uuid;
     @LauncherAPI
@@ -26,8 +25,7 @@ public final class PlayerProfile extends StreamObject
     public final Texture skin, cloak;
 
     @LauncherAPI
-    public PlayerProfile(HInput input) throws IOException
-    {
+    public PlayerProfile(HInput input) throws IOException {
         uuid = input.readUUID();
         username = VerifyHelper.verifyUsername(input.readString(64));
         skin = input.readBoolean() ? new Texture(input) : null;
@@ -35,8 +33,7 @@ public final class PlayerProfile extends StreamObject
     }
 
     @LauncherAPI
-    public PlayerProfile(UUID uuid, String username, Texture skin, Texture cloak)
-    {
+    public PlayerProfile(UUID uuid, String username, Texture skin, Texture cloak) {
         this.uuid = Objects.requireNonNull(uuid, "uuid");
         this.username = VerifyHelper.verifyUsername(username);
         this.skin = skin;
@@ -44,38 +41,32 @@ public final class PlayerProfile extends StreamObject
     }
 
     @LauncherAPI
-    public static PlayerProfile newOfflineProfile(String username)
-    {
+    public static PlayerProfile newOfflineProfile(String username) {
         return new PlayerProfile(offlineUUID(username), username, null, null);
     }
 
     @LauncherAPI
-    public static UUID offlineUUID(String username)
-    {
+    public static UUID offlineUUID(String username) {
         return UUID.nameUUIDFromBytes(IOHelper.encodeASCII("OfflinePlayer:" + username));
     }
 
     @Override
-    public void write(HOutput output) throws IOException
-    {
+    public void write(HOutput output) throws IOException {
         output.writeUUID(uuid);
         output.writeString(username, 64);
 
         // Write textures
         output.writeBoolean(skin != null);
-        if (skin != null)
-        {
+        if (skin != null) {
             skin.write(output);
         }
         output.writeBoolean(cloak != null);
-        if (cloak != null)
-        {
+        if (cloak != null) {
             cloak.write(output);
         }
     }
 
-    public static final class Texture extends StreamObject
-    {
+    public static final class Texture extends StreamObject {
         private static final DigestAlgorithm DIGEST_ALGO = DigestAlgorithm.SHA256;
 
         // Instance
@@ -85,25 +76,21 @@ public final class PlayerProfile extends StreamObject
         public final byte[] digest;
 
         @LauncherAPI
-        public Texture(String url, byte[] digest)
-        {
+        public Texture(String url, byte[] digest) {
             this.url = IOHelper.verifyURL(url);
             this.digest = Objects.requireNonNull(digest, "digest");
         }
 
         @LauncherAPI
-        public Texture(String url, boolean cloak) throws IOException
-        {
+        public Texture(String url, boolean cloak) throws IOException {
             this.url = IOHelper.verifyURL(url);
 
             // Fetch texture
             byte[] texture;
-            try (InputStream input = IOHelper.newInput(new URL(url)))
-            {
+            try (InputStream input = IOHelper.newInput(new URL(url))) {
                 texture = IOHelper.read(input);
             }
-            try (ByteArrayInputStream input = new ByteArrayInputStream(texture))
-            {
+            try (ByteArrayInputStream input = new ByteArrayInputStream(texture)) {
                 IOHelper.readTexture(input, cloak); // Verify texture
             }
 
@@ -112,15 +99,13 @@ public final class PlayerProfile extends StreamObject
         }
 
         @LauncherAPI
-        public Texture(HInput input) throws IOException
-        {
+        public Texture(HInput input) throws IOException {
             url = IOHelper.verifyURL(input.readASCII(2048));
             digest = input.readByteArray(-DIGEST_ALGO.bytes);
         }
 
         @Override
-        public void write(HOutput output) throws IOException
-        {
+        public void write(HOutput output) throws IOException {
             output.writeASCII(url, 2048);
             output.writeByteArray(digest, -DIGEST_ALGO.bytes);
         }

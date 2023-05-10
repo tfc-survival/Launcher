@@ -12,8 +12,7 @@ import java.net.URL;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
-public class AuthlibAuthProvider extends AuthProvider
-{
+public class AuthlibAuthProvider extends AuthProvider {
     private static final Pattern UUID_REGEX = Pattern.compile("(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})");
     private static URL URL;
     private static String authUrl;
@@ -22,25 +21,20 @@ public class AuthlibAuthProvider extends AuthProvider
     //  https://wiki.vg/Authentication#Refresh
     //  https://wiki.vg/Authentication#Signout
 
-    AuthlibAuthProvider(BlockConfigEntry block)
-    {
+    AuthlibAuthProvider(BlockConfigEntry block) {
         super(block);
         authUrl = block.getEntryValue("authUrl", StringConfigEntry.class);
 
-        try
-        {
+        try {
             // Docs: https://wiki.vg/Authentication#Authenticate
             URL = new URL(authUrl); // "https://authserver.mojang.com/authenticate"
-        }
-        catch (MalformedURLException e)
-        {
+        } catch (MalformedURLException e) {
             throw new InternalError(e);
         }
     }
 
     @Override
-    public AuthProviderResult auth(String login, String password, String ip) throws Throwable
-    {
+    public AuthProviderResult auth(String login, String password, String ip) throws Throwable {
         String clientToken = UUID.randomUUID().toString().replaceAll("-", "");
 
         // https://wiki.vg/Authentication#Payload
@@ -50,13 +44,11 @@ public class AuthlibAuthProvider extends AuthProvider
 
         // Verify there's no error
         JsonObject response = HTTPRequestHelper.makeAuthlibRequest(URL, request, "Authlib");
-        if (response == null)
-        {
+        if (response == null) {
             authError("Empty Authlib response");
         }
         JsonValue errorMessage = response.get("errorMessage");
-        if (errorMessage != null)
-        {
+        if (errorMessage != null) {
             authError(errorMessage.asString());
         }
 
@@ -72,8 +64,7 @@ public class AuthlibAuthProvider extends AuthProvider
     }
 
     @Override
-    public void close()
-    {
+    public void close() {
         // Do nothing
     }
 }

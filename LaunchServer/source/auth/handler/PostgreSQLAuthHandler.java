@@ -1,15 +1,16 @@
 package launchserver.auth.handler;
 
-import launcher.helper.LogHelper;
 import launcher.helper.VerifyHelper;
 import launcher.serialize.config.entry.BlockConfigEntry;
-import launcher.serialize.config.entry.BooleanConfigEntry;
 import launcher.serialize.config.entry.StringConfigEntry;
 import launchserver.auth.PostgreSQLSourceConfig;
 import org.postgresql.util.PGobject;
 
 import java.io.IOException;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.UUID;
 
 public final class PostgreSQLAuthHandler extends CachedAuthHandler {

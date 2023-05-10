@@ -9,8 +9,8 @@ import launchserver.command.CommandException;
 import launchserver.command.auth.*;
 import launchserver.command.basic.*;
 import launchserver.command.hash.*;
-import launchserver.command.hwid.HWIDPardonCommand;
 import launchserver.command.hwid.HWIDBanCommand;
+import launchserver.command.hwid.HWIDPardonCommand;
 import launchserver.command.ip.IPAllowCommand;
 import launchserver.command.ip.IPBlockCommand;
 import launchserver.command.legacy.DumpBinaryAuthHandler;
@@ -19,12 +19,10 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-public abstract class CommandHandler implements Runnable
-{
+public abstract class CommandHandler implements Runnable {
     private final Map<String, Command> commands = new ConcurrentHashMap<>(32);
 
-    protected CommandHandler(LaunchServer server)
-    {
+    protected CommandHandler(LaunchServer server) {
         // Register basic commands
         registerCommand("help", new HelpCommand(server));
         registerCommand("version", new VersionCommand(server));
@@ -68,30 +66,25 @@ public abstract class CommandHandler implements Runnable
         registerCommand("dumpBinaryAuthHandler", new DumpBinaryAuthHandler(server));
     }
 
-    private static String[] parse(CharSequence line) throws CommandException
-    {
+    private static String[] parse(CharSequence line) throws CommandException {
         boolean quoted = false;
         boolean wasQuoted = false;
 
         // Read line char by char
         Collection<String> result = new LinkedList<>();
         StringBuilder builder = new StringBuilder(100);
-        for (int i = 0; i <= line.length(); i++)
-        {
+        for (int i = 0; i <= line.length(); i++) {
             boolean end = i >= line.length();
             char ch = end ? '\0' : line.charAt(i);
 
             // Maybe we should read next argument?
-            if (end || !quoted && Character.isWhitespace(ch))
-            {
-                if (end && quoted)
-                { // Quotes should be closed
+            if (end || !quoted && Character.isWhitespace(ch)) {
+                if (end && quoted) { // Quotes should be closed
                     throw new CommandException("Quotes wasn't closed");
                 }
 
                 // Empty args are ignored (except if was quoted)
-                if (wasQuoted || builder.length() > 0)
-                {
+                if (wasQuoted || builder.length() > 0) {
                     result.add(builder.toString());
                 }
 
@@ -102,15 +95,13 @@ public abstract class CommandHandler implements Runnable
             }
 
             // Append next char
-            switch (ch)
-            {
+            switch (ch) {
                 case '"': // "abc"de, "abc""de" also allowed
                     quoted = !quoted;
                     wasQuoted = true;
                     break;
                 case '\\': // All escapes, including spaces etc
-                    if (i + 1 >= line.length())
-                    {
+                    if (i + 1 >= line.length()) {
                         throw new CommandException("Escape character is not specified");
                     }
                     char next = line.charAt(i + 1);
@@ -128,14 +119,10 @@ public abstract class CommandHandler implements Runnable
     }
 
     @Override
-    public final void run()
-    {
-        try
-        {
+    public final void run() {
+        try {
             readLoop();
-        }
-        catch (IOException e)
-        {
+        } catch (IOException e) {
             LogHelper.error(e);
         }
     }
@@ -150,25 +137,20 @@ public abstract class CommandHandler implements Runnable
     public abstract String readLine() throws IOException;
 
     @LauncherAPI
-    public final Map<String, Command> commandsMap()
-    {
+    public final Map<String, Command> commandsMap() {
         return Collections.unmodifiableMap(commands);
     }
 
     @LauncherAPI
-    public final void eval(String line, boolean bell)
-    {
+    public final void eval(String line, boolean bell) {
         LogHelper.info("Command '%s'", line);
 
         // Parse line to tokens
         String[] args;
-        try
-        {
+        try {
             args = parse(line);
-            if(args.length > 0) args[0] = args[0].toLowerCase();
-        }
-        catch (Throwable exc)
-        {
+            if (args.length > 0) args[0] = args[0].toLowerCase();
+        } catch (Throwable exc) {
             LogHelper.error(exc);
             return;
         }
@@ -178,62 +160,48 @@ public abstract class CommandHandler implements Runnable
     }
 
     @LauncherAPI
-    public final void eval(String[] args, boolean bell)
-    {
-        if (args.length == 0)
-        {
+    public final void eval(String[] args, boolean bell) {
+        if (args.length == 0) {
             return;
         }
 
         // Measure start time and invoke command
         long start = System.currentTimeMillis();
-        try
-        {
+        try {
             lookup(args[0]).invoke(Arrays.copyOfRange(args, 1, args.length));
-        }
-        catch (Throwable exc)
-        {
+        } catch (Throwable exc) {
             LogHelper.error(exc);
         }
 
         // Bell if invocation took > 1s
         long end = System.currentTimeMillis();
-        if (bell && end - start >= 5_000L)
-        {
-            try
-            {
+        if (bell && end - start >= 5_000L) {
+            try {
                 bell();
-            }
-            catch (IOException e)
-            {
+            } catch (IOException e) {
                 LogHelper.error(e);
             }
         }
     }
 
     @LauncherAPI
-    public final Command lookup(String name) throws CommandException
-    {
+    public final Command lookup(String name) throws CommandException {
         Command command = commands.get(name);
-        if (command == null)
-        {
+        if (command == null) {
             throw new CommandException(String.format("Unknown command: '%s'", name));
         }
         return command;
     }
 
     @LauncherAPI
-    public final void registerCommand(String name, Command command)
-    {
+    public final void registerCommand(String name, Command command) {
         VerifyHelper.verifyIDName(name);
         VerifyHelper.putIfAbsent(commands, name.toLowerCase(), Objects.requireNonNull(command, "command"),
                 String.format("Command has been already registered: '%s'", name.toLowerCase()));
     }
 
-    private void readLoop() throws IOException
-    {
-        for (String line = readLine(); line != null; line = readLine())
-        {
+    private void readLoop() throws IOException {
+        for (String line = readLine(); line != null; line = readLine()) {
             eval(line, true);
         }
     }

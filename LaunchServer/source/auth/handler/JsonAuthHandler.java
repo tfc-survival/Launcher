@@ -16,8 +16,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
-public class JsonAuthHandler extends CachedAuthHandler
-{
+public class JsonAuthHandler extends CachedAuthHandler {
 
     private static final int TIMEOUT = 10;
     private final URL url;
@@ -32,8 +31,7 @@ public class JsonAuthHandler extends CachedAuthHandler
     private final String responseUserKeyName;
     private final String responseErrorKeyName;
 
-    protected JsonAuthHandler(BlockConfigEntry block)
-    {
+    protected JsonAuthHandler(BlockConfigEntry block) {
         super(block);
         String configUrl = block.getEntryValue("url", StringConfigEntry.class);
         String configUrlCheckServer = block.getEntryValue("urlCheckServer", StringConfigEntry.class);
@@ -60,34 +58,29 @@ public class JsonAuthHandler extends CachedAuthHandler
     }
 
     @Override
-    public UUID checkServer(String username, String serverID) throws IOException
-    {
+    public UUID checkServer(String username, String serverID) throws IOException {
         JsonObject request = Json.object().add(userKeyName, username).add(serverIDKeyName, serverID);
         JsonObject result = jsonRequest(request, urlCheckServer);
         String value;
-        if ((value = result.getString(uuidKeyName, null)) != null)
-        {
+        if ((value = result.getString(uuidKeyName, null)) != null) {
             return UUID.fromString(value);
         }
         return super.checkServer(username, serverID);
     }
 
     @Override
-    public void close()
-    {
+    public void close() {
 
     }
 
     @Override
-    protected Entry fetchEntry(String username) throws IOException
-    {
+    protected Entry fetchEntry(String username) throws IOException {
         JsonObject request = Json.object().add(userKeyName, username);
         JsonObject result = jsonRequest(request, urlCheckServer);
         UUID uuid = UUID.fromString(result.getString(uuidKeyName, null));
         String accessToken = result.getString(accessTokenKeyName, null);
         String serverID = result.getString(serverIDKeyName, null);
-        if (accessToken == null || serverID == null)
-        {
+        if (accessToken == null || serverID == null) {
             return null;
         }
 
@@ -95,15 +88,13 @@ public class JsonAuthHandler extends CachedAuthHandler
     }
 
     @Override
-    protected Entry fetchEntry(UUID uuid) throws IOException
-    {
+    protected Entry fetchEntry(UUID uuid) throws IOException {
         JsonObject request = Json.object().add(uuidKeyName, uuid.toString());
         JsonObject result = jsonRequest(request, urlCheckServer);
         String username = result.getString(userKeyName, null);
         String accessToken = result.getString(accessTokenKeyName, null);
         String serverID = result.getString(serverIDKeyName, null);
-        if (username == null || accessToken == null || serverID == null)
-        {
+        if (username == null || accessToken == null || serverID == null) {
             return null;
         }
 
@@ -111,23 +102,20 @@ public class JsonAuthHandler extends CachedAuthHandler
     }
 
     @Override
-    public boolean joinServer(String username, String accessToken, String serverID) throws IOException
-    {
+    public boolean joinServer(String username, String accessToken, String serverID) throws IOException {
         JsonObject request = Json.object().add(userKeyName, username).add(serverIDKeyName, serverID).add(accessTokenKeyName, accessToken);
         jsonRequest(request, urlJoinServer);
         return super.joinServer(username, accessToken, serverID);
     }
 
-    public JsonObject jsonRequest(JsonObject request, URL url) throws IOException
-    {
+    public JsonObject jsonRequest(JsonObject request, URL url) throws IOException {
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setDoInput(true);
         connection.setDoOutput(true);
         connection.setRequestMethod("POST");
         connection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
         connection.setRequestProperty("Accept", "application/json");
-        if (TIMEOUT > 0)
-        {
+        if (TIMEOUT > 0) {
             connection.setConnectTimeout(TIMEOUT);
         }
 
@@ -139,39 +127,32 @@ public class JsonAuthHandler extends CachedAuthHandler
         InputStreamReader reader;
         int statusCode = connection.getResponseCode();
 
-        if (200 <= statusCode && statusCode < 300)
-        {
+        if (200 <= statusCode && statusCode < 300) {
             reader = new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8);
-        }
-        else
-        {
+        } else {
             reader = new InputStreamReader(connection.getErrorStream(), StandardCharsets.UTF_8);
         }
         JsonValue content = Json.parse(reader);
-        if (!content.isObject())
-        {
+        if (!content.isObject()) {
             authError("Authentication server response is malformed");
         }
 
         JsonObject response = content.asObject();
         String value;
 
-        if ((value = response.getString(responseErrorKeyName, null)) != null)
-        {
+        if ((value = response.getString(responseErrorKeyName, null)) != null) {
             authError(value);
         }
         return response;
     }
 
     @Override
-    protected boolean updateAuth(UUID uuid, String username, String accessToken)
-    {
+    protected boolean updateAuth(UUID uuid, String username, String accessToken) {
         return false;
     }
 
     @Override
-    protected boolean updateServerID(UUID uuid, String serverID)
-    {
+    protected boolean updateServerID(UUID uuid, String serverID) {
         return false;
     }
 }

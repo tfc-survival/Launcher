@@ -9,7 +9,6 @@ import launcher.request.Request.Type;
 import launcher.request.RequestException;
 import launcher.serialize.HInput;
 import launcher.serialize.HOutput;
-import launcher.serialize.config.entry.StringConfigEntry;
 import launchserver.LaunchServer;
 import launchserver.auth.limiter.AuthLimiterIPConfig;
 import launchserver.response.auth.AuthResponse;
@@ -27,14 +26,12 @@ import java.math.BigInteger;
 import java.net.Socket;
 import java.net.SocketException;
 
-public final class ResponseThread implements Runnable
-{
+public final class ResponseThread implements Runnable {
     private final LaunchServer server;
     private final String ip;
     private final Socket socket;
 
-    public ResponseThread(LaunchServer server, String ip, Socket socket) throws SocketException
-    {
+    public ResponseThread(LaunchServer server, String ip, Socket socket) throws SocketException {
         this.server = server;
         this.ip = ip;
         this.socket = socket;
@@ -44,19 +41,17 @@ public final class ResponseThread implements Runnable
     }
 
     @Override
-    public void run()
-    {
-        if (server.config.authLimit && !server.config.authLimitConfig.blockOnConnect)
-        {
-            if (AuthLimiterIPConfig.Instance.getAllowIp().stream().noneMatch(s -> s.equals(ip)) && server.config.authLimitConfig.onlyAllowIp)
-            {
-                if (!server.serverSocketHandler.logConnections) LogHelper.debug("Blocked connection from %s [Not found in Allow List]", ip);
+    public void run() {
+        if (server.config.authLimit && !server.config.authLimitConfig.blockOnConnect) {
+            if (AuthLimiterIPConfig.Instance.getAllowIp().stream().noneMatch(s -> s.equals(ip)) && server.config.authLimitConfig.onlyAllowIp) {
+                if (!server.serverSocketHandler.logConnections)
+                    LogHelper.debug("Blocked connection from %s [Not found in Allow List]", ip);
                 return;
             }
 
-            if (AuthLimiterIPConfig.Instance.getBlockIp().stream().anyMatch(s -> s.equals(ip)) && server.config.authLimitConfig.useBlockIp)
-            {
-                if (!server.serverSocketHandler.logConnections) LogHelper.debug("Blocked connection from %s [Found in Block List]", ip);
+            if (AuthLimiterIPConfig.Instance.getBlockIp().stream().anyMatch(s -> s.equals(ip)) && server.config.authLimitConfig.useBlockIp) {
+                if (!server.serverSocketHandler.logConnections)
+                    LogHelper.debug("Blocked connection from %s [Found in Block List]", ip);
                 return;
             }
         }
@@ -67,53 +62,41 @@ public final class ResponseThread implements Runnable
         boolean cancelled = false;
         Throwable savedError = null;
         try (HInput input = new HInput(IOHelper.newBufferedInputStream(socket.getInputStream()));
-             HOutput output = new HOutput(IOHelper.newBufferedOutStream(socket.getOutputStream())))
-        {
+             HOutput output = new HOutput(IOHelper.newBufferedOutStream(socket.getOutputStream()))) {
             Type type = readHandshake(ip, input, output);
-            if (type == null)
-            { // Not accepted
+            if (type == null) { // Not accepted
                 cancelled = true;
                 return;
             }
 
             // Start response
-            try
-            {
+            try {
                 respond(type, input, output);
-            }
-            catch (RequestException e)
-            {
+            } catch (RequestException e) {
                 LogHelper.subDebug(String.format("#%s Request error: %s", IOHelper.getIP(socket.getRemoteSocketAddress()), e.getMessage()));
                 output.writeString(e.getMessage(), 0);
             }
-        }
-        catch (Throwable exc)
-        {
+        } catch (Throwable exc) {
             savedError = exc;
             if (LogHelper.isDebugEnabled()) LogHelper.error(exc);
-        }
-        finally
-        {
+        } finally {
             IOHelper.close(socket);
-            if (!cancelled)
-            {
+            if (!cancelled) {
                 server.serverSocketHandler.onDisconnect(IOHelper.getIP(socket.getRemoteSocketAddress()), savedError);
             }
         }
     }
 
-    private Type readHandshake(String ip, HInput input, HOutput output) throws IOException
-    {
+    private Type readHandshake(String ip, HInput input, HOutput output) throws IOException {
         boolean legacy = false;
 
         // Verify magic number
         int magicNumber = input.readInt();
-        if (magicNumber != Launcher.PROTOCOL_MAGIC)
-        {
-            if (magicNumber != Launcher.PROTOCOL_MAGIC - 1)
-            { // Previous launcher protocol
+        if (magicNumber != Launcher.PROTOCOL_MAGIC) {
+            if (magicNumber != Launcher.PROTOCOL_MAGIC - 1) { // Previous launcher protocol
                 output.writeBoolean(false);
-                if (LogHelper.isDebugEnabled()) throw new IOException(String.format("[%s] Protocol magic mismatch", ip));
+                if (LogHelper.isDebugEnabled())
+                    throw new IOException(String.format("[%s] Protocol magic mismatch", ip));
                 return null;
             }
             legacy = true;
@@ -121,8 +104,7 @@ public final class ResponseThread implements Runnable
 
         // Verify key modulus
         BigInteger keyModulus = input.readBigInteger(SecurityHelper.RSA_KEY_LENGTH + 1);
-        if (!keyModulus.equals(server.privateKey.getModulus()))
-        {
+        if (!keyModulus.equals(server.privateKey.getModulus())) {
             output.writeBoolean(false);
             if (LogHelper.isDebugEnabled()) throw new IOException(String.format("[%s] Key modulus mismatch", ip));
             return null;
@@ -130,14 +112,13 @@ public final class ResponseThread implements Runnable
 
         // Read request type
         Type type = Type.read(input);
-        if (legacy && type != Type.LAUNCHER)
-        {
+        if (legacy && type != Type.LAUNCHER) {
             output.writeBoolean(false);
-            if (LogHelper.isDebugEnabled()) throw new IOException(String.format("[%s] Not LAUNCHER request on legacy protocol", ip));
+            if (LogHelper.isDebugEnabled())
+                throw new IOException(String.format("[%s] Not LAUNCHER request on legacy protocol", ip));
             return null;
         }
-        if (!server.serverSocketHandler.onHandshake(ip, type))
-        {
+        if (!server.serverSocketHandler.onHandshake(ip, type)) {
             output.writeBoolean(false);
             return null;
         }
@@ -148,21 +129,16 @@ public final class ResponseThread implements Runnable
         return type;
     }
 
-    private void respond(Type type, HInput input, HOutput output) throws Throwable
-    {
-        if (server.serverSocketHandler.logConnections)
-        {
+    private void respond(Type type, HInput input, HOutput output) throws Throwable {
+        if (server.serverSocketHandler.logConnections) {
             LogHelper.info("Connection from %s: %s", ip, type.name());
-        }
-        else
-        {
+        } else {
             LogHelper.subDebug("[%s] Type: %s", ip, type.name());
         }
 
         // Choose response based on type
         Response response;
-        switch (type)
-        {
+        switch (type) {
             case PING:
                 response = new PingResponse(server, ip, input, output);
                 break;

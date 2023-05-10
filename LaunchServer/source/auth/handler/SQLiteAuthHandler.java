@@ -10,8 +10,7 @@ import java.io.IOException;
 import java.sql.*;
 import java.util.UUID;
 
-public final class SQLiteAuthHandler extends CachedAuthHandler
-{
+public final class SQLiteAuthHandler extends CachedAuthHandler {
     private final Connection sqliteconnection;
 
     private final String uuidColumn;
@@ -25,18 +24,14 @@ public final class SQLiteAuthHandler extends CachedAuthHandler
     private final String updateAuthSQL;
     private final String updateServerIDSQL;
 
-    protected SQLiteAuthHandler(BlockConfigEntry block)
-    {
+    protected SQLiteAuthHandler(BlockConfigEntry block) {
         super(block);
         String table = VerifyHelper.verifyIDName(block.getEntryValue("table", StringConfigEntry.class));
 
         Connection v_sqliteconnection;
-        try
-        {
+        try {
             v_sqliteconnection = DriverManager.getConnection("jdbc:sqlite:" + block.getEntryValue("path", StringConfigEntry.class));
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             LogHelper.error("Error connecting to sqlite: ");
             e.printStackTrace();
             v_sqliteconnection = null;
@@ -54,305 +49,202 @@ public final class SQLiteAuthHandler extends CachedAuthHandler
     }
 
     @Override
-    protected Entry fetchEntry(UUID uuid) throws IOException
-    {
+    protected Entry fetchEntry(UUID uuid) throws IOException {
         return this.query(this.queryByUUIDSQL, uuid.toString());
     }
 
     @Override
-    protected Entry fetchEntry(String s) throws IOException
-    {
+    protected Entry fetchEntry(String s) throws IOException {
         return this.query(this.queryByUsernameSQL, s);
     }
 
-    protected boolean updateAuth(UUID uuid, String username, String accessToken) throws IOException
-    {
-        try
-        {
+    protected boolean updateAuth(UUID uuid, String username, String accessToken) throws IOException {
+        try {
             Connection c = this.sqliteconnection;
             Throwable var5 = null;
 
             boolean var8;
-            try
-            {
+            try {
                 PreparedStatement s = c.prepareStatement(this.updateAuthSQL);
                 Throwable var7 = null;
 
-                try
-                {
+                try {
                     s.setString(1, username);
                     s.setString(2, accessToken);
                     s.setString(3, uuid.toString());
                     s.setQueryTimeout(5000);
                     var8 = s.executeUpdate() > 0;
-                }
-                catch (Throwable var33)
-                {
+                } catch (Throwable var33) {
                     var7 = var33;
                     throw var33;
-                }
-                finally
-                {
-                    if (s != null)
-                    {
-                        if (var7 != null)
-                        {
-                            try
-                            {
+                } finally {
+                    if (s != null) {
+                        if (var7 != null) {
+                            try {
                                 s.close();
-                            }
-                            catch (Throwable var32)
-                            {
+                            } catch (Throwable var32) {
                                 var7.addSuppressed(var32);
                             }
-                        }
-                        else
-                        {
+                        } else {
                             s.close();
                         }
                     }
                 }
-            }
-            catch (Throwable var35)
-            {
+            } catch (Throwable var35) {
                 var5 = var35;
                 throw var35;
-            }
-            finally
-            {
-                if (c != null)
-                {
-                    if (var5 != null)
-                    {
-                        try
-                        {
+            } finally {
+                if (c != null) {
+                    if (var5 != null) {
+                        try {
                             c.close();
-                        }
-                        catch (Throwable var31)
-                        {
+                        } catch (Throwable var31) {
                             var5.addSuppressed(var31);
                         }
-                    }
-                    else
-                    {
+                    } else {
                         c.close();
                     }
                 }
             }
             return var8;
-        }
-        catch (SQLException e)
-        {
+        } catch (SQLException e) {
             throw new IOException(e);
         }
     }
 
-    protected boolean updateServerID(UUID uuid, String serverID) throws IOException
-    {
-        try
-        {
+    protected boolean updateServerID(UUID uuid, String serverID) throws IOException {
+        try {
             Connection c = this.sqliteconnection;
             Throwable var4 = null;
 
             boolean var7;
-            try
-            {
+            try {
                 PreparedStatement s = c.prepareStatement(this.updateServerIDSQL);
                 Throwable var6 = null;
 
-                try
-                {
+                try {
                     s.setString(1, serverID);
                     s.setString(2, uuid.toString());
                     s.setQueryTimeout(MySQLSourceConfig.TIMEOUT);
                     var7 = s.executeUpdate() > 0;
-                }
-                catch (Throwable var32)
-                {
+                } catch (Throwable var32) {
                     var6 = var32;
                     throw var32;
-                }
-                finally
-                {
-                    if (s != null)
-                    {
-                        if (var6 != null)
-                        {
-                            try
-                            {
+                } finally {
+                    if (s != null) {
+                        if (var6 != null) {
+                            try {
                                 s.close();
-                            }
-                            catch (Throwable var31)
-                            {
+                            } catch (Throwable var31) {
                                 var6.addSuppressed(var31);
                             }
-                        }
-                        else
-                        {
+                        } else {
                             s.close();
                         }
                     }
                 }
-            }
-            catch (Throwable var34)
-            {
+            } catch (Throwable var34) {
                 var4 = var34;
                 throw var34;
-            }
-            finally
-            {
-                if (c != null)
-                {
-                    if (var4 != null)
-                    {
-                        try
-                        {
+            } finally {
+                if (c != null) {
+                    if (var4 != null) {
+                        try {
                             c.close();
-                        }
-                        catch (Throwable var30)
-                        {
+                        } catch (Throwable var30) {
                             var4.addSuppressed(var30);
                         }
-                    }
-                    else
-                    {
+                    } else {
                         c.close();
                     }
                 }
             }
             return var7;
-        }
-        catch (SQLException e)
-        {
+        } catch (SQLException e) {
             throw new IOException(e);
         }
     }
 
-    public void close()
-    {
-        try
-        {
+    public void close() {
+        try {
             this.sqliteconnection.close();
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private Entry constructEntry(ResultSet set) throws SQLException
-    {
+    private Entry constructEntry(ResultSet set) throws SQLException {
         return set.next() ? new Entry(UUID.fromString(set.getString(this.uuidColumn)), set.getString(this.usernameColumn), set.getString(this.accessTokenColumn), set.getString(this.serverIDColumn)) : null;
     }
 
-    private Entry query(String sql, String value) throws IOException
-    {
-        try
-        {
+    private Entry query(String sql, String value) throws IOException {
+        try {
             Connection c = this.sqliteconnection;
             Throwable var4 = null;
 
             Entry var9;
-            try
-            {
+            try {
                 PreparedStatement s = c.prepareStatement(sql);
                 Throwable var6 = null;
 
-                try
-                {
+                try {
                     s.setString(1, value);
                     s.setQueryTimeout(MySQLSourceConfig.TIMEOUT);
                     ResultSet set = s.executeQuery();
                     Throwable var8 = null;
 
-                    try
-                    {
+                    try {
                         var9 = this.constructEntry(set);
-                    }
-                    catch (Throwable var56)
-                    {
+                    } catch (Throwable var56) {
                         var8 = var56;
                         throw var56;
-                    }
-                    finally
-                    {
-                        if (set != null)
-                        {
-                            if (var8 != null)
-                            {
-                                try
-                                {
+                    } finally {
+                        if (set != null) {
+                            if (var8 != null) {
+                                try {
                                     set.close();
-                                }
-                                catch (Throwable var55)
-                                {
+                                } catch (Throwable var55) {
                                     var8.addSuppressed(var55);
                                 }
-                            }
-                            else
-                            {
+                            } else {
                                 set.close();
                             }
                         }
                     }
-                }
-                catch (Throwable var58)
-                {
+                } catch (Throwable var58) {
                     var6 = var58;
                     throw var58;
-                }
-                finally
-                {
-                    if (s != null)
-                    {
-                        if (var6 != null)
-                        {
-                            try
-                            {
+                } finally {
+                    if (s != null) {
+                        if (var6 != null) {
+                            try {
                                 s.close();
-                            }
-                            catch (Throwable var54)
-                            {
+                            } catch (Throwable var54) {
                                 var6.addSuppressed(var54);
                             }
-                        }
-                        else
-                        {
+                        } else {
                             s.close();
                         }
                     }
                 }
-            }
-            catch (Throwable var60)
-            {
+            } catch (Throwable var60) {
                 var4 = var60;
                 throw var60;
-            }
-            finally
-            {
-                if (c != null)
-                {
-                    if (var4 != null)
-                    {
-                        try
-                        {
+            } finally {
+                if (c != null) {
+                    if (var4 != null) {
+                        try {
                             c.close();
-                        }
-                        catch (Throwable var53)
-                        {
+                        } catch (Throwable var53) {
                             var4.addSuppressed(var53);
                         }
-                    }
-                    else
-                    {
+                    } else {
                         c.close();
                     }
                 }
             }
             return var9;
-        }
-        catch (SQLException e)
-        {
+        } catch (SQLException e) {
             throw new IOException(e);
         }
     }

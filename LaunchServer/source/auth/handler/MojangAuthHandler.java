@@ -15,27 +15,21 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class MojangAuthHandler extends AuthHandler
-{
+public class MojangAuthHandler extends AuthHandler {
     private static final java.net.URL URL_join, URL_hasJoin;
 
-    static
-    {
-        try
-        {
+    static {
+        try {
             URL_join = new URL("https://sessionserver.mojang.com/session/minecraft/join");
             URL_hasJoin = new URL("https://sessionserver.mojang.com/session/minecraft/hasJoined");
-        }
-        catch (MalformedURLException e)
-        {
+        } catch (MalformedURLException e) {
             throw new InternalError(e);
         }
     }
 
     public final HashMap<String, UUID> usernameToUUID = new HashMap<>();
 
-    MojangAuthHandler(BlockConfigEntry block)
-    {
+    MojangAuthHandler(BlockConfigEntry block) {
         super(block);
     }
 
@@ -50,23 +44,18 @@ public class MojangAuthHandler extends AuthHandler
     }
 
     @Override
-    public UUID checkServer(String username, String serverID)
-    {
+    public UUID checkServer(String username, String serverID) {
         JsonObject uuidResponse;
         try {
             URL uuidURL = new URL(URL_hasJoin + "?username=" + IOHelper.urlEncode(username) + "&serverId=" + IOHelper.urlEncode(serverID));
             uuidResponse = HTTPRequestHelper.makeAuthlibRequest(uuidURL, null, "Mojang");
-        }
-        catch (IOException e)
-        {
+        } catch (IOException e) {
             throw new IllegalArgumentException("Empty UUID response");
         }
-        if (uuidResponse.get("error") != null)
-        {
+        if (uuidResponse.get("error") != null) {
             throw new IllegalArgumentException(String.valueOf(uuidResponse.get("errorMessage")));
         }
-        if (uuidResponse.get("id") == null)
-        {
+        if (uuidResponse.get("id") == null) {
             throw new IllegalArgumentException("Empty UUID response");
         }
         return UUID.fromString(uuidResponse.get("id").asString().replaceFirst("(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})", "$1-$2-$3-$4-$5"));
@@ -85,12 +74,9 @@ public class MojangAuthHandler extends AuthHandler
 
         int response = HTTPRequestHelper.authJoinRequest(URL_join, request, "Mojang");
 
-        if (200 <= response && response < 300 )
-        {
+        if (200 <= response && response < 300) {
             return true;
-        }
-        else
-        {
+        } else {
             authError("Empty Mojang Handler response");
         }
         return false;

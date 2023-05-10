@@ -13,34 +13,29 @@ import launcher.serialize.HOutput;
 
 import java.io.IOException;
 
-public final class AuthRequest extends Request<Result>
-{
+public final class AuthRequest extends Request<Result> {
     private final String login;
     private final byte[] encryptedPassword;
 
     @LauncherAPI
-    public AuthRequest(Config config, String login, byte[] encryptedPassword)
-    {
+    public AuthRequest(Config config, String login, byte[] encryptedPassword) {
         super(config);
         this.login = VerifyHelper.verify(login, VerifyHelper.NOT_EMPTY, "Login can't be empty");
         this.encryptedPassword = encryptedPassword.clone();
     }
 
     @LauncherAPI
-    public AuthRequest(String login, byte[] encryptedPassword)
-    {
+    public AuthRequest(String login, byte[] encryptedPassword) {
         this(null, login, encryptedPassword);
     }
 
     @Override
-    public Type getType()
-    {
+    public Type getType() {
         return Type.AUTH;
     }
 
     @Override
-    protected Result requestDo(HInput input, HOutput output) throws IOException
-    {
+    protected Result requestDo(HInput input, HOutput output) throws IOException {
         output.writeString(login, 255);
         output.writeByteArray(encryptedPassword, SecurityHelper.CRYPTO_MAX_LENGTH);
         output.writeByteArray(Launcher.getHWID(), SecurityHelper.HWID_MAX_LENGTH);
@@ -54,15 +49,13 @@ public final class AuthRequest extends Request<Result>
         return new Result(pp, accessToken);
     }
 
-    public static final class Result
-    {
+    public static final class Result {
         @LauncherAPI
         public final PlayerProfile pp;
         @LauncherAPI
         public final String accessToken;
 
-        private Result(PlayerProfile pp, String accessToken)
-        {
+        private Result(PlayerProfile pp, String accessToken) {
             this.pp = pp;
             this.accessToken = accessToken;
         }

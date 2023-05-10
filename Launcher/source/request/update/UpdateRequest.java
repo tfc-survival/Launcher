@@ -35,8 +35,7 @@ import java.util.Objects;
 import java.util.Queue;
 import java.util.zip.InflaterInputStream;
 
-public final class UpdateRequest extends Request<SignedObjectHolder<HashedDir>>
-{
+public final class UpdateRequest extends Request<SignedObjectHolder<HashedDir>> {
     @LauncherAPI
     public static final int MAX_QUEUE_SIZE = 128;
 
@@ -54,8 +53,7 @@ public final class UpdateRequest extends Request<SignedObjectHolder<HashedDir>>
     private Instant startTime;
 
     @LauncherAPI
-    public UpdateRequest(Config config, String dirName, Path dir, FileNameMatcher matcher, boolean digest)
-    {
+    public UpdateRequest(Config config, String dirName, Path dir, FileNameMatcher matcher, boolean digest) {
         super(config);
         this.dirName = IOHelper.verifyFileName(dirName);
         this.dir = Objects.requireNonNull(dir, "dir");
@@ -64,20 +62,16 @@ public final class UpdateRequest extends Request<SignedObjectHolder<HashedDir>>
     }
 
     @LauncherAPI
-    public UpdateRequest(String dirName, Path dir, FileNameMatcher matcher, boolean digest)
-    {
+    public UpdateRequest(String dirName, Path dir, FileNameMatcher matcher, boolean digest) {
         this(null, dirName, dir, matcher, digest);
     }
 
-    private static void fillActionsQueue(Queue<Action> queue, HashedDir mismatch)
-    {
-        for (Entry<String, HashedEntry> mapEntry : mismatch.map().entrySet())
-        {
+    private static void fillActionsQueue(Queue<Action> queue, HashedDir mismatch) {
+        for (Entry<String, HashedEntry> mapEntry : mismatch.map().entrySet()) {
             String name = mapEntry.getKey();
             HashedEntry entry = mapEntry.getValue();
             HashedEntry.Type entryType = entry.getType();
-            switch (entryType)
-            {
+            switch (entryType) {
                 case DIR: // cd - get - cd ..
                     queue.add(new Action(Action.Type.CD, name, entry));
                     fillActionsQueue(queue, (HashedDir) entry);
@@ -93,14 +87,12 @@ public final class UpdateRequest extends Request<SignedObjectHolder<HashedDir>>
     }
 
     @Override
-    public Type getType()
-    {
+    public Type getType() {
         return Type.UPDATE;
     }
 
     @Override
-    public SignedObjectHolder<HashedDir> request() throws Throwable
-    {
+    public SignedObjectHolder<HashedDir> request() throws Throwable {
         Files.createDirectories(dir);
         localDir = new HashedDir(dir, matcher, false, digest);
 
@@ -109,8 +101,7 @@ public final class UpdateRequest extends Request<SignedObjectHolder<HashedDir>>
     }
 
     @Override
-    protected SignedObjectHolder<HashedDir> requestDo(HInput input, HOutput output) throws IOException, SignatureException
-    {
+    protected SignedObjectHolder<HashedDir> requestDo(HInput input, HOutput output) throws IOException, SignatureException {
         // Write update dir name
         output.writeString(dirName, 255);
         output.flush();
@@ -135,14 +126,12 @@ public final class UpdateRequest extends Request<SignedObjectHolder<HashedDir>>
         startTime = Instant.now();
         Path currentDir = dir;
         Action[] actionsSlice = new Action[MAX_QUEUE_SIZE];
-        while (!queue.isEmpty())
-        {
+        while (!queue.isEmpty()) {
             int length = Math.min(queue.size(), MAX_QUEUE_SIZE);
 
             // Write actions slice
             output.writeLength(length, MAX_QUEUE_SIZE);
-            for (int i = 0; i < length; i++)
-            {
+            for (int i = 0; i < length; i++) {
                 Action action = queue.remove();
                 actionsSlice[i] = action;
                 action.write(output);
@@ -150,19 +139,16 @@ public final class UpdateRequest extends Request<SignedObjectHolder<HashedDir>>
             output.flush();
 
             // Perform actions
-            for (int i = 0; i < length; i++)
-            {
+            for (int i = 0; i < length; i++) {
                 Action action = actionsSlice[i];
-                switch (action.type)
-                {
+                switch (action.type) {
                     case CD:
                         currentDir = currentDir.resolve(action.name);
                         Files.createDirectories(currentDir);
                         break;
                     case GET:
                         Path targetFile = currentDir.resolve(action.name);
-                        if (fileInput.read() != 0xFF)
-                        {
+                        if (fileInput.read() != 0xFF) {
                             throw new IOException("Serverside cached size mismath for file " + action.name);
                         }
                         downloadFile(targetFile, (HashedFile) action.entry, fileInput);
@@ -184,23 +170,19 @@ public final class UpdateRequest extends Request<SignedObjectHolder<HashedDir>>
     }
 
     @LauncherAPI
-    public void setStateCallback(Callback callback)
-    {
+    public void setStateCallback(Callback callback) {
         stateCallback = callback;
     }
 
-    private void deleteExtraDir(Path subDir, HashedDir subHDir, boolean flag) throws IOException
-    {
-        for (Entry<String, HashedEntry> mapEntry : subHDir.map().entrySet())
-        {
+    private void deleteExtraDir(Path subDir, HashedDir subHDir, boolean flag) throws IOException {
+        for (Entry<String, HashedEntry> mapEntry : subHDir.map().entrySet()) {
             String name = mapEntry.getKey();
             Path path = subDir.resolve(name);
 
             // Delete files and dirs based on type
             HashedEntry entry = mapEntry.getValue();
             HashedEntry.Type entryType = entry.getType();
-            switch (entryType)
-            {
+            switch (entryType) {
                 case FILE:
                     updateState(IOHelper.toString(path), 0, 0);
                     Files.delete(path);
@@ -214,39 +196,33 @@ public final class UpdateRequest extends Request<SignedObjectHolder<HashedDir>>
         }
 
         // Delete!
-        if (flag)
-        {
+        if (flag) {
             updateState(IOHelper.toString(subDir), 0, 0);
             Files.delete(subDir);
         }
     }
 
-    private void downloadFile(Path file, HashedFile hFile, InputStream input) throws IOException
-    {
+    private void downloadFile(Path file, HashedFile hFile, InputStream input) throws IOException {
         String filePath = IOHelper.toString(dir.relativize(file));
         updateState(filePath, 0L, hFile.size);
 
         // Start file update
         MessageDigest digest = this.digest ? SecurityHelper.newDigest(DigestAlgorithm.MD5) : null;
-        try (OutputStream fileOutput = IOHelper.newBufferedOutStream(IOHelper.newOutput(file)))
-        {
+        try (OutputStream fileOutput = IOHelper.newBufferedOutStream(IOHelper.newOutput(file))) {
             long downloaded = 0L;
 
             // Download with digest update
             byte[] bytes = IOHelper.newBuffer();
-            while (downloaded < hFile.size)
-            {
+            while (downloaded < hFile.size) {
                 int remaining = (int) Math.min(hFile.size - downloaded, bytes.length);
                 int length = input.read(bytes, 0, remaining);
-                if (length < 0)
-                {
+                if (length < 0) {
                     throw new EOFException(String.format("%d bytes remaining", hFile.size - downloaded));
                 }
 
                 // Update file
                 fileOutput.write(bytes, 0, length);
-                if (digest != null)
-                {
+                if (digest != null) {
                     digest.update(bytes, 0, length);
                 }
 
@@ -259,27 +235,22 @@ public final class UpdateRequest extends Request<SignedObjectHolder<HashedDir>>
         }
 
         // Verify digest
-        if (digest != null)
-        {
+        if (digest != null) {
             byte[] digestBytes = digest.digest();
-            if (!hFile.isSameDigest(digestBytes))
-            {
+            if (!hFile.isSameDigest(digestBytes)) {
                 throw new SecurityException(String.format("File digest mismatch: '%s'", filePath));
             }
         }
     }
 
-    private void updateState(String filePath, long fileDownloaded, long fileSize)
-    {
-        if (stateCallback != null)
-        {
+    private void updateState(String filePath, long fileDownloaded, long fileSize) {
+        if (stateCallback != null) {
             stateCallback.call(new State(filePath, fileDownloaded, fileSize,
                     totalDownloaded, totalSize, Duration.between(startTime, Instant.now())));
         }
     }
 
-    public static final class Action extends StreamObject
-    {
+    public static final class Action extends StreamObject {
         public static final Action CD_BACK = new Action(Type.CD_BACK, null, null);
         public static final Action FINISH = new Action(Type.FINISH, null, null);
 
@@ -288,56 +259,47 @@ public final class UpdateRequest extends Request<SignedObjectHolder<HashedDir>>
         public final String name;
         public final HashedEntry entry;
 
-        public Action(Type type, String name, HashedEntry entry)
-        {
+        public Action(Type type, String name, HashedEntry entry) {
             this.type = type;
             this.name = name;
             this.entry = entry;
         }
 
-        public Action(HInput input) throws IOException
-        {
+        public Action(HInput input) throws IOException {
             type = Type.read(input);
             name = type == Type.CD || type == Type.GET ? IOHelper.verifyFileName(input.readString(255)) : null;
             entry = null;
         }
 
         @Override
-        public void write(HOutput output) throws IOException
-        {
+        public void write(HOutput output) throws IOException {
             EnumSerializer.write(output, type);
-            if (type == Type.CD || type == Type.GET)
-            {
+            if (type == Type.CD || type == Type.GET) {
                 output.writeString(name, 255);
             }
         }
 
-        public enum Type implements Itf
-        {
+        public enum Type implements Itf {
             CD(1), CD_BACK(2), GET(3), FINISH(255);
             private static final EnumSerializer<Type> SERIALIZER = new EnumSerializer<>(Type.class);
             private final int n;
 
-            Type(int n)
-            {
+            Type(int n) {
                 this.n = n;
             }
 
-            public static Type read(HInput input) throws IOException
-            {
+            public static Type read(HInput input) throws IOException {
                 return SERIALIZER.read(input);
             }
 
             @Override
-            public int getNumber()
-            {
+            public int getNumber() {
                 return n;
             }
         }
     }
 
-    public static final class State
-    {
+    public static final class State {
         @LauncherAPI
         public final long fileDownloaded;
         @LauncherAPI
@@ -351,8 +313,7 @@ public final class UpdateRequest extends Request<SignedObjectHolder<HashedDir>>
         @LauncherAPI
         public final Duration duration;
 
-        public State(String filePath, long fileDownloaded, long fileSize, long totalDownloaded, long totalSize, Duration duration)
-        {
+        public State(String filePath, long fileDownloaded, long fileSize, long totalDownloaded, long totalSize, Duration duration) {
             this.filePath = filePath;
             this.fileDownloaded = fileDownloaded;
             this.fileSize = fileSize;
@@ -364,134 +325,111 @@ public final class UpdateRequest extends Request<SignedObjectHolder<HashedDir>>
         }
 
         @LauncherAPI
-        public double getBps()
-        {
+        public double getBps() {
             long seconds = duration.getSeconds();
-            if (seconds == 0)
-            {
+            if (seconds == 0) {
                 return -1.0D; // Otherwise will throw /0 exception
             }
             return totalDownloaded / (double) seconds;
         }
 
         @LauncherAPI
-        public Duration getEstimatedTime()
-        {
+        public Duration getEstimatedTime() {
             double bps = getBps();
-            if (bps <= 0.0D)
-            {
+            if (bps <= 0.0D) {
                 return null; // Otherwise will throw /0 exception
             }
             return Duration.ofSeconds((long) (getTotalRemaining() / bps));
         }
 
         @LauncherAPI
-        public double getFileDownloadedKiB()
-        {
+        public double getFileDownloadedKiB() {
             return fileDownloaded / 1024.0D;
         }
 
         @LauncherAPI
-        public double getFileDownloadedMiB()
-        {
+        public double getFileDownloadedMiB() {
             return getFileDownloadedKiB() / 1024.0D;
         }
 
         @LauncherAPI
-        public double getFileDownloadedPart()
-        {
-            if (fileSize == 0)
-            {
+        public double getFileDownloadedPart() {
+            if (fileSize == 0) {
                 return 0.0D;
             }
             return (double) fileDownloaded / fileSize;
         }
 
         @LauncherAPI
-        public long getFileRemaining()
-        {
+        public long getFileRemaining() {
             return fileSize - fileDownloaded;
         }
 
         @LauncherAPI
-        public double getFileRemainingKiB()
-        {
+        public double getFileRemainingKiB() {
             return getFileRemaining() / 1024.0D;
         }
 
         @LauncherAPI
-        public double getFileRemainingMiB()
-        {
+        public double getFileRemainingMiB() {
             return getFileRemainingKiB() / 1024.0D;
         }
 
         @LauncherAPI
-        public double getFileSizeKiB()
-        {
+        public double getFileSizeKiB() {
             return fileSize / 1024.0D;
         }
 
         @LauncherAPI
-        public double getFileSizeMiB()
-        {
+        public double getFileSizeMiB() {
             return getFileSizeKiB() / 1024.0D;
         }
 
         @LauncherAPI
-        public double getTotalDownloadedKiB()
-        {
+        public double getTotalDownloadedKiB() {
             return totalDownloaded / 1024.0D;
         }
 
         @LauncherAPI
-        public double getTotalDownloadedMiB()
-        {
+        public double getTotalDownloadedMiB() {
             return getTotalDownloadedKiB() / 1024.0D;
         }
 
         @LauncherAPI
-        public double getTotalDownloadedPart()
-        {
-            if (totalSize == 0)
-            {
+        public double getTotalDownloadedPart() {
+            if (totalSize == 0) {
                 return 0.0D;
             }
             return (double) totalDownloaded / totalSize;
         }
 
         @LauncherAPI
-        public long getTotalRemaining()
-        {
+        public long getTotalRemaining() {
             return totalSize - totalDownloaded;
         }
 
         @LauncherAPI
-        public double getTotalRemainingKiB()
-        {
+        public double getTotalRemainingKiB() {
             return getTotalRemaining() / 1024.0D;
         }
 
         @LauncherAPI
-        public double getTotalRemainingMiB()
-        {
+        public double getTotalRemainingMiB() {
             return getTotalRemainingKiB() / 1024.0D;
         }
 
         @LauncherAPI
-        public double getTotalSizeKiB()
-        {
+        public double getTotalSizeKiB() {
             return totalSize / 1024.0D;
         }
 
         @LauncherAPI
-        public double getTotalSizeMiB()
-        {
+        public double getTotalSizeMiB() {
             return getTotalSizeKiB() / 1024.0D;
         }
 
         @FunctionalInterface
-        public interface Callback
-        {
+        public interface Callback {
             void call(State state);
         }
     }

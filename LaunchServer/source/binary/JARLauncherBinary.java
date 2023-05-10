@@ -24,46 +24,39 @@ import java.util.jar.JarOutputStream;
 import java.util.jar.Pack200;
 import java.util.zip.*;
 
-public final class JARLauncherBinary extends LauncherBinary
-{
+public final class JARLauncherBinary extends LauncherBinary {
     @LauncherAPI
     public final Path runtimeDir;
     @LauncherAPI
     public final Path initScriptFile;
 
     @LauncherAPI
-    public JARLauncherBinary(LaunchServer server) throws IOException
-    {
+    public JARLauncherBinary(LaunchServer server) throws IOException {
         super(server, server.dir.resolve(server.config.binaryName + ".jar"));
         runtimeDir = server.dir.resolve(Launcher.RUNTIME_DIR);
         initScriptFile = runtimeDir.resolve(Launcher.INIT_SCRIPT_FILE);
         tryUnpackRuntime();
     }
 
-    private static ZipEntry newEntry(String fileName)
-    {
+    private static ZipEntry newEntry(String fileName) {
         return IOHelper.newZipEntry(Launcher.RUNTIME_DIR + IOHelper.CROSS_SEPARATOR + fileName);
     }
 
     @Override
-    public void build() throws IOException
-    {
+    public void build() throws IOException {
         tryUnpackRuntime();
 
         // Build launcher binary
         LogHelper.info("Building launcher binary file");
-        try (JarOutputStream output = new JarOutputStream(IOHelper.newOutput(binaryFile)))
-        {
+        try (JarOutputStream output = new JarOutputStream(IOHelper.newOutput(binaryFile))) {
             output.setMethod(ZipOutputStream.DEFLATED);
             output.setLevel(Deflater.BEST_COMPRESSION);
-            try (InputStream input = new GZIPInputStream(IOHelper.newInput(IOHelper.getResourceURL("Launcher.pack.gz"))))
-            {
+            try (InputStream input = new GZIPInputStream(IOHelper.newInput(IOHelper.getResourceURL("Launcher.pack.gz")))) {
                 Pack200.newUnpacker().unpack(input, output);
             }
 
             // Verify has init script file
-            if (!IOHelper.isFile(initScriptFile))
-            {
+            if (!IOHelper.isFile(initScriptFile)) {
                 throw new IOException(String.format("Missing init script file ('%s')", Launcher.INIT_SCRIPT_FILE));
             }
 
@@ -73,10 +66,8 @@ public final class JARLauncherBinary extends LauncherBinary
 
             // Create launcher config file
             byte[] launcherConfigBytes;
-            try (ByteArrayOutputStream configArray = IOHelper.newByteArrayOutput())
-            {
-                try (HOutput configOutput = new HOutput(configArray))
-                {
+            try (ByteArrayOutputStream configArray = IOHelper.newByteArrayOutput()) {
+                try (HOutput configOutput = new HOutput(configArray)) {
                     new Config(server.config.getAddress(), server.config.port, server.publicKey, runtime).write(configOutput);
                 }
                 launcherConfigBytes = configArray.toByteArray();
@@ -86,7 +77,7 @@ public final class JARLauncherBinary extends LauncherBinary
             try {
                 output.putNextEntry(IOHelper.newZipEntry(Launcher.CONFIG_FILE));
                 output.write(launcherConfigBytes);
-            }catch (ZipException e){
+            } catch (ZipException e) {
                 if (e.getMessage().contains("duplicate entry"))
                     LogHelper.warning(e.getMessage());
                 else
@@ -96,23 +87,18 @@ public final class JARLauncherBinary extends LauncherBinary
     }
 
     @LauncherAPI
-    public void tryUnpackRuntime() throws IOException
-    {
+    public void tryUnpackRuntime() throws IOException {
         // Verify is runtime dir unpacked
-        if (IOHelper.isDir(runtimeDir))
-        {
+        if (IOHelper.isDir(runtimeDir)) {
             return; // Already unpacked
         }
 
         // Unpack launcher runtime files
         Files.createDirectory(runtimeDir);
         LogHelper.info("Unpacking launcher runtime files");
-        try (ZipInputStream input = IOHelper.newZipInput(IOHelper.getResourceURL("launchserver/defaults/runtime.zip")))
-        {
-            for (ZipEntry entry = input.getNextEntry(); entry != null; entry = input.getNextEntry())
-            {
-                if (entry.isDirectory())
-                {
+        try (ZipInputStream input = IOHelper.newZipInput(IOHelper.getResourceURL("launchserver/defaults/runtime.zip"))) {
+            for (ZipEntry entry = input.getNextEntry(); entry != null; entry = input.getNextEntry()) {
+                if (entry.isDirectory()) {
                     continue; // Skip dirs
                 }
 
@@ -122,24 +108,21 @@ public final class JARLauncherBinary extends LauncherBinary
         }
     }
 
-    private final class RuntimeDirVisitor extends SimpleFileVisitor<Path>
-    {
+    private final class RuntimeDirVisitor extends SimpleFileVisitor<Path> {
         private final ZipOutputStream output;
         private final Map<String, byte[]> runtime;
 
-        private RuntimeDirVisitor(ZipOutputStream output, Map<String, byte[]> runtime)
-        {
+        private RuntimeDirVisitor(ZipOutputStream output, Map<String, byte[]> runtime) {
             this.output = output;
             this.runtime = runtime;
         }
 
         @Override
-        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException
-        {
+        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
             String dirName = IOHelper.toString(runtimeDir.relativize(dir));
-            try{
+            try {
                 output.putNextEntry(newEntry(dirName + '/'));
-            }catch (ZipException e){
+            } catch (ZipException e) {
                 if (e.getMessage().contains("duplicate entry"))
                     LogHelper.warning(e.getMessage());
                 else
@@ -150,16 +133,15 @@ public final class JARLauncherBinary extends LauncherBinary
         }
 
         @Override
-        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException
-        {
+        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
             String fileName = IOHelper.toString(runtimeDir.relativize(file));
             runtime.put(fileName, SecurityHelper.digest(DigestAlgorithm.MD5, file));
 
-            try{
+            try {
                 // Create zip entry and transfer contents
                 output.putNextEntry(newEntry(fileName));
                 IOHelper.transfer(file, output);
-            }catch (ZipException e){
+            } catch (ZipException e) {
                 if (e.getMessage().contains("duplicate entry"))
                     LogHelper.warning(e.getMessage());
                 else

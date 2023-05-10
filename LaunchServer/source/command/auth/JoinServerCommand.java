@@ -4,28 +4,23 @@ import launcher.helper.LogHelper;
 import launchserver.LaunchServer;
 import launchserver.command.Command;
 
-public final class JoinServerCommand extends Command
-{
-    public JoinServerCommand(LaunchServer server)
-    {
+public final class JoinServerCommand extends Command {
+    public JoinServerCommand(LaunchServer server) {
         super(server);
     }
 
     @Override
-    public String getArgsDescription()
-    {
+    public String getArgsDescription() {
         return "<username> <accessToken> <serverID>";
     }
 
     @Override
-    public String getUsageDescription()
-    {
+    public String getUsageDescription() {
         return "Try to join server with specified credentials";
     }
 
     @Override
-    public void invoke(String... args) throws Throwable
-    {
+    public void invoke(String... args) throws Throwable {
         verifyArgs(args, 3);
         String username = args[0];
         String accessToken = args[1];

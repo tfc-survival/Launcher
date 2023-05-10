@@ -4,24 +4,20 @@ import launcher.helper.CommonHelper;
 import launchserver.plugin.PluginBridge;
 import net.md_5.bungee.api.plugin.Plugin;
 
-public final class PluginBungee extends Plugin
-{
+public final class PluginBungee extends Plugin {
     public volatile PluginBridge bridge = null;
 
     @Override
-    public void onDisable()
-    {
+    public void onDisable() {
         super.onDisable();
-        if (bridge != null)
-        {
+        if (bridge != null) {
             bridge.close();
             bridge = null;
         }
     }
 
     @Override
-    public void onEnable()
-    {
+    public void onEnable() {
         super.onEnable();
 
         // Initialize LaunchServer

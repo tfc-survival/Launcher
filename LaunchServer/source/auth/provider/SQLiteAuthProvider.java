@@ -12,33 +12,25 @@ import launchserver.auth.MySQLSourceConfig;
 
 import java.sql.*;
 
-public final class SQLiteAuthProvider extends AuthProvider
-{
+public final class SQLiteAuthProvider extends AuthProvider {
     private final String query;
     private final String[] queryParams;
     private final Connection sqliteconnection;
 
-    public SQLiteAuthProvider(BlockConfigEntry block)
-    {
+    public SQLiteAuthProvider(BlockConfigEntry block) {
         super(block);
 
-        try
-        {
+        try {
             Class.forName("org.sqlite.JDBC");
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
             //System.out.println("Here");
         }
 
         Connection sqliteconnection1;
-        try
-        {
+        try {
             sqliteconnection1 = DriverManager.getConnection("jdbc:sqlite:" + block.getEntryValue("path", StringConfigEntry.class));
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             LogHelper.error("Error connecting to sqlite: ");
             e.printStackTrace();
             sqliteconnection1 = null;
@@ -54,22 +46,18 @@ public final class SQLiteAuthProvider extends AuthProvider
         this.queryParams = block.getEntry("queryParams", ListConfigEntry.class).stream(StringConfigEntry.class).toArray(String[]::new);
     }
 
-    public AuthProviderResult auth(String login, String password, String ip) throws SQLException, AuthException
-    {
+    public AuthProviderResult auth(String login, String password, String ip) throws SQLException, AuthException {
         Connection c = this.sqliteconnection;
         Throwable var5 = null;
 
-        try
-        {
+        try {
             PreparedStatement s = c.prepareStatement(this.query);
             Throwable var7 = null;
 
-            try
-            {
+            try {
                 String[] replaceParams = new String[]{"login", login, "password", password, "ip", ip};
 
-                for(int i = 0; i < this.queryParams.length; ++i)
-                {
+                for (int i = 0; i < this.queryParams.length; ++i) {
                     s.setString(i + 1, CommonHelper.replace(this.queryParams[i], replaceParams));
                 }
 
@@ -77,11 +65,9 @@ public final class SQLiteAuthProvider extends AuthProvider
                 ResultSet set = s.executeQuery();
                 Throwable var10 = null;
 
-                try
-                {
+                try {
                     AuthProviderResult var55;
-                    try
-                    {
+                    try {
                         /*
                         AuthProviderResult var11 = set.next() ? new AuthProviderResult(set.getString(1), SecurityHelper.randomStringToken()) : authError("Incorrect username or password");
                         var55 = var11;
@@ -90,93 +76,59 @@ public final class SQLiteAuthProvider extends AuthProvider
                         var55 = set.next() ? new AuthProviderResult(set.getString(1), SecurityHelper.randomStringToken()) : authError("Incorrect username or password");
                         return var55;
                         // return (AuthProviderResult)var55;
-                    }
-                    catch (Throwable var56)
-                    {
+                    } catch (Throwable var56) {
                         //var55 = var56;
                         var10 = var56;
                         throw var56;
                     }
-                }
-                finally
-                {
-                    if (set != null)
-                    {
-                        if (var10 != null)
-                        {
-                            try
-                            {
+                } finally {
+                    if (set != null) {
+                        if (var10 != null) {
+                            try {
                                 set.close();
-                            }
-                            catch (Throwable var55)
-                            {
+                            } catch (Throwable var55) {
                                 var10.addSuppressed(var55);
                             }
-                        }
-                        else
-                        {
+                        } else {
                             set.close();
                         }
                     }
 
                 }
-            }
-            catch (Throwable var58)
-            {
+            } catch (Throwable var58) {
                 var7 = var58;
                 throw var58;
-            }
-            finally
-            {
-                if (s != null)
-                {
-                    if (var7 != null)
-                    {
-                        try
-                        {
+            } finally {
+                if (s != null) {
+                    if (var7 != null) {
+                        try {
                             s.close();
-                        }
-                        catch (Throwable var54)
-                        {
+                        } catch (Throwable var54) {
                             var7.addSuppressed(var54);
                         }
-                    }
-                    else
-                    {
+                    } else {
                         s.close();
                     }
                 }
             }
-        }
-        catch (Throwable var60)
-        {
+        } catch (Throwable var60) {
             var5 = var60;
             throw var60;
-        }
-        finally
-        {
-            if (c != null)
-            {
-                if (var5 != null)
-                {
-                    try
-                    {
+        } finally {
+            if (c != null) {
+                if (var5 != null) {
+                    try {
                         c.close();
-                    }
-                    catch (Throwable var53)
-                    {
+                    } catch (Throwable var53) {
                         var5.addSuppressed(var53);
                     }
-                }
-                else
-                {
+                } else {
                     c.close();
                 }
             }
         }
     }
 
-    public void close()
-    {
+    public void close() {
     }
 }

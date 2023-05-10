@@ -13,8 +13,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 
-public final class EXEL4JLauncherBinary extends LauncherBinary
-{
+public final class EXEL4JLauncherBinary extends LauncherBinary {
     // URL constants
     private static final String DOWNLOAD_URL = "http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html"; // Oracle JRE 8
 
@@ -22,44 +21,35 @@ public final class EXEL4JLauncherBinary extends LauncherBinary
     private final Path faviconFile;
 
     @LauncherAPI
-    public EXEL4JLauncherBinary(LaunchServer server)
-    {
+    public EXEL4JLauncherBinary(LaunchServer server) {
         super(server, server.dir.resolve(server.config.binaryName + ".exe"));
         faviconFile = server.dir.resolve("favicon.ico");
         setConfig();
     }
 
     @Override
-    public void build() throws IOException
-    {
+    public void build() throws IOException {
         LogHelper.info("Building launcher EXE binary file (Using Launch4J)");
 
         // Set favicon path
         Config config = ConfigPersister.getInstance().getConfig();
-        if (IOHelper.isFile(faviconFile))
-        {
+        if (IOHelper.isFile(faviconFile)) {
             config.setIcon(new File("favicon.ico"));
-        }
-        else
-        {
+        } else {
             config.setIcon(null);
             LogHelper.warning("Missing favicon.ico file");
         }
 
         // Start building
         Builder builder = new Builder(Launch4JLog.INSTANCE);
-        try
-        {
+        try {
             builder.build();
-        }
-        catch (Throwable e)
-        {
+        } catch (Throwable e) {
             throw new IOException(e);
         }
     }
 
-    private void setConfig()
-    {
+    private void setConfig() {
         Config config = new Config();
 
         // Set string options
@@ -108,19 +98,16 @@ public final class EXEL4JLauncherBinary extends LauncherBinary
         ConfigPersister.getInstance().setAntConfig(config, null);
     }
 
-    private static final class Launch4JLog extends Log
-    {
+    private static final class Launch4JLog extends Log {
         private static final Launch4JLog INSTANCE = new Launch4JLog();
 
         @Override
-        public void append(String s)
-        {
+        public void append(String s) {
             LogHelper.subInfo(s);
         }
 
         @Override
-        public void clear()
-        {
+        public void clear() {
             // Do nothing
         }
     }

@@ -16,8 +16,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
-public final class JsonAuthProvider extends AuthProvider
-{
+public final class JsonAuthProvider extends AuthProvider {
     private static final int TIMEOUT = Integer.parseInt(
             System.getProperty("launcher.connection.timeout", Integer.toString(1500)));
 
@@ -28,8 +27,7 @@ public final class JsonAuthProvider extends AuthProvider
     private final String responseUserKeyName;
     private final String responseErrorKeyName;
 
-    JsonAuthProvider(BlockConfigEntry block)
-    {
+    JsonAuthProvider(BlockConfigEntry block) {
         super(block);
         String configUrl = block.getEntryValue("url", StringConfigEntry.class);
         userKeyName = VerifyHelper.verify(block.getEntryValue("userKeyName", StringConfigEntry.class), VerifyHelper.NOT_EMPTY, "Username key name can't be empty");
@@ -41,8 +39,7 @@ public final class JsonAuthProvider extends AuthProvider
     }
 
     @Override
-    public AuthProviderResult auth(String login, String password, String ip) throws IOException
-    {
+    public AuthProviderResult auth(String login, String password, String ip) throws IOException {
         JsonObject request = Json.object().add(userKeyName, login).add(passKeyName, password).add(ipKeyName, ip);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setDoInput(true);
@@ -50,8 +47,7 @@ public final class JsonAuthProvider extends AuthProvider
         connection.setRequestMethod("POST");
         connection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
         connection.setRequestProperty("Accept", "application/json");
-        if (TIMEOUT > 0)
-        {
+        if (TIMEOUT > 0) {
             connection.setConnectTimeout(TIMEOUT);
         }
 
@@ -65,41 +61,31 @@ public final class JsonAuthProvider extends AuthProvider
 
         // Don't throw an exception when gets 4xx/5xx response
         // https://github.com/new-sashok724/Launcher/pull/54/commits/d3be2e243cf5476af000fd8850da9436a227eb2a
-        if (200 <= statusCode && statusCode < 300)
-        {
-            reader = new InputStreamReader(connection.getInputStream(), "UTF-8");
-        }
-        else
-        {
-            reader = new InputStreamReader(connection.getErrorStream(), "UTF-8");
+        if (200 <= statusCode && statusCode < 300) {
+            reader = new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8);
+        } else {
+            reader = new InputStreamReader(connection.getErrorStream(), StandardCharsets.UTF_8);
         }
 
         JsonValue content = Json.parse(reader);
-        if (!content.isObject())
-        {
+        if (!content.isObject()) {
             return authError("Authentication server response is malformed");
         }
 
         JsonObject response = content.asObject();
         String value;
 
-        if ((value = response.getString(responseUserKeyName, null)) != null)
-        {
+        if ((value = response.getString(responseUserKeyName, null)) != null) {
             return new AuthProviderResult(value, SecurityHelper.randomStringToken());
-        }
-        else if ((value = response.getString(responseErrorKeyName, null)) != null)
-        {
+        } else if ((value = response.getString(responseErrorKeyName, null)) != null) {
             return authError(value);
-        }
-        else
-        {
+        } else {
             return authError("Authentication server response is malformed");
         }
     }
 
     @Override
-    public void close()
-    {
+    public void close() {
         // pass
     }
 }

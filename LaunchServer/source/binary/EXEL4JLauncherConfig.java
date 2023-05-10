@@ -5,8 +5,7 @@ import launcher.serialize.config.ConfigObject;
 import launcher.serialize.config.entry.BlockConfigEntry;
 import launcher.serialize.config.entry.StringConfigEntry;
 
-public class EXEL4JLauncherConfig extends ConfigObject
-{
+public class EXEL4JLauncherConfig extends ConfigObject {
     @LauncherAPI
     public String productName;
     @LauncherAPI
@@ -19,8 +18,7 @@ public class EXEL4JLauncherConfig extends ConfigObject
     public String trademarks;
 
     @LauncherAPI
-    public EXEL4JLauncherConfig(BlockConfigEntry block)
-    {
+    public EXEL4JLauncherConfig(BlockConfigEntry block) {
         super(block);
         productName = block.hasEntry("productName") ? block.getEntryValue("productName", StringConfigEntry.class)
                 : "LauncherSchool";

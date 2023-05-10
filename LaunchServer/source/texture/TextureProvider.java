@@ -12,12 +12,10 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-public abstract class TextureProvider extends ConfigObject implements AutoCloseable
-{
+public abstract class TextureProvider extends ConfigObject implements AutoCloseable {
     private static final Map<String, Adapter<TextureProvider>> TEXTURE_PROVIDERS = new ConcurrentHashMap<>(2);
 
-    static
-    {
+    static {
         // Default TextureProviders
         registerProvider("void", VoidTextureProvider::new);
         registerProvider("delegate", DelegateTextureProvider::new);
@@ -33,14 +31,12 @@ public abstract class TextureProvider extends ConfigObject implements AutoClosea
     }
 
     @LauncherAPI
-    protected TextureProvider(BlockConfigEntry block)
-    {
+    protected TextureProvider(BlockConfigEntry block) {
         super(block);
     }
 
     @LauncherAPI
-    public static TextureProvider newProvider(String name, BlockConfigEntry block)
-    {
+    public static TextureProvider newProvider(String name, BlockConfigEntry block) {
         VerifyHelper.verifyIDName(name);
         Adapter<TextureProvider> authHandlerAdapter = VerifyHelper.getMapValue(TEXTURE_PROVIDERS, name,
                 String.format("Unknown texture provider: '%s'", name));
@@ -48,8 +44,7 @@ public abstract class TextureProvider extends ConfigObject implements AutoClosea
     }
 
     @LauncherAPI
-    public static void registerProvider(String name, Adapter<TextureProvider> adapter)
-    {
+    public static void registerProvider(String name, Adapter<TextureProvider> adapter) {
         VerifyHelper.putIfAbsent(TEXTURE_PROVIDERS, name, Objects.requireNonNull(adapter, "adapter"),
                 String.format("Texture provider has been already registered: '%s'", name));
     }

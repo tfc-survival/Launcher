@@ -13,23 +13,19 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
-public abstract class CachedAuthHandler extends AuthHandler
-{
+public abstract class CachedAuthHandler extends AuthHandler {
     private final Map<UUID, Entry> entryCache = new HashMap<>(1024);
     private final Map<String, UUID> usernamesCache = new HashMap<>(1024);
 
     @LauncherAPI
-    protected CachedAuthHandler(BlockConfigEntry block)
-    {
+    protected CachedAuthHandler(BlockConfigEntry block) {
         super(block);
     }
 
     @Override
-    public synchronized UUID auth(AuthProviderResult result) throws IOException
-    {
+    public synchronized UUID auth(AuthProviderResult result) throws IOException {
         Entry entry = getEntry(result.username);
-        if (entry == null || !updateAuth(entry.uuid, entry.username, result.accessToken))
-        {
+        if (entry == null || !updateAuth(entry.uuid, entry.username, result.accessToken)) {
             return authError(String.format("UUID is null for username '%s'", result.username));
         }
 
@@ -41,20 +37,17 @@ public abstract class CachedAuthHandler extends AuthHandler
     }
 
     @Override
-    public synchronized UUID checkServer(String username, String serverID) throws IOException
-    {
+    public synchronized UUID checkServer(String username, String serverID) throws IOException {
         Entry entry = getEntry(username);
         return entry != null && username.equals(entry.username) &&
                 serverID.equals(entry.serverID) ? entry.uuid : null;
     }
 
     @Override
-    public synchronized boolean joinServer(String username, String accessToken, String serverID) throws IOException
-    {
+    public synchronized boolean joinServer(String username, String accessToken, String serverID) throws IOException {
         Entry entry = getEntry(username);
         if (entry == null || !username.equals(entry.username) || !accessToken.equals(entry.accessToken) ||
-                !updateServerID(entry.uuid, serverID))
-        {
+                !updateServerID(entry.uuid, serverID)) {
             return false; // Account doesn't exist or invalid access token
         }
 
@@ -64,15 +57,13 @@ public abstract class CachedAuthHandler extends AuthHandler
     }
 
     @Override
-    public synchronized UUID usernameToUUID(String username) throws IOException
-    {
+    public synchronized UUID usernameToUUID(String username) throws IOException {
         Entry entry = getEntry(username);
         return entry == null ? null : entry.uuid;
     }
 
     @Override
-    public synchronized String uuidToUsername(UUID uuid) throws IOException
-    {
+    public synchronized String uuidToUsername(UUID uuid) throws IOException {
         Entry entry = getEntry(uuid);
         return entry == null ? null : entry.username;
     }
@@ -90,42 +81,34 @@ public abstract class CachedAuthHandler extends AuthHandler
     protected abstract boolean updateServerID(UUID uuid, String serverID) throws IOException;
 
     @LauncherAPI
-    protected void addEntry(Entry entry)
-    {
+    protected void addEntry(Entry entry) {
         Entry previous = entryCache.put(entry.uuid, entry);
-        if (previous != null)
-        { // In case of username changing
+        if (previous != null) { // In case of username changing
             usernamesCache.remove(CommonHelper.low(previous.username));
         }
         usernamesCache.put(CommonHelper.low(entry.username), entry.uuid);
     }
 
-    private Entry getEntry(UUID uuid) throws IOException
-    {
+    private Entry getEntry(UUID uuid) throws IOException {
         Entry entry = entryCache.get(uuid);
-        if (entry == null)
-        {
+        if (entry == null) {
             entry = fetchEntry(uuid);
-            if (entry != null)
-            {
+            if (entry != null) {
                 addEntry(entry);
             }
         }
         return entry;
     }
 
-    private Entry getEntry(String username) throws IOException
-    {
+    private Entry getEntry(String username) throws IOException {
         UUID uuid = usernamesCache.get(CommonHelper.low(username));
-        if (uuid != null)
-        {
+        if (uuid != null) {
             return getEntry(uuid);
         }
 
         // Fetch entry by username
         Entry entry = fetchEntry(username);
-        if (entry != null)
-        {
+        if (entry != null) {
             addEntry(entry);
         }
 
@@ -133,8 +116,7 @@ public abstract class CachedAuthHandler extends AuthHandler
         return entry;
     }
 
-    public static final class Entry
-    {
+    public static final class Entry {
         @LauncherAPI
         public final UUID uuid;
         private String username;
@@ -142,8 +124,7 @@ public abstract class CachedAuthHandler extends AuthHandler
         private String serverID;
 
         @LauncherAPI
-        public Entry(UUID uuid, String username, String accessToken, String serverID)
-        {
+        public Entry(UUID uuid, String username, String accessToken, String serverID) {
             this.uuid = Objects.requireNonNull(uuid, "uuid");
             this.username = Objects.requireNonNull(username, "username");
             this.accessToken = accessToken == null ? null : SecurityHelper.verifyToken(accessToken);

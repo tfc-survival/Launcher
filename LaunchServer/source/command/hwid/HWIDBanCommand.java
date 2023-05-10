@@ -3,8 +3,6 @@ package launchserver.command.hwid;
 import launchserver.LaunchServer;
 import launchserver.command.Command;
 
-import java.util.Locale;
-
 public class HWIDBanCommand extends Command {
     public HWIDBanCommand(LaunchServer server) {
         super(server);

@@ -1,17 +1,15 @@
 package launchserver.plugin;
 
-import java.nio.file.Path;
-
 import launcher.helper.JVMHelper;
 import launcher.helper.LogHelper;
 import launchserver.LaunchServer;
 
-public final class PluginBridge implements Runnable, AutoCloseable
-{
+import java.nio.file.Path;
+
+public final class PluginBridge implements Runnable, AutoCloseable {
     private final LaunchServer server;
 
-    public PluginBridge(Path dir) throws Throwable
-    {
+    public PluginBridge(Path dir) throws Throwable {
         LogHelper.addOutput(dir.resolve("LaunchServer.log"));
         LogHelper.printVersion("LaunchServer");
 

@@ -11,12 +11,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
-public abstract class AuthProvider extends ConfigObject implements AutoCloseable
-{
+public abstract class AuthProvider extends ConfigObject implements AutoCloseable {
     private static final Map<String, Adapter<AuthProvider>> AUTH_PROVIDERS = new ConcurrentHashMap<>(15);
 
-    static
-    {
+    static {
         // Default Providers
         registerProvider("accept", AcceptAuthProvider::new);
         registerProvider("reject", RejectAuthProvider::new);
@@ -45,20 +43,17 @@ public abstract class AuthProvider extends ConfigObject implements AutoCloseable
     }
 
     @LauncherAPI
-    protected AuthProvider(BlockConfigEntry block)
-    {
+    protected AuthProvider(BlockConfigEntry block) {
         super(block);
     }
 
     @LauncherAPI
-    public static AuthProviderResult authError(String message) throws AuthException
-    {
+    public static AuthProviderResult authError(String message) throws AuthException {
         throw new AuthException(message);
     }
 
     @LauncherAPI
-    public static AuthProvider newProvider(String name, BlockConfigEntry block)
-    {
+    public static AuthProvider newProvider(String name, BlockConfigEntry block) {
         VerifyHelper.verifyIDName(name);
         Adapter<AuthProvider> authHandlerAdapter = VerifyHelper.getMapValue(AUTH_PROVIDERS, name,
                 String.format("Unknown auth provider: '%s'", name));
@@ -66,8 +61,7 @@ public abstract class AuthProvider extends ConfigObject implements AutoCloseable
     }
 
     @LauncherAPI
-    public static void registerProvider(String name, Adapter<AuthProvider> adapter)
-    {
+    public static void registerProvider(String name, Adapter<AuthProvider> adapter) {
         VerifyHelper.putIfAbsent(AUTH_PROVIDERS, name, Objects.requireNonNull(adapter, "adapter"),
                 String.format("Auth provider has been already registered: '%s'", name));
     }

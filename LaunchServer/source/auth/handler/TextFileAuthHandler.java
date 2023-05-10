@@ -17,15 +17,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-public final class TextFileAuthHandler extends FileAuthHandler
-{
-    TextFileAuthHandler(BlockConfigEntry block)
-    {
+public final class TextFileAuthHandler extends FileAuthHandler {
+    TextFileAuthHandler(BlockConfigEntry block) {
         super(block);
     }
 
-    private static StringConfigEntry cc(String value)
-    {
+    private static StringConfigEntry cc(String value) {
         StringConfigEntry entry = new StringConfigEntry(value, true, 4);
         entry.setComment(0, "\n\t"); // Pre-name
         entry.setComment(2, " "); // Pre-value
@@ -33,18 +30,15 @@ public final class TextFileAuthHandler extends FileAuthHandler
     }
 
     @Override
-    protected void readAuthFile() throws IOException
-    {
+    protected void readAuthFile() throws IOException {
         BlockConfigEntry authFile;
-        try (BufferedReader reader = IOHelper.newReader(file))
-        {
+        try (BufferedReader reader = IOHelper.newReader(file)) {
             authFile = TextConfigReader.read(reader, false);
         }
 
         // Read auths from config block
         Set<Map.Entry<String, ConfigEntry<?>>> entrySet = authFile.getValue().entrySet();
-        for (Map.Entry<String, ConfigEntry<?>> entry : entrySet)
-        {
+        for (Map.Entry<String, ConfigEntry<?>> entry : entrySet) {
             UUID uuid = UUID.fromString(entry.getKey());
             ConfigEntry<?> value = VerifyHelper.verify(entry.getValue(),
                     v -> v.getType() == Type.BLOCK, "Illegal config entry type: " + uuid);
@@ -63,15 +57,13 @@ public final class TextFileAuthHandler extends FileAuthHandler
     }
 
     @Override
-    protected void writeAuthFileTmp() throws IOException
-    {
+    protected void writeAuthFileTmp() throws IOException {
         boolean next = false;
 
         // Write auth blocks to map
         Set<Map.Entry<UUID, Entry>> entrySet = entrySet();
         Map<String, ConfigEntry<?>> map = new LinkedHashMap<>(entrySet.size());
-        for (Map.Entry<UUID, Entry> entry : entrySet)
-        {
+        for (Map.Entry<UUID, Entry> entry : entrySet) {
             UUID uuid = entry.getKey();
             Entry auth = entry.getValue();
 
@@ -79,24 +71,19 @@ public final class TextFileAuthHandler extends FileAuthHandler
             Map<String, ConfigEntry<?>> authMap = new LinkedHashMap<>(entrySet.size());
             authMap.put("username", cc(auth.getUsername()));
             String accessToken = auth.getAccessToken();
-            if (accessToken != null)
-            {
+            if (accessToken != null) {
                 authMap.put("accessToken", cc(accessToken));
             }
             String serverID = auth.getServerID();
-            if (serverID != null)
-            {
+            if (serverID != null) {
                 authMap.put("serverID", cc(serverID));
             }
 
             // Create and add auth block
             BlockConfigEntry authBlock = new BlockConfigEntry(authMap, true, 5);
-            if (next)
-            {
+            if (next) {
                 authBlock.setComment(0, "\n"); // Pre-name
-            }
-            else
-            {
+            } else {
                 next = true;
             }
             authBlock.setComment(2, " "); // Pre-value
@@ -105,8 +92,7 @@ public final class TextFileAuthHandler extends FileAuthHandler
         }
 
         // Write auth handler file
-        try (BufferedWriter writer = IOHelper.newWriter(fileTmp))
-        {
+        try (BufferedWriter writer = IOHelper.newWriter(fileTmp)) {
             BlockConfigEntry authFile = new BlockConfigEntry(map, true, 1);
             authFile.setComment(0, "\n");
             TextConfigWriter.write(authFile, writer, true);

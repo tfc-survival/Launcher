@@ -4,28 +4,23 @@ import launcher.helper.LogHelper;
 import launchserver.LaunchServer;
 import launchserver.command.Command;
 
-public final class ClearCommand extends Command
-{
-    public ClearCommand(LaunchServer server)
-    {
+public final class ClearCommand extends Command {
+    public ClearCommand(LaunchServer server) {
         super(server);
     }
 
     @Override
-    public String getArgsDescription()
-    {
+    public String getArgsDescription() {
         return null;
     }
 
     @Override
-    public String getUsageDescription()
-    {
+    public String getUsageDescription() {
         return "Clear terminal";
     }
 
     @Override
-    public void invoke(String... args) throws Throwable
-    {
+    public void invoke(String... args) throws Throwable {
         server.commandHandler.clear();
         LogHelper.subInfo("Terminal cleared");
     }

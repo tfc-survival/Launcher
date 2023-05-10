@@ -11,31 +11,24 @@ import java.net.URL;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
-public class ElyByAuthProvider extends AuthProvider
-{
+public class ElyByAuthProvider extends AuthProvider {
     private static final Pattern UUID_REGEX = Pattern.compile("(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})");
     private static final URL URL;
 
-    static
-    {
-        try
-        {
+    static {
+        try {
             URL = new URL("https://authserver.ely.by/auth/authenticate");
-        }
-        catch (MalformedURLException e)
-        {
+        } catch (MalformedURLException e) {
             throw new InternalError(e);
         }
     }
 
-    ElyByAuthProvider(BlockConfigEntry block)
-    {
+    ElyByAuthProvider(BlockConfigEntry block) {
         super(block);
     }
 
     @Override
-    public AuthProviderResult auth(String login, String password, String ip) throws Throwable
-    {
+    public AuthProviderResult auth(String login, String password, String ip) throws Throwable {
         String clientToken = UUID.randomUUID().toString().replaceAll("-", "");
         // https://wiki.vg/Authentication#Payload
         JsonObject request = Json.object().
@@ -44,13 +37,11 @@ public class ElyByAuthProvider extends AuthProvider
 
         // Verify there's no error
         JsonObject response = HTTPRequestHelper.makeAuthlibRequest(URL, request, "ElyBy");
-        if (response == null)
-        {
+        if (response == null) {
             authError("Empty ElyBy response");
         }
         JsonValue errorMessage = response.get("errorMessage");
-        if (errorMessage != null)
-        {
+        if (errorMessage != null) {
             authError(errorMessage.asString());
         }
 
@@ -66,8 +57,7 @@ public class ElyByAuthProvider extends AuthProvider
     }
 
     @Override
-    public void close()
-    {
+    public void close() {
         // Do nothing
     }
 }

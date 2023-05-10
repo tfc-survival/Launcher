@@ -8,14 +8,11 @@ import launchserver.LaunchServer;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 
-public final class JLineCommandHandler extends CommandHandler
-{
+public final class JLineCommandHandler extends CommandHandler {
     private final ConsoleReader reader;
 
-    public JLineCommandHandler(LaunchServer server) throws IOException
-    {
+    public JLineCommandHandler(LaunchServer server) throws IOException {
         super(server);
 
         // Set reader
@@ -29,46 +26,36 @@ public final class JLineCommandHandler extends CommandHandler
     }
 
     @Override
-    public void bell() throws IOException
-    {
+    public void bell() throws IOException {
         reader.beep();
     }
 
     @Override
-    public void clear() throws IOException
-    {
+    public void clear() throws IOException {
         reader.clearScreen();
     }
 
     @Override
-    public String readLine() throws IOException
-    {
+    public String readLine() throws IOException {
         return reader.readLine();
     }
 
-    private final class JLineOutput implements Output
-    {
+    private final class JLineOutput implements Output {
         @Override
-        public void println(String message)
-        {
-            try
-            {
+        public void println(String message) {
+            try {
                 reader.println(ConsoleReader.RESET_LINE + message);
                 reader.drawLine();
                 reader.flush();
-            }
-            catch (IOException ignored)
-            {
+            } catch (IOException ignored) {
                 // Ignored
             }
         }
     }
 
-    public class JLineConsoleCompleter implements Completer
-    {
+    public class JLineConsoleCompleter implements Completer {
         @Override
-        public int complete(String line, int pos, List<CharSequence> list)
-        {
+        public int complete(String line, int pos, List<CharSequence> list) {
             if (pos == 0) {
                 list.addAll(commandsMap().keySet());
             } else {

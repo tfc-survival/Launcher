@@ -14,14 +14,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public final class MariaDBAuthProvider extends AuthProvider
-{
+public final class MariaDBAuthProvider extends AuthProvider {
     private final MariaDBSourceConfig mySQLHolder;
     private final String query;
     private final String[] queryParams;
 
-    MariaDBAuthProvider(BlockConfigEntry block)
-    {
+    MariaDBAuthProvider(BlockConfigEntry block) {
         super(block);
         mySQLHolder = new MariaDBSourceConfig("authProviderPool", block);
 
@@ -33,28 +31,23 @@ public final class MariaDBAuthProvider extends AuthProvider
     }
 
     @Override
-    public AuthProviderResult auth(String login, String password, String ip) throws SQLException, AuthException
-    {
-        try (Connection c = mySQLHolder.getConnection(); PreparedStatement s = c.prepareStatement(query))
-        {
+    public AuthProviderResult auth(String login, String password, String ip) throws SQLException, AuthException {
+        try (Connection c = mySQLHolder.getConnection(); PreparedStatement s = c.prepareStatement(query)) {
             String[] replaceParams = {"login", login, "password", password, "ip", ip};
-            for (int i = 0; i < queryParams.length; i++)
-            {
+            for (int i = 0; i < queryParams.length; i++) {
                 s.setString(i + 1, CommonHelper.replace(queryParams[i], replaceParams));
             }
 
             // Execute SQL query
             s.setQueryTimeout(MariaDBSourceConfig.TIMEOUT);
-            try (ResultSet set = s.executeQuery())
-            {
+            try (ResultSet set = s.executeQuery()) {
                 return set.next() ? new AuthProviderResult(set.getString(1), SecurityHelper.randomStringToken()) : authError("Incorrect username or password");
             }
         }
     }
 
     @Override
-    public void close()
-    {
+    public void close() {
         // Do nothing
     }
 }

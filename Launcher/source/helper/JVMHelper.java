@@ -16,8 +16,7 @@ import java.security.cert.Certificate;
 import java.util.Arrays;
 import java.util.Locale;
 
-public final class JVMHelper
-{
+public final class JVMHelper {
     // MXBeans exports
     @LauncherAPI
     public static final RuntimeMXBean RUNTIME_MXBEAN = ManagementFactory.getRuntimeMXBean();
@@ -55,10 +54,8 @@ public final class JVMHelper
     private static final MethodHandle MH_UCP_GETRESOURCE_METHOD;
     private static final MethodHandle MH_RESOURCE_GETCERTS_METHOD;
 
-    static
-    {
-        try
-        {
+    static {
+        try {
             MethodHandles.publicLookup(); // Just to initialize class
 
             // Get unsafe to get trusted lookup
@@ -79,113 +76,87 @@ public final class JVMHelper
             MH_UCP_GETURLS_METHOD = LOOKUP.findVirtual(ucpClass, "getURLs", MethodType.methodType(URL[].class));
             MH_UCP_GETRESOURCE_METHOD = LOOKUP.findVirtual(ucpClass, "getResource", MethodType.methodType(resourceClass, String.class));
             MH_RESOURCE_GETCERTS_METHOD = LOOKUP.findVirtual(resourceClass, "getCertificates", MethodType.methodType(Certificate[].class));
-        }
-        catch (Throwable exc)
-        {
+        } catch (Throwable exc) {
             throw new InternalError(exc);
         }
     }
 
-    private JVMHelper()
-    {
+    private JVMHelper() {
     }
 
     @LauncherAPI
-    public static void addClassPath(URL url)
-    {
-        try
-        {
+    public static void addClassPath(URL url) {
+        try {
             MH_UCP_ADDURL_METHOD.invoke(UCP, url);
-        }
-        catch (Throwable exc)
-        {
+        } catch (Throwable exc) {
             throw new InternalError(exc);
         }
     }
 
     @LauncherAPI
     @SuppressWarnings("CallToSystemGC")
-    public static void fullGC()
-    {
+    public static void fullGC() {
         RUNTIME.gc();
         RUNTIME.runFinalization();
         LogHelper.debug("Used heap: %d MiB", RUNTIME.totalMemory() - RUNTIME.freeMemory() >> 20);
     }
 
     @LauncherAPI
-    public static Certificate[] getCertificates(String resource)
-    {
-        try
-        {
+    public static Certificate[] getCertificates(String resource) {
+        try {
             Object resource0 = MH_UCP_GETRESOURCE_METHOD.invoke(UCP, resource);
             return resource0 == null ? null : (Certificate[]) MH_RESOURCE_GETCERTS_METHOD.invoke(resource0);
-        }
-        catch (Throwable exc)
-        {
+        } catch (Throwable exc) {
             throw new InternalError(exc);
         }
     }
 
     @LauncherAPI
-    public static URL[] getClassPath()
-    {
-        try
-        {
+    public static URL[] getClassPath() {
+        try {
             return (URL[]) MH_UCP_GETURLS_METHOD.invoke(UCP);
-        }
-        catch (Throwable exc)
-        {
+        } catch (Throwable exc) {
             throw new InternalError(exc);
         }
     }
 
     @LauncherAPI
-    public static void halt0(int status)
-    {
+    public static void halt0(int status) {
         LogHelper.debug("Trying to halt JVM");
-        try
-        {
+        try {
             LOOKUP.findStatic(Class.forName("java.lang.Shutdown"), "halt0", MethodType.methodType(void.class, int.class)).invokeExact(status);
-        }
-        catch (Throwable exc)
-        {
+        } catch (Throwable exc) {
             throw new InternalError(exc);
         }
     }
 
     @LauncherAPI
-    public static boolean isJVMMatchesSystemArch()
-    {
+    public static boolean isJVMMatchesSystemArch() {
         return JVM_BITS == OS_BITS;
     }
 
     @LauncherAPI
-    public static void verifySystemProperties(Class<?> mainClass, boolean requireSystem)
-    {
+    public static void verifySystemProperties(Class<?> mainClass, boolean requireSystem) {
         Locale.setDefault(Locale.US);
 
         // Verify class loader
         LogHelper.debug("Verifying class loader");
-        if (requireSystem && !mainClass.getClassLoader().equals(LOADER))
-        {
+        if (requireSystem && !mainClass.getClassLoader().equals(LOADER)) {
             throw new SecurityException("ClassLoader should be system");
         }
 
         // Verify system and java architecture
         LogHelper.debug("Verifying JVM architecture");
-        if (!isJVMMatchesSystemArch())
-        {
+        if (!isJVMMatchesSystemArch()) {
             LogHelper.warning("Java and OS architecture mismatch");
             LogHelper.warning("It's recommended to download %d-bit JRE", OS_BITS);
         }
     }
 
     @SuppressWarnings("CallToSystemGetenv")
-    private static int getCorrectOSArch()
-    {
+    private static int getCorrectOSArch() {
         // As always, mustdie must die
-        if (OS_TYPE == OS.MUSTDIE)
-        {
+        if (OS_TYPE == OS.MUSTDIE) {
             return System.getenv("ProgramFiles(x86)") == null ? 32 : 64;
         }
 
@@ -193,22 +164,16 @@ public final class JVMHelper
         return System.getProperty("os.arch").contains("64") ? 64 : 32;
     }
 
-    private static int getRAMAmount()
-    {
+    private static int getRAMAmount() {
         int physicalRam = (int) (OPERATING_SYSTEM_MXBEAN.getTotalPhysicalMemorySize() >> 20);
         return Math.min(physicalRam, OS_BITS == 32 ? 1536 : 65534); // Limit 32-bit OS to 1536 MiB, and 64-bit OS to 65534 MiB / 64 Gb
     }
 
-    public static Class<?> firstClass(String... names) throws ClassNotFoundException
-    {
-        for (String name : names)
-        {
-            try
-            {
+    public static Class<?> firstClass(String... names) throws ClassNotFoundException {
+        for (String name : names) {
+            try {
                 return Class.forName(name, false, LOADER);
-            }
-            catch (ClassNotFoundException ignored)
-            {
+            } catch (ClassNotFoundException ignored) {
                 // Expected
             }
         }
@@ -216,32 +181,25 @@ public final class JVMHelper
     }
 
     @LauncherAPI
-    public enum OS
-    {
+    public enum OS {
         MUSTDIE("mustdie"), LINUX("linux"), MACOSX("macosx");
         public final String name;
 
-        OS(String name)
-        {
+        OS(String name) {
             this.name = name;
         }
 
-        public static OS byName(String name)
-        {
-            if (name.startsWith("Windows"))
-            {
+        public static OS byName(String name) {
+            if (name.startsWith("Windows")) {
                 return MUSTDIE;
             }
-            if (name.startsWith("Linux"))
-            {
+            if (name.startsWith("Linux")) {
                 return LINUX;
             }
-            if (name.startsWith("FreeBSD"))
-            {
+            if (name.startsWith("FreeBSD")) {
                 return LINUX;
             }
-            if (name.startsWith("Mac OS X"))
-            {
+            if (name.startsWith("Mac OS X")) {
                 return MACOSX;
             }
             throw new RuntimeException(String.format("This shit is not yet supported: '%s'", name));

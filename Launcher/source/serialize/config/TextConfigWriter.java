@@ -10,35 +10,29 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-public final class TextConfigWriter
-{
+public final class TextConfigWriter {
     private final Writer writer;
     private final boolean comments;
 
-    private TextConfigWriter(Writer writer, boolean comments)
-    {
+    private TextConfigWriter(Writer writer, boolean comments) {
         this.writer = writer;
         this.comments = comments;
     }
 
     @LauncherAPI
-    public static void write(BlockConfigEntry block, Writer writer, boolean comments) throws IOException
-    {
+    public static void write(BlockConfigEntry block, Writer writer, boolean comments) throws IOException {
         new TextConfigWriter(writer, comments).writeBlock(block, false);
     }
 
-    private void writeBlock(BlockConfigEntry block, boolean brackets) throws IOException
-    {
+    private void writeBlock(BlockConfigEntry block, boolean brackets) throws IOException {
         // Write start bracket
-        if (brackets)
-        {
+        if (brackets) {
             writer.write('{');
         }
 
         // Write block entries
         Map<String, ConfigEntry<?>> map = block.getValue();
-        for (Entry<String, ConfigEntry<?>> mapEntry : map.entrySet())
-        {
+        for (Entry<String, ConfigEntry<?>> mapEntry : map.entrySet()) {
             String name = mapEntry.getKey();
             ConfigEntry<?> entry = mapEntry.getValue();
 
@@ -57,30 +51,24 @@ public final class TextConfigWriter
         writeComment(block.getComment(-1));
 
         // Write end bracket
-        if (brackets)
-        {
+        if (brackets) {
             writer.write('}');
         }
     }
 
-    private void writeBoolean(BooleanConfigEntry entry) throws IOException
-    {
+    private void writeBoolean(BooleanConfigEntry entry) throws IOException {
         writer.write(entry.getValue().toString());
     }
 
-    private void writeComment(String comment) throws IOException
-    {
-        if (comments && comment != null)
-        {
+    private void writeComment(String comment) throws IOException {
+        if (comments && comment != null) {
             writer.write(comment);
         }
     }
 
-    private void writeEntry(ConfigEntry<?> entry) throws IOException
-    {
+    private void writeEntry(ConfigEntry<?> entry) throws IOException {
         Type type = entry.getType();
-        switch (type)
-        {
+        switch (type) {
             case BLOCK:
                 writeBlock((BlockConfigEntry) entry, true);
                 break;
@@ -101,21 +89,17 @@ public final class TextConfigWriter
         }
     }
 
-    private void writeInteger(IntegerConfigEntry entry) throws IOException
-    {
+    private void writeInteger(IntegerConfigEntry entry) throws IOException {
         writer.write(Integer.toString(entry.getValue()));
     }
 
-    private void writeList(ListConfigEntry entry) throws IOException
-    {
+    private void writeList(ListConfigEntry entry) throws IOException {
         writer.write('[');
 
         // Write list elements
         List<ConfigEntry<?>> value = entry.getValue();
-        for (int i = 0; i < value.size(); i++)
-        {
-            if (i > 0)
-            {
+        for (int i = 0; i < value.size(); i++) {
+            if (i > 0) {
                 writer.write(',');
             }
 
@@ -131,17 +115,14 @@ public final class TextConfigWriter
         writer.write(']');
     }
 
-    private void writeString(StringConfigEntry entry) throws IOException
-    {
+    private void writeString(StringConfigEntry entry) throws IOException {
         writer.write('"');
 
         // Quote string
         String s = entry.getValue();
-        for (int i = 0; i < s.length(); i++)
-        {
+        for (int i = 0; i < s.length(); i++) {
             char ch = s.charAt(i);
-            switch (ch)
-            {
+            switch (ch) {
                 case '\t':
                     writer.write("\\t");
                     break;

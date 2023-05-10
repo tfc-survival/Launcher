@@ -20,18 +20,15 @@ public class HTTPRequestHelper {
         return connection;
     }
 
-    public static JsonObject makeAuthlibRequest(URL url, JsonObject request, String requestType) throws IOException
-    {
+    public static JsonObject makeAuthlibRequest(URL url, JsonObject request, String requestType) throws IOException {
         HttpURLConnection connection = request == null ?
                 (HttpURLConnection) IOHelper.newConnection(url) :
                 makeRequest(url, "POST");
 
         // Make request
-        if (request != null)
-        {
+        if (request != null) {
             connection.setRequestProperty("Content-Type", "application/json");
-            try (OutputStream output = connection.getOutputStream())
-            {
+            try (OutputStream output = connection.getOutputStream()) {
                 output.write(request.toString(WriterConfig.MINIMAL).getBytes(StandardCharsets.UTF_8));
             }
         }
@@ -39,8 +36,7 @@ public class HTTPRequestHelper {
 
         // Read response
         InputStream errorInput = connection.getErrorStream();
-        try (InputStream input = errorInput == null ? connection.getInputStream() : errorInput)
-        {
+        try (InputStream input = errorInput == null ? connection.getInputStream() : errorInput) {
             String charset = connection.getContentEncoding();
             Charset charsetObject = charset == null ?
                     IOHelper.UNICODE_CHARSET : Charset.forName(charset);
@@ -49,12 +45,9 @@ public class HTTPRequestHelper {
             String json = new String(IOHelper.read(input), charsetObject);
             LogHelper.subDebug("Raw " + requestType + " response: '" + json + '\'');
 
-            if (200 <= statusCode && statusCode < 300)
-            {
+            if (200 <= statusCode && statusCode < 300) {
                 return Json.parse(json).asObject();
-            }
-            else
-            {
+            } else {
                 return json.isEmpty() ? null : Json.parse(json).asObject();
             }
         }
@@ -79,18 +72,15 @@ public class HTTPRequestHelper {
         return response.toString();
     }
 
-    public static int authJoinRequest(URL url, JsonObject request, String authType) throws IOException
-    {
+    public static int authJoinRequest(URL url, JsonObject request, String authType) throws IOException {
         HttpURLConnection connection = request == null ?
                 (HttpURLConnection) IOHelper.newConnection(url) :
                 makeRequest(url, "POST");
 
         // Make request
-        if (request != null)
-        {
+        if (request != null) {
             connection.setRequestProperty("Content-Type", "application/json");
-            try (OutputStream output = connection.getOutputStream())
-            {
+            try (OutputStream output = connection.getOutputStream()) {
                 output.write(request.toString(WriterConfig.MINIMAL).getBytes(StandardCharsets.UTF_8));
             }
         }

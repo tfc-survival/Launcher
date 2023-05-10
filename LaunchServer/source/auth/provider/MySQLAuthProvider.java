@@ -14,14 +14,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public final class MySQLAuthProvider extends AuthProvider
-{
+public final class MySQLAuthProvider extends AuthProvider {
     private final MySQLSourceConfig mySQLHolder;
     private final String query;
     private final String[] queryParams;
 
-    MySQLAuthProvider(BlockConfigEntry block)
-    {
+    MySQLAuthProvider(BlockConfigEntry block) {
         super(block);
         mySQLHolder = new MySQLSourceConfig("authProviderPool", block);
 
@@ -32,28 +30,23 @@ public final class MySQLAuthProvider extends AuthProvider
     }
 
     @Override
-    public AuthProviderResult auth(String login, String password, String ip) throws SQLException, AuthException
-    {
-        try (Connection c = mySQLHolder.getConnection(); PreparedStatement s = c.prepareStatement(query))
-        {
+    public AuthProviderResult auth(String login, String password, String ip) throws SQLException, AuthException {
+        try (Connection c = mySQLHolder.getConnection(); PreparedStatement s = c.prepareStatement(query)) {
             String[] replaceParams = {"login", login, "password", password, "ip", ip};
-            for (int i = 0; i < queryParams.length; i++)
-            {
+            for (int i = 0; i < queryParams.length; i++) {
                 s.setString(i + 1, CommonHelper.replace(queryParams[i], replaceParams));
             }
 
             // Execute SQL query
             s.setQueryTimeout(MySQLSourceConfig.TIMEOUT);
-            try (ResultSet set = s.executeQuery())
-            {
+            try (ResultSet set = s.executeQuery()) {
                 return set.next() ? new AuthProviderResult(set.getString(1), SecurityHelper.randomStringToken()) : authError("Incorrect username or password");
             }
         }
     }
 
     @Override
-    public void close()
-    {
+    public void close() {
         // Do nothing
     }
 }

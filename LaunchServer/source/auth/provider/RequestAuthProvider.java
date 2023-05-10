@@ -11,13 +11,11 @@ import java.net.URL;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public final class RequestAuthProvider extends AuthProvider
-{
+public final class RequestAuthProvider extends AuthProvider {
     private final String url;
     private final Pattern response;
 
-    RequestAuthProvider(BlockConfigEntry block)
-    {
+    RequestAuthProvider(BlockConfigEntry block) {
         super(block);
         url = block.getEntryValue("url", StringConfigEntry.class);
         response = Pattern.compile(block.getEntryValue("response", StringConfigEntry.class));
@@ -27,8 +25,7 @@ public final class RequestAuthProvider extends AuthProvider
     }
 
     @Override
-    public AuthProviderResult auth(String login, String password, String ip) throws IOException
-    {
+    public AuthProviderResult auth(String login, String password, String ip) throws IOException {
         String currentResponse = IOHelper.request(new URL(getFormattedURL(login, password, ip)));
 
         // Match username
@@ -39,13 +36,11 @@ public final class RequestAuthProvider extends AuthProvider
     }
 
     @Override
-    public void close()
-    {
+    public void close() {
         // Do nothing
     }
 
-    private String getFormattedURL(String login, String password, String ip)
-    {
+    private String getFormattedURL(String login, String password, String ip) {
         return CommonHelper.replace(url, "login", IOHelper.urlEncode(login), "password", IOHelper.urlEncode(password), "ip", IOHelper.urlEncode(ip));
     }
 }

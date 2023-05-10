@@ -29,6 +29,7 @@ import launcher.request.update.UpdateRequest;
 import launcher.request.uuid.BatchProfileByUsernameRequest;
 import launcher.request.uuid.ProfileByUUIDRequest;
 import launcher.request.uuid.ProfileByUsernameRequest;
+import launcher.runtime.Init;
 import launcher.serialize.HInput;
 import launcher.serialize.HOutput;
 import launcher.serialize.config.ConfigObject;
@@ -45,7 +46,10 @@ import oshi.SystemInfo;
 import oshi.hardware.CentralProcessor;
 import oshi.hardware.ComputerSystem;
 
-import javax.script.*;
+import javax.script.Bindings;
+import javax.script.ScriptContext;
+import javax.script.ScriptEngine;
+import javax.script.ScriptException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -61,10 +65,9 @@ import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-public final class Launcher
-{
+public final class Launcher {
 
-    public static final boolean dev=true;
+    public static final boolean dev = true;
     // Version info
     @LauncherAPI
     public static final String VERSION = "1.7.5.2";
@@ -84,14 +87,12 @@ public final class Launcher
     private final AtomicBoolean started = new AtomicBoolean(false);
     private final ScriptEngine engine = CommonHelper.newScriptEngine();
 
-    private Launcher()
-    {
+    private Launcher() {
         setScriptBindings();
     }
 
     @LauncherAPI
-    public static void addLauncherClassBindings(ScriptEngine engine, Map<String, Object> bindings)
-    {
+    public static void addLauncherClassBindings(ScriptEngine engine, Map<String, Object> bindings) {
         addClassBinding(engine, bindings, "Launcher", Launcher.class);
         addClassBinding(engine, bindings, "Config", Config.class);
 
@@ -158,32 +159,26 @@ public final class Launcher
         addClassBinding(engine, bindings, "VerifyHelper", VerifyHelper.class);
 
         // Load JS API if available
-        try
-        {
+        try {
             addClassBinding(engine, bindings, "Application", Application.class);
             addClassBinding(engine, bindings, "JSApplication", JSApplication.class);
-        }
-        catch (Throwable ignored)
-        {
+        } catch (Throwable ignored) {
             LogHelper.error("JavaFX API isn't available");
         }
     }
 
     @LauncherAPI
-    public static void addClassBinding(ScriptEngine engine, Map<String, Object> bindings, String name, Class<?> clazz)
-    {
+    public static void addClassBinding(ScriptEngine engine, Map<String, Object> bindings, String name, Class<?> clazz) {
         bindings.put(name + "Class", clazz); // Backwards-compatibility
-        try
-        {
+        try {
             engine.eval("var " + name + " = " + name + "Class.static;");
-        }
-        catch (ScriptException e)
-        {
+        } catch (ScriptException e) {
             throw new AssertionError(e);
         }
     }
 
     private static final MessageDigest md;
+
     static {
         try {
             md = MessageDigest.getInstance("SHA-512");
@@ -193,35 +188,30 @@ public final class Launcher
         }
     }
 
-    public static byte[] hash(String e){
+    public static byte[] hash(String e) {
         return md.digest(e.getBytes(StandardCharsets.UTF_8));
     }
 
     @LauncherAPI
-    public static byte[] getHWID(){
+    public static byte[] getHWID() {
         SystemInfo systemInfo = new SystemInfo();
         CentralProcessor.ProcessorIdentifier processorIdentifier = systemInfo.getHardware().getProcessor().getProcessorIdentifier();
         ComputerSystem computerSystem = systemInfo.getHardware().getComputerSystem();
 
         return
-                hash(processorIdentifier.getProcessorID()+"/"+
-                        processorIdentifier.getName()+"/"+
-                        computerSystem.getHardwareUUID()+"/"+
+                hash(processorIdentifier.getProcessorID() + "/" +
+                        processorIdentifier.getName() + "/" +
+                        computerSystem.getHardwareUUID() + "/" +
                         computerSystem.getBaseboard().getSerialNumber());
     }
 
     @LauncherAPI
-    public static Config getConfig()
-    {
+    public static Config getConfig() {
         Config config = CONFIG.get();
-        if (config == null)
-        {
-            try (HInput input = new HInput(IOHelper.newInput(IOHelper.getResourceURL(CONFIG_FILE))))
-            {
+        if (config == null) {
+            try (HInput input = new HInput(IOHelper.newInput(IOHelper.getResourceURL(CONFIG_FILE)))) {
                 config = new Config(input);
-            }
-            catch (IOException | InvalidKeySpecException e)
-            {
+            } catch (IOException | InvalidKeySpecException e) {
                 throw new SecurityException(e);
             }
             CONFIG.set(config);
@@ -230,11 +220,10 @@ public final class Launcher
     }
 
     @LauncherAPI
-    public static URL getResourceURL(String name) throws IOException
-    {
+    public static URL getResourceURL(String name) throws IOException {
         Config config = getConfig();
         URL url = IOHelper.getResourceURL(RUNTIME_DIR + '/' + name);
-        if(!dev) {
+        if (!dev) {
             byte[] validDigest = config.runtime.get(name);
             if (validDigest == null) { // No such resource digest
                 throw new NoSuchFileException(name);
@@ -252,67 +241,53 @@ public final class Launcher
 
     @LauncherAPI
     @SuppressWarnings({"SameReturnValue", "MethodReturnAlwaysConstant"})
-    public static String getVersion()
-    {
+    public static String getVersion() {
         return VERSION; // Because Java constants are known at compile-time
     }
 
-    public static void main(String... args) throws Throwable
-    {
+    public static void main(String... args) throws Throwable {
         SecurityHelper.verifyCertificates(Launcher.class);
         JVMHelper.verifySystemProperties(Launcher.class, true);
         LogHelper.printVersion("Launcher");
 
         // Start Launcher
-        try
-        {
+        try {
             new Launcher().start(args);
-        }
-        catch (Throwable exc)
-        {
+        } catch (Throwable exc) {
             LogHelper.error(exc);
         }
     }
 
-    private static String readBuildNumber()
-    {
-        try
-        {
+    private static String readBuildNumber() {
+        try {
             return IOHelper.request(IOHelper.getResourceURL("buildnumber"));
-        }
-        catch (IOException ignored)
-        {
+        } catch (IOException ignored) {
             return "dev"; // Maybe dev env?
         }
     }
 
     @LauncherAPI
-    public Object loadScript(URL url) throws IOException, ScriptException
-    {
+    public Object loadScript(URL url) throws IOException, ScriptException {
         LogHelper.debug("Loading script: '%s'", url);
-        try (BufferedReader reader = IOHelper.newReader(url))
-        {
+        try (BufferedReader reader = IOHelper.newReader(url)) {
             return engine.eval(reader);
         }
     }
 
     @LauncherAPI
-    public void start(String... args) throws Throwable
-    {
+    public void start(String... args) throws Throwable {
         Objects.requireNonNull(args, "args");
-        if (started.getAndSet(true))
-        {
+        if (started.getAndSet(true)) {
             throw new IllegalStateException("Launcher has been already started");
         }
 
         // Load init.js script
         loadScript(getResourceURL(INIT_SCRIPT_FILE));
         LogHelper.info("Invoking start() function");
-        ((Invocable) engine).invokeFunction("start", (Object) args);
+        Init.start(args);
     }
 
-    private void setScriptBindings()
-    {
+    private void setScriptBindings() {
         LogHelper.info("Setting up script engine bindings");
         Bindings bindings = engine.getBindings(ScriptContext.ENGINE_SCOPE);
         bindings.put("launcher", this);
@@ -321,8 +296,7 @@ public final class Launcher
         addLauncherClassBindings(engine, bindings);
     }
 
-    public static final class Config extends StreamObject
-    {
+    public static final class Config extends StreamObject {
         @LauncherAPI
         public static final String ADDRESS_OVERRIDE_PROPERTY = "launcher.addressOverride";
         @LauncherAPI
@@ -338,16 +312,14 @@ public final class Launcher
 
         @LauncherAPI
         @SuppressWarnings("AssignmentToCollectionOrArrayFieldFromParameter")
-        public Config(String address, int port, RSAPublicKey publicKey, Map<String, byte[]> runtime)
-        {
+        public Config(String address, int port, RSAPublicKey publicKey, Map<String, byte[]> runtime) {
             this.address = InetSocketAddress.createUnresolved(address, port);
             this.publicKey = Objects.requireNonNull(publicKey, "publicKey");
             this.runtime = Collections.unmodifiableMap(new HashMap<>(runtime));
         }
 
         @LauncherAPI
-        public Config(HInput input) throws IOException, InvalidKeySpecException
-        {
+        public Config(HInput input) throws IOException, InvalidKeySpecException {
             String localAddress = input.readASCII(255);
             address = InetSocketAddress.createUnresolved(
                     ADDRESS_OVERRIDE == null ? localAddress : ADDRESS_OVERRIDE, input.readLength(65535));
@@ -356,8 +328,7 @@ public final class Launcher
             // Read signed runtime
             int count = input.readLength(0);
             Map<String, byte[]> localResources = new HashMap<>(count);
-            for (int i = 0; i < count; i++)
-            {
+            for (int i = 0; i < count; i++) {
                 String name = input.readString(255);
                 VerifyHelper.putIfAbsent(localResources, name,
                         input.readByteArray(SecurityHelper.CRYPTO_MAX_LENGTH),
@@ -366,15 +337,13 @@ public final class Launcher
             runtime = Collections.unmodifiableMap(localResources);
 
             // Print warning if address override is enabled
-            if (ADDRESS_OVERRIDE != null)
-            {
+            if (ADDRESS_OVERRIDE != null) {
                 LogHelper.warning("Address override is enabled: '%s'", ADDRESS_OVERRIDE);
             }
         }
 
         @Override
-        public void write(HOutput output) throws IOException
-        {
+        public void write(HOutput output) throws IOException {
             output.writeASCII(address.getHostString(), 255);
             output.writeLength(address.getPort(), 65535);
             output.writeByteArray(publicKey.getEncoded(), SecurityHelper.CRYPTO_MAX_LENGTH);
@@ -382,8 +351,7 @@ public final class Launcher
             // Write signed runtime
             Set<Entry<String, byte[]>> entrySet = runtime.entrySet();
             output.writeLength(entrySet.size(), 0);
-            for (Entry<String, byte[]> entry : runtime.entrySet())
-            {
+            for (Entry<String, byte[]> entry : runtime.entrySet()) {
                 output.writeString(entry.getKey(), 255);
                 output.writeByteArray(entry.getValue(), SecurityHelper.CRYPTO_MAX_LENGTH);
             }

@@ -12,61 +12,51 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public final class TextConfigReader
-{
+public final class TextConfigReader {
     private final LineNumberReader reader;
     private final boolean ro;
     private String skipped;
     private int ch = -1;
 
-    private TextConfigReader(Reader reader, boolean ro)
-    {
+    private TextConfigReader(Reader reader, boolean ro) {
         this.reader = new LineNumberReader(reader);
         this.reader.setLineNumber(1);
         this.ro = ro;
     }
 
     @LauncherAPI
-    public static BlockConfigEntry read(Reader reader, boolean ro) throws IOException
-    {
+    public static BlockConfigEntry read(Reader reader, boolean ro) throws IOException {
         return new TextConfigReader(reader, ro).readBlock(0);
     }
 
-    private IOException newIOException(String message)
-    {
+    private IOException newIOException(String message) {
         return new IOException(message + " (line " + reader.getLineNumber() + ')');
     }
 
-    private int nextChar(boolean eof) throws IOException
-    {
+    private int nextChar(boolean eof) throws IOException {
         ch = reader.read();
-        if (eof && ch < 0)
-        {
+        if (eof && ch < 0) {
             throw newIOException("Unexpected end of config");
         }
         return ch;
     }
 
-    private int nextClean(boolean eof) throws IOException
-    {
+    private int nextClean(boolean eof) throws IOException {
         nextChar(eof);
         return skipWhitespace(eof);
     }
 
-    private BlockConfigEntry readBlock(int cc) throws IOException
-    {
+    private BlockConfigEntry readBlock(int cc) throws IOException {
         Map<String, ConfigEntry<?>> map = new LinkedHashMap<>(16);
 
         // Read block entries
         boolean brackets = ch == '{';
-        while (nextClean(brackets) >= 0 && (!brackets || ch != '}'))
-        {
+        while (nextClean(brackets) >= 0 && (!brackets || ch != '}')) {
             String preNameComment = skipped;
 
             // Read entry name
             String name = readToken();
-            if (skipWhitespace(true) != ':')
-            {
+            if (skipWhitespace(true) != ':') {
                 throw newIOException("Value start expected");
             }
             String postNameComment = skipped;
@@ -75,8 +65,7 @@ public final class TextConfigReader
             nextClean(true);
             String preValueComment = skipped;
             ConfigEntry<?> entry = readEntry(4);
-            if (skipWhitespace(true) != ';')
-            {
+            if (skipWhitespace(true) != ';') {
                 throw newIOException("Value end expected");
             }
 
@@ -87,8 +76,7 @@ public final class TextConfigReader
             entry.setComment(3, skipped);
 
             // Try add entry to map
-            if (map.put(name, entry) != null)
-            {
+            if (map.put(name, entry) != null) {
                 throw newIOException(String.format("Duplicate config entry: '%s'", name));
             }
         }
@@ -100,11 +88,9 @@ public final class TextConfigReader
         return block;
     }
 
-    private ConfigEntry<?> readEntry(int cc) throws IOException
-    {
+    private ConfigEntry<?> readEntry(int cc) throws IOException {
         // Try detect type by first char
-        switch (ch)
-        {
+        switch (ch) {
             case '"': // String
                 return readString(cc);
             case '[': // List
@@ -116,15 +102,13 @@ public final class TextConfigReader
         }
 
         // Possibly integer value
-        if (ch == '-' || ch >= '0' && ch <= '9')
-        {
+        if (ch == '-' || ch >= '0' && ch <= '9') {
             return readInteger(cc);
         }
 
         // Statement?
         String statement = readToken();
-        switch (statement)
-        {
+        switch (statement) {
             case "true":
                 return new BooleanConfigEntry(Boolean.TRUE, ro, cc);
             case "false":
@@ -134,20 +118,17 @@ public final class TextConfigReader
         }
     }
 
-    private ConfigEntry<Integer> readInteger(int cc) throws IOException
-    {
+    private ConfigEntry<Integer> readInteger(int cc) throws IOException {
         return new IntegerConfigEntry(Integer.parseInt(readToken()), ro, cc);
     }
 
-    private ConfigEntry<List<ConfigEntry<?>>> readList(int cc) throws IOException
-    {
+    private ConfigEntry<List<ConfigEntry<?>>> readList(int cc) throws IOException {
         List<ConfigEntry<?>> listValue = new ArrayList<>(16);
 
         // Read list elements
         boolean hasNextElement = nextClean(true) != ']';
         String preValueComment = skipped;
-        while (hasNextElement)
-        {
+        while (hasNextElement) {
             ConfigEntry<?> element = readEntry(2);
             hasNextElement = skipWhitespace(true) != ']';
             element.setComment(0, preValueComment);
@@ -155,10 +136,8 @@ public final class TextConfigReader
             listValue.add(element);
 
             // Prepare for next element read
-            if (hasNextElement)
-            {
-                if (ch != ',')
-                {
+            if (hasNextElement) {
+                if (ch != ',') {
                     throw newIOException("Comma expected");
                 }
                 nextClean(true);
@@ -169,8 +148,7 @@ public final class TextConfigReader
         // Set in-list comment (if no elements)
         boolean additional = listValue.isEmpty();
         ConfigEntry<List<ConfigEntry<?>>> list = new ListConfigEntry(listValue, ro, additional ? cc + 1 : cc);
-        if (additional)
-        {
+        if (additional) {
             list.setComment(cc, skipped);
         }
 
@@ -179,22 +157,18 @@ public final class TextConfigReader
         return list;
     }
 
-    private ConfigEntry<?> readString(int cc) throws IOException
-    {
+    private ConfigEntry<?> readString(int cc) throws IOException {
         StringBuilder builder = new StringBuilder();
 
         // Read string chars
-        while (nextChar(true) != '"')
-        {
-            switch (ch)
-            {
+        while (nextChar(true) != '"') {
+            switch (ch) {
                 case '\r':
                 case '\n': // String termination
                     throw newIOException("String termination");
                 case '\\':
                     int next = nextChar(true);
-                    switch (next)
-                    {
+                    switch (next) {
                         case 't':
                             builder.append('\t');
                             break;
@@ -229,41 +203,33 @@ public final class TextConfigReader
         return new StringConfigEntry(builder.toString(), ro, cc);
     }
 
-    private String readToken() throws IOException
-    {
+    private String readToken() throws IOException {
         // Read token
         StringBuilder builder = new StringBuilder();
-        while (VerifyHelper.isValidIDNameChar(ch))
-        {
+        while (VerifyHelper.isValidIDNameChar(ch)) {
             builder.append((char) ch);
             nextChar(false);
         }
 
         // Return token as string
         String token = builder.toString();
-        if (token.isEmpty())
-        {
+        if (token.isEmpty()) {
             throw newIOException("Not a token");
         }
         return token;
     }
 
-    private void skipComment(StringBuilder skippedBuilder, boolean eof) throws IOException
-    {
-        while (ch >= 0 && ch != '\r' && ch != '\n')
-        {
+    private void skipComment(StringBuilder skippedBuilder, boolean eof) throws IOException {
+        while (ch >= 0 && ch != '\r' && ch != '\n') {
             skippedBuilder.append((char) ch);
             nextChar(eof);
         }
     }
 
-    private int skipWhitespace(boolean eof) throws IOException
-    {
+    private int skipWhitespace(boolean eof) throws IOException {
         StringBuilder skippedBuilder = new StringBuilder();
-        while (Character.isWhitespace(ch) || ch == '#')
-        {
-            if (ch == '#')
-            {
+        while (Character.isWhitespace(ch) || ch == '#') {
+            if (ch == '#') {
                 skipComment(skippedBuilder, eof);
                 continue;
             }

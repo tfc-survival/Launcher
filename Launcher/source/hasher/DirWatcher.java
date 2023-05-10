@@ -18,8 +18,7 @@ import java.util.Deque;
 import java.util.LinkedList;
 import java.util.Objects;
 
-public final class DirWatcher implements Runnable, AutoCloseable
-{
+public final class DirWatcher implements Runnable, AutoCloseable {
     private static final boolean FILE_TREE_SUPPORTED = JVMHelper.OS_TYPE == OS.MUSTDIE;
 
     // Constants
@@ -41,8 +40,7 @@ public final class DirWatcher implements Runnable, AutoCloseable
     private final boolean digest;
 
     @LauncherAPI
-    public DirWatcher(Path dir, HashedDir hdir, FileNameMatcher matcher, boolean digest) throws IOException
-    {
+    public DirWatcher(Path dir, HashedDir hdir, FileNameMatcher matcher, boolean digest) throws IOException {
         this.dir = Objects.requireNonNull(dir, "dir");
         this.hdir = Objects.requireNonNull(hdir, "hdir");
         this.matcher = matcher;
@@ -50,8 +48,7 @@ public final class DirWatcher implements Runnable, AutoCloseable
         service = dir.getFileSystem().newWatchService();
 
         // Use FILE_TREE if supported
-        if (FILE_TREE_SUPPORTED)
-        {
+        if (FILE_TREE_SUPPORTED) {
             dir.register(service, KINDS, FILE_TREE_MODIFIERS);
             return;
         }
@@ -60,17 +57,14 @@ public final class DirWatcher implements Runnable, AutoCloseable
         IOHelper.walk(dir, new RegisterFileVisitor(), true);
     }
 
-    private static void handleError(Throwable e)
-    {
+    private static void handleError(Throwable e) {
         LogHelper.error(e);
         JVMHelper.halt0(0x0BADFEE1);
     }
 
-    private static Deque<String> toPath(Iterable<Path> path)
-    {
+    private static Deque<String> toPath(Iterable<Path> path) {
         Deque<String> result = new LinkedList<>();
-        for (Path pe : path)
-        {
+        for (Path pe : path) {
             result.add(pe.toString());
         }
         return result;
@@ -78,39 +72,28 @@ public final class DirWatcher implements Runnable, AutoCloseable
 
     @Override
     @LauncherAPI
-    public void close() throws IOException
-    {
+    public void close() throws IOException {
         service.close();
     }
 
     @Override
     @LauncherAPI
-    public void run()
-    {
-        try
-        {
+    public void run() {
+        try {
             processLoop();
-        }
-        catch (InterruptedException | ClosedWatchServiceException ignored)
-        {
+        } catch (InterruptedException | ClosedWatchServiceException ignored) {
             // Do nothing (closed etc)
-        }
-        catch (Throwable exc)
-        {
+        } catch (Throwable exc) {
             handleError(exc);
         }
     }
 
-    private void processKey(WatchKey key) throws IOException
-    {
+    private void processKey(WatchKey key) throws IOException {
         Path watchDir = (Path) key.watchable();
-        for (WatchEvent<?> event : key.pollEvents())
-        {
+        for (WatchEvent<?> event : key.pollEvents()) {
             Kind<?> kind = event.kind();
-            if (kind.equals(StandardWatchEventKinds.OVERFLOW))
-            {
-                if (Boolean.getBoolean("launcher.dirwatcher.ignoreOverflows"))
-                {
+            if (kind.equals(StandardWatchEventKinds.OVERFLOW)) {
+                if (Boolean.getBoolean("launcher.dirwatcher.ignoreOverflows")) {
                     continue; // Sometimes it's better to ignore than interrupt fair playing
                 }
                 throw new IOException("Overflow");
@@ -119,17 +102,14 @@ public final class DirWatcher implements Runnable, AutoCloseable
             // Resolve paths and verify is not exclusion
             Path path = watchDir.resolve((Path) event.context());
             Deque<String> stringPath = toPath(dir.relativize(path));
-            if (matcher != null && !matcher.shouldVerify(stringPath))
-            {
+            if (matcher != null && !matcher.shouldVerify(stringPath)) {
                 continue; // Exclusion; should not be verified
             }
 
             // Verify is REALLY modified (not just attributes)
-            if (kind.equals(StandardWatchEventKinds.ENTRY_MODIFY))
-            {
+            if (kind.equals(StandardWatchEventKinds.ENTRY_MODIFY)) {
                 HashedEntry entry = hdir.resolve(stringPath);
-                if (entry != null && (entry.getType() != Type.FILE || ((HashedFile) entry).isSame(path, digest)))
-                {
+                if (entry != null && (entry.getType() != Type.FILE || ((HashedFile) entry).isSame(path, digest))) {
                     continue; // Modified attributes, not need to worry :D
                 }
             }
@@ -140,43 +120,35 @@ public final class DirWatcher implements Runnable, AutoCloseable
         key.reset();
     }
 
-    private void processLoop() throws IOException, InterruptedException
-    {
-        while (!Thread.interrupted())
-        {
+    private void processLoop() throws IOException, InterruptedException {
+        while (!Thread.interrupted()) {
             processKey(service.take());
         }
     }
 
-    private final class RegisterFileVisitor extends SimpleFileVisitor<Path>
-    {
+    private final class RegisterFileVisitor extends SimpleFileVisitor<Path> {
         private final Deque<String> path = new LinkedList<>();
 
         @Override
-        public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException
-        {
+        public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
             FileVisitResult result = super.postVisitDirectory(dir, exc);
-            if (!DirWatcher.this.dir.equals(dir))
-            {
+            if (!DirWatcher.this.dir.equals(dir)) {
                 path.removeLast();
             }
             return result;
         }
 
         @Override
-        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException
-        {
+        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
             FileVisitResult result = super.preVisitDirectory(dir, attrs);
-            if (DirWatcher.this.dir.equals(dir))
-            {
+            if (DirWatcher.this.dir.equals(dir)) {
                 dir.register(service, KINDS, MODIFIERS);
                 return result;
             }
 
             // Maybe it's unnecessary to go deeper
             path.add(IOHelper.getFileName(dir));
-            if (matcher != null && !matcher.shouldVerify(path))
-            {
+            if (matcher != null && !matcher.shouldVerify(path)) {
                 return FileVisitResult.SKIP_SUBTREE;
             }
 

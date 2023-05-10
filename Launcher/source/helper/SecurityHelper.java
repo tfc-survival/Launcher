@@ -23,8 +23,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.jar.JarFile;
 
-public final class SecurityHelper
-{
+public final class SecurityHelper {
     // Algorithm constants
     @LauncherAPI
     public static final String RSA_ALGO = "RSA";
@@ -36,8 +35,8 @@ public final class SecurityHelper
     // Algorithm size constants
     @LauncherAPI
     public static final int TOKEN_LENGTH = 16;
-   /* @LauncherAPI
-    public static final int TOKEN_STRING_LENGTH = TOKEN_LENGTH << 1;*/
+    /* @LauncherAPI
+     public static final int TOKEN_STRING_LENGTH = TOKEN_LENGTH << 1;*/
     @LauncherAPI
     public static final int RSA_KEY_LENGTH_BITS = 2048;
     @LauncherAPI
@@ -59,101 +58,80 @@ public final class SecurityHelper
     private static final char[] VOWELS = {'e', 'u', 'i', 'o', 'a'};
     private static final char[] CONS = {'r', 't', 'p', 's', 'd', 'f', 'g', 'h', 'k', 'l', 'c', 'v', 'b', 'n', 'm'};
 
-    private SecurityHelper()
-    {
+    private SecurityHelper() {
     }
 
     @LauncherAPI
-    public static byte[] digest(DigestAlgorithm algo, String s)
-    {
+    public static byte[] digest(DigestAlgorithm algo, String s) {
         return digest(algo, IOHelper.encode(s));
     }
 
     @LauncherAPI
-    public static byte[] digest(DigestAlgorithm algo, URL url) throws IOException
-    {
-        try (InputStream input = IOHelper.newInput(url))
-        {
+    public static byte[] digest(DigestAlgorithm algo, URL url) throws IOException {
+        try (InputStream input = IOHelper.newInput(url)) {
             return digest(algo, input);
         }
     }
 
     @LauncherAPI
-    public static byte[] digest(DigestAlgorithm algo, Path file) throws IOException
-    {
-        try (InputStream input = IOHelper.newInput(file))
-        {
+    public static byte[] digest(DigestAlgorithm algo, Path file) throws IOException {
+        try (InputStream input = IOHelper.newInput(file)) {
             return digest(algo, input);
         }
     }
 
     @LauncherAPI
-    public static byte[] digest(DigestAlgorithm algo, byte[] bytes)
-    {
+    public static byte[] digest(DigestAlgorithm algo, byte[] bytes) {
         return newDigest(algo).digest(bytes);
     }
 
     @LauncherAPI
-    public static byte[] digest(DigestAlgorithm algo, InputStream input) throws IOException
-    {
+    public static byte[] digest(DigestAlgorithm algo, InputStream input) throws IOException {
         byte[] buffer = IOHelper.newBuffer();
         MessageDigest digest = newDigest(algo);
-        for (int length = input.read(buffer); length != -1; length = input.read(buffer))
-        {
+        for (int length = input.read(buffer); length != -1; length = input.read(buffer)) {
             digest.update(buffer, 0, length);
         }
         return digest.digest();
     }
 
     @LauncherAPI
-    public static KeyPair genRSAKeyPair(SecureRandom random)
-    {
-        try
-        {
+    public static KeyPair genRSAKeyPair(SecureRandom random) {
+        try {
             KeyPairGenerator generator = KeyPairGenerator.getInstance(RSA_ALGO);
             generator.initialize(RSA_KEY_LENGTH_BITS, random);
             return generator.genKeyPair();
-        }
-        catch (NoSuchAlgorithmException e)
-        {
+        } catch (NoSuchAlgorithmException e) {
             throw new InternalError(e);
         }
     }
 
     @LauncherAPI
-    public static KeyPair genRSAKeyPair()
-    {
+    public static KeyPair genRSAKeyPair() {
         return genRSAKeyPair(newRandom());
     }
 
     @LauncherAPI
-    public static boolean isValidCertificate(Certificate cert)
-    {
-        try
-        {
+    public static boolean isValidCertificate(Certificate cert) {
+        try {
             return toHex(digest(DigestAlgorithm.SHA256, cert.getEncoded())).equals(CERTIFICATE_DIGEST);
-        }
-        catch (CertificateEncodingException e)
-        {
+        } catch (CertificateEncodingException e) {
             throw new InternalError(e);
         }
     }
 
     @LauncherAPI
-    public static boolean isValidCertificates(Certificate... certs)
-    {
+    public static boolean isValidCertificates(Certificate... certs) {
         return certs != null && certs.length == 1 && isValidCertificate(certs[0]);
     }
 
     @LauncherAPI
-    public static boolean isValidCertificates(Class<?> clazz)
-    {
-        if(Launcher.dev)
+    public static boolean isValidCertificates(Class<?> clazz) {
+        if (Launcher.dev)
             return true;
         // Verify META-INF/MANIFEST.MF certificate
         Certificate[] certificates = JVMHelper.getCertificates(JarFile.MANIFEST_NAME);
-        if (certificates == null || !isValidCertificates(certificates))
-        {
+        if (certificates == null || !isValidCertificates(certificates)) {
             return false;
         }
 
@@ -163,194 +141,152 @@ public final class SecurityHelper
     }
 
     @LauncherAPI
-    public static boolean isValidSign(Path path, byte[] sign, RSAPublicKey publicKey) throws IOException, SignatureException
-    {
-        if(Launcher.dev)
+    public static boolean isValidSign(Path path, byte[] sign, RSAPublicKey publicKey) throws IOException, SignatureException {
+        if (Launcher.dev)
             return true;
-        try (InputStream input = IOHelper.newInput(path))
-        {
+        try (InputStream input = IOHelper.newInput(path)) {
             return isValidSign(input, sign, publicKey);
         }
     }
 
     @LauncherAPI
-    public static boolean isValidSign(byte[] bytes, byte[] sign, RSAPublicKey publicKey) throws SignatureException
-    {
+    public static boolean isValidSign(byte[] bytes, byte[] sign, RSAPublicKey publicKey) throws SignatureException {
         Signature signature = newRSAVerifySignature(publicKey);
-        try
-        {
+        try {
             signature.update(bytes);
-        }
-        catch (SignatureException e)
-        {
+        } catch (SignatureException e) {
             throw new InternalError(e);
         }
         return signature.verify(sign);
     }
 
     @LauncherAPI
-    public static boolean isValidSign(InputStream input, byte[] sign, RSAPublicKey publicKey) throws IOException, SignatureException
-    {
+    public static boolean isValidSign(InputStream input, byte[] sign, RSAPublicKey publicKey) throws IOException, SignatureException {
         Signature signature = newRSAVerifySignature(publicKey);
         updateSignature(input, signature);
         return signature.verify(sign);
     }
 
     @LauncherAPI
-    public static boolean isValidSign(URL url, byte[] sign, RSAPublicKey publicKey) throws IOException, SignatureException
-    {
-        try (InputStream input = IOHelper.newInput(url))
-        {
+    public static boolean isValidSign(URL url, byte[] sign, RSAPublicKey publicKey) throws IOException, SignatureException {
+        try (InputStream input = IOHelper.newInput(url)) {
             return isValidSign(input, sign, publicKey);
         }
     }
 
     @LauncherAPI
-    public static boolean isValidToken(CharSequence token)
-    {
+    public static boolean isValidToken(CharSequence token) {
         // TODO: Проверить обратную совместимость с 32 символа acsessToken (MineSocial/Authlib самопис)
         // return token.length() == TOKEN_STRING_LENGTH && token.chars().allMatch(ch -> HEX.indexOf(ch) >= 0);
         return token.chars().allMatch(ch -> JWT.indexOf(ch) >= 0);
     }
 
     @LauncherAPI
-    public static MessageDigest newDigest(DigestAlgorithm algo)
-    {
+    public static MessageDigest newDigest(DigestAlgorithm algo) {
         VerifyHelper.verify(algo, a -> a != DigestAlgorithm.PLAIN, "PLAIN digest");
-        try
-        {
+        try {
             return MessageDigest.getInstance(algo.name);
-        }
-        catch (NoSuchAlgorithmException e)
-        {
+        } catch (NoSuchAlgorithmException e) {
             throw new InternalError(e);
         }
     }
 
     @LauncherAPI
-    public static Cipher newRSADecryptCipher(RSAPrivateKey key)
-    {
+    public static Cipher newRSADecryptCipher(RSAPrivateKey key) {
         return newRSACipher(Cipher.DECRYPT_MODE, key);
     }
 
     @LauncherAPI
-    public static Cipher newRSAEncryptCipher(RSAPublicKey key)
-    {
+    public static Cipher newRSAEncryptCipher(RSAPublicKey key) {
         return newRSACipher(Cipher.ENCRYPT_MODE, key);
     }
 
     @LauncherAPI
-    public static Signature newRSASignSignature(RSAPrivateKey key)
-    {
+    public static Signature newRSASignSignature(RSAPrivateKey key) {
         Signature signature = newRSASignature();
-        try
-        {
+        try {
             signature.initSign(key);
-        }
-        catch (InvalidKeyException e)
-        {
+        } catch (InvalidKeyException e) {
             throw new InternalError(e);
         }
         return signature;
     }
 
     @LauncherAPI
-    public static Signature newRSAVerifySignature(RSAPublicKey key)
-    {
+    public static Signature newRSAVerifySignature(RSAPublicKey key) {
         Signature signature = newRSASignature();
-        try
-        {
+        try {
             signature.initVerify(key);
-        }
-        catch (InvalidKeyException e)
-        {
+        } catch (InvalidKeyException e) {
             throw new InternalError(e);
         }
         return signature;
     }
 
     @LauncherAPI
-    public static SecureRandom newRandom()
-    {
+    public static SecureRandom newRandom() {
         return new SecureRandom();
     }
 
     @LauncherAPI
-    public static byte[] randomBytes(Random random, int length)
-    {
+    public static byte[] randomBytes(Random random, int length) {
         byte[] bytes = new byte[length];
         random.nextBytes(bytes);
         return bytes;
     }
 
     @LauncherAPI
-    public static byte[] randomBytes(int length)
-    {
+    public static byte[] randomBytes(int length) {
         return randomBytes(newRandom(), length);
     }
 
     @LauncherAPI
-    public static String randomStringToken(Random random)
-    {
+    public static String randomStringToken(Random random) {
         return toHex(randomToken(random));
     }
 
     @LauncherAPI
-    public static String randomStringToken()
-    {
+    public static String randomStringToken() {
         return randomStringToken(newRandom());
     }
 
     @LauncherAPI
-    public static byte[] randomToken(Random random)
-    {
+    public static byte[] randomToken(Random random) {
         return randomBytes(random, TOKEN_LENGTH);
     }
 
     @LauncherAPI
-    public static byte[] randomToken()
-    {
+    public static byte[] randomToken() {
         return randomToken(newRandom());
     }
 
     @LauncherAPI
-    public static String randomUsername(Random random)
-    {
+    public static String randomUsername(Random random) {
         int usernameLength = 3 + random.nextInt(7); // 3-9
 
         // Choose prefix
         String prefix;
         int prefixType = random.nextInt(7);
-        if (usernameLength >= 5 && prefixType == 6)
-        { // (6) 2-char
+        if (usernameLength >= 5 && prefixType == 6) { // (6) 2-char
             prefix = random.nextBoolean() ? "Mr" : "Dr";
             usernameLength -= 2;
-        }
-        else if (usernameLength >= 6 && prefixType == 5)
-        { // (5) 3-char
+        } else if (usernameLength >= 6 && prefixType == 5) { // (5) 3-char
             prefix = "Mrs";
             usernameLength -= 3;
-        }
-        else
-        {
+        } else {
             prefix = "";
         }
 
         // Choose suffix
         String suffix;
         int suffixType = random.nextInt(7); // 0-6, 7 values
-        if (usernameLength >= 5 && suffixType == 6)
-        { // (6) 10-99
+        if (usernameLength >= 5 && suffixType == 6) { // (6) 10-99
             suffix = String.valueOf(10 + random.nextInt(90));
             usernameLength -= 2;
-        }
-        else if (usernameLength >= 7 && suffixType == 5)
-        { // (5) 1990-2015
+        } else if (usernameLength >= 7 && suffixType == 5) { // (5) 1990-2015
             suffix = String.valueOf(1990 + random.nextInt(26));
             usernameLength -= 4;
-        }
-        else
-        {
+        } else {
             suffix = "";
         }
 
@@ -358,21 +294,16 @@ public final class SecurityHelper
         int consRepeat = 0;
         boolean consPrev = random.nextBoolean();
         char[] chars = new char[usernameLength];
-        for (int i = 0; i < chars.length; i++)
-        {
-            if (i > 1 && consPrev && random.nextInt(10) == 0)
-            { // Doubled
+        for (int i = 0; i < chars.length; i++) {
+            if (i > 1 && consPrev && random.nextInt(10) == 0) { // Doubled
                 chars[i] = chars[i - 1];
                 continue;
             }
 
             // Choose next char
-            if (consRepeat < 1 && random.nextInt() == 5)
-            {
+            if (consRepeat < 1 && random.nextInt() == 5) {
                 consRepeat++;
-            }
-            else
-            {
+            } else {
                 consRepeat = 0;
                 consPrev ^= true;
             }
@@ -383,8 +314,7 @@ public final class SecurityHelper
         }
 
         // Make first letter uppercase
-        if (!prefix.isEmpty() || random.nextBoolean())
-        {
+        if (!prefix.isEmpty() || random.nextBoolean()) {
             chars[0] = Character.toUpperCase(chars[0]);
         }
 
@@ -393,57 +323,44 @@ public final class SecurityHelper
     }
 
     @LauncherAPI
-    public static String randomUsername()
-    {
+    public static String randomUsername() {
         return randomUsername(newRandom());
     }
 
     @LauncherAPI
-    public static byte[] sign(InputStream input, RSAPrivateKey privateKey) throws IOException
-    {
+    public static byte[] sign(InputStream input, RSAPrivateKey privateKey) throws IOException {
         Signature signature = newRSASignSignature(privateKey);
         updateSignature(input, signature);
-        try
-        {
+        try {
             return signature.sign();
-        }
-        catch (SignatureException e)
-        {
+        } catch (SignatureException e) {
             throw new InternalError(e);
         }
     }
 
     @LauncherAPI
-    public static byte[] sign(byte[] bytes, RSAPrivateKey privateKey)
-    {
+    public static byte[] sign(byte[] bytes, RSAPrivateKey privateKey) {
         Signature signature = newRSASignSignature(privateKey);
-        try
-        {
+        try {
             signature.update(bytes);
             return signature.sign();
-        }
-        catch (SignatureException e)
-        {
+        } catch (SignatureException e) {
             throw new InternalError(e);
         }
     }
 
     @LauncherAPI
-    public static byte[] sign(Path path, RSAPrivateKey privateKey) throws IOException
-    {
-        try (InputStream input = IOHelper.newInput(path))
-        {
+    public static byte[] sign(Path path, RSAPrivateKey privateKey) throws IOException {
+        try (InputStream input = IOHelper.newInput(path)) {
             return sign(input, privateKey);
         }
     }
 
     @LauncherAPI
-    public static String toHex(byte[] bytes)
-    {
+    public static String toHex(byte[] bytes) {
         int offset = 0;
         char[] hex = new char[bytes.length << 1];
-        for (byte currentByte : bytes)
-        {
+        for (byte currentByte : bytes) {
             int ub = Byte.toUnsignedInt(currentByte);
             hex[offset] = HEX.charAt(ub >>> 4);
             offset++;
@@ -454,151 +371,112 @@ public final class SecurityHelper
     }
 
     @LauncherAPI
-    public static RSAPrivateKey toPrivateRSAKey(byte[] bytes) throws InvalidKeySpecException
-    {
+    public static RSAPrivateKey toPrivateRSAKey(byte[] bytes) throws InvalidKeySpecException {
         return (RSAPrivateKey) newRSAKeyFactory().generatePrivate(new PKCS8EncodedKeySpec(bytes));
     }
 
     @LauncherAPI
-    public static RSAPublicKey toPublicRSAKey(byte[] bytes) throws InvalidKeySpecException
-    {
+    public static RSAPublicKey toPublicRSAKey(byte[] bytes) throws InvalidKeySpecException {
         return (RSAPublicKey) newRSAKeyFactory().generatePublic(new X509EncodedKeySpec(bytes));
     }
 
     @LauncherAPI
-    public static void verifyCertificates(Class<?> clazz)
-    {
-        if (!isValidCertificates(clazz))
-        {
+    public static void verifyCertificates(Class<?> clazz) {
+        if (!isValidCertificates(clazz)) {
             throw new SecurityException("Invalid certificates");
         }
     }
 
     @LauncherAPI
-    public static void verifySign(byte[] bytes, byte[] sign, RSAPublicKey publicKey) throws SignatureException
-    {
-        if (!isValidSign(bytes, sign, publicKey))
-        {
+    public static void verifySign(byte[] bytes, byte[] sign, RSAPublicKey publicKey) throws SignatureException {
+        if (!isValidSign(bytes, sign, publicKey)) {
             throw new SignatureException("Invalid sign");
         }
     }
 
     @LauncherAPI
-    public static void verifySign(InputStream input, byte[] sign, RSAPublicKey publicKey) throws SignatureException, IOException
-    {
-        if (!isValidSign(input, sign, publicKey))
-        {
+    public static void verifySign(InputStream input, byte[] sign, RSAPublicKey publicKey) throws SignatureException, IOException {
+        if (!isValidSign(input, sign, publicKey)) {
             throw new SignatureException("Invalid stream sign");
         }
     }
 
     @LauncherAPI
-    public static void verifySign(Path path, byte[] sign, RSAPublicKey publicKey) throws SignatureException, IOException
-    {
-        if (!isValidSign(path, sign, publicKey))
-        {
+    public static void verifySign(Path path, byte[] sign, RSAPublicKey publicKey) throws SignatureException, IOException {
+        if (!isValidSign(path, sign, publicKey)) {
             throw new SignatureException(String.format("Invalid file sign: '%s'", path));
         }
     }
 
     @LauncherAPI
-    public static void verifySign(URL url, byte[] sign, RSAPublicKey publicKey) throws SignatureException, IOException
-    {
-        if (!isValidSign(url, sign, publicKey))
-        {
+    public static void verifySign(URL url, byte[] sign, RSAPublicKey publicKey) throws SignatureException, IOException {
+        if (!isValidSign(url, sign, publicKey)) {
             throw new SignatureException(String.format("Invalid URL sign: '%s'", url));
         }
     }
 
     @LauncherAPI
-    public static String verifyToken(String token)
-    {
+    public static String verifyToken(String token) {
         return VerifyHelper.verify(token, SecurityHelper::isValidToken, String.format("Invalid token: '%s'", token));
     }
 
-    private static Cipher newCipher(String algo)
-    {
+    private static Cipher newCipher(String algo) {
         // IDK Why, but collapsing catch blocks makes ProGuard generate invalid stackmap
-        try
-        {
+        try {
             return Cipher.getInstance(algo);
-        }
-        catch (NoSuchAlgorithmException e)
-        {
+        } catch (NoSuchAlgorithmException e) {
             throw new InternalError(e);
-        }
-        catch (NoSuchPaddingException e)
-        {
+        } catch (NoSuchPaddingException e) {
             throw new InternalError(e);
         }
     }
 
-    private static Cipher newRSACipher(int mode, RSAKey key)
-    {
+    private static Cipher newRSACipher(int mode, RSAKey key) {
         Cipher cipher = newCipher(RSA_CIPHER_ALGO);
-        try
-        {
+        try {
             cipher.init(mode, (Key) key);
-        }
-        catch (InvalidKeyException e)
-        {
+        } catch (InvalidKeyException e) {
             throw new InternalError(e);
         }
         return cipher;
     }
 
-    private static KeyFactory newRSAKeyFactory()
-    {
-        try
-        {
+    private static KeyFactory newRSAKeyFactory() {
+        try {
             return KeyFactory.getInstance(RSA_ALGO);
-        }
-        catch (NoSuchAlgorithmException e)
-        {
+        } catch (NoSuchAlgorithmException e) {
             throw new InternalError(e);
         }
     }
 
-    private static Signature newRSASignature()
-    {
-        try
-        {
+    private static Signature newRSASignature() {
+        try {
             return Signature.getInstance(RSA_SIGN_ALGO);
-        }
-        catch (NoSuchAlgorithmException e)
-        {
+        } catch (NoSuchAlgorithmException e) {
             throw new InternalError(e);
         }
     }
 
-    private static void updateSignature(InputStream input, Signature signature) throws IOException
-    {
+    private static void updateSignature(InputStream input, Signature signature) throws IOException {
         byte[] buffer = IOHelper.newBuffer();
-        for (int length = input.read(buffer); length >= 0; length = input.read(buffer))
-        {
-            try
-            {
+        for (int length = input.read(buffer); length >= 0; length = input.read(buffer)) {
+            try {
                 signature.update(buffer, 0, length);
-            }
-            catch (SignatureException e)
-            {
+            } catch (SignatureException e) {
                 throw new InternalError(e);
             }
         }
     }
 
     @LauncherAPI
-    public enum DigestAlgorithm
-    {
+    public enum DigestAlgorithm {
         PLAIN("plain", -1), MD5("MD5", 128), SHA1("SHA-1", 160), SHA224("SHA-224", 224), SHA256("SHA-256", 256), SHA512("SHA-512", 512);
         private static final Map<String, DigestAlgorithm> ALGORITHMS;
 
-        static
-        {
+        static {
             DigestAlgorithm[] algorithmsValues = values();
             ALGORITHMS = new HashMap<>(algorithmsValues.length);
-            for (DigestAlgorithm algorithm : algorithmsValues)
-            {
+            for (DigestAlgorithm algorithm : algorithmsValues) {
                 ALGORITHMS.put(algorithm.name, algorithm);
             }
         }
@@ -608,8 +486,7 @@ public final class SecurityHelper
         public final int bits;
         public final int bytes;
 
-        DigestAlgorithm(String name, int bits)
-        {
+        DigestAlgorithm(String name, int bits) {
             this.name = name;
             this.bits = bits;
 
@@ -618,21 +495,17 @@ public final class SecurityHelper
             assert bits % Byte.SIZE == 0;
         }
 
-        public static DigestAlgorithm byName(String name)
-        {
+        public static DigestAlgorithm byName(String name) {
             return VerifyHelper.getMapValue(ALGORITHMS, name, String.format("Unknown digest algorithm: '%s'", name));
         }
 
         @Override
-        public String toString()
-        {
+        public String toString() {
             return name;
         }
 
-        public byte[] verify(byte[] digest)
-        {
-            if (digest.length != bytes)
-            {
+        public byte[] verify(byte[] digest) {
+            if (digest.length != bytes) {
                 throw new IllegalArgumentException("Invalid digest length: " + digest.length);
             }
             return digest;

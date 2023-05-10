@@ -15,8 +15,7 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-public final class MySQL8SourceConfig extends ConfigObject implements AutoCloseable, SQLSourceConfig
-{
+public final class MySQL8SourceConfig extends ConfigObject implements AutoCloseable, SQLSourceConfig {
     @LauncherAPI
     public static final int TIMEOUT = VerifyHelper.verifyInt(
             Integer.parseInt(System.getProperty("launcher.mysql.idleTimeout", Integer.toString(5000))),
@@ -35,15 +34,14 @@ public final class MySQL8SourceConfig extends ConfigObject implements AutoClosea
     private final String password;
     private final String database;
     private final boolean useSSL;
-    private String timeZone;
+    private final String timeZone;
 
     // Cache
     private DataSource source;
     private boolean hikari;
 
     @LauncherAPI
-    public MySQL8SourceConfig(String poolName, BlockConfigEntry block)
-    {
+    public MySQL8SourceConfig(String poolName, BlockConfigEntry block) {
         super(block);
         this.poolName = poolName;
         address = VerifyHelper.verify(block.getEntryValue("address", StringConfigEntry.class), VerifyHelper.NOT_EMPTY, "MySQL address can't be empty");
@@ -64,19 +62,15 @@ public final class MySQL8SourceConfig extends ConfigObject implements AutoClosea
     }
 
     @Override
-    public synchronized void close()
-    {
-        if (hikari)
-        { // Shutdown hikari pool
+    public synchronized void close() {
+        if (hikari) { // Shutdown hikari pool
             ((HikariDataSource) source).close();
         }
     }
 
     @LauncherAPI
-    public synchronized Connection getConnection() throws SQLException
-    {
-        if (source == null)
-        { // New data source
+    public synchronized Connection getConnection() throws SQLException {
+        if (source == null) { // New data source
             MysqlDataSource mysqlSource = new MysqlDataSource();
             mysqlSource.setCharacterEncoding("UTF-8");
             mysqlSource.setUseSSL(useSSL);
@@ -108,9 +102,8 @@ public final class MySQL8SourceConfig extends ConfigObject implements AutoClosea
 
             // Try using HikariCP
             source = mysqlSource;
-            LogHelper.info("connection to db "+mysqlSource.getUrl());
-            try
-            {
+            LogHelper.info("connection to db " + mysqlSource.getUrl());
+            try {
                 Class.forName("com.zaxxer.hikari.HikariDataSource");
                 hikari = true; // Used for shutdown. Not instanceof because of possible classpath error
 
@@ -127,9 +120,7 @@ public final class MySQL8SourceConfig extends ConfigObject implements AutoClosea
                 // Replace source with hds
                 source = hikariSource;
                 LogHelper.info("HikariCP pooling enabled for '%s'", poolName);
-            }
-            catch (ClassNotFoundException ignored)
-            {
+            } catch (ClassNotFoundException ignored) {
                 LogHelper.warning("HikariCP isn't in classpath for '%s'", poolName);
             }
         }

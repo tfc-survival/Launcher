@@ -13,31 +13,24 @@ import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
-public class MineSocialAuthProvider extends AuthProvider
-{
+public class MineSocialAuthProvider extends AuthProvider {
     private static final Pattern UUID_REGEX = Pattern.compile("(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})");
     private static final java.net.URL URL;
 
-    static
-    {
-        try
-        {
+    static {
+        try {
             URL = new URL("https://authserver.minesocial.net/authenticate");
-        }
-        catch (MalformedURLException e)
-        {
+        } catch (MalformedURLException e) {
             throw new InternalError(e);
         }
     }
 
-    MineSocialAuthProvider(BlockConfigEntry block)
-    {
+    MineSocialAuthProvider(BlockConfigEntry block) {
         super(block);
     }
 
     @Override
-    public AuthProviderResult auth(String login, String password, String ip) throws Throwable
-    {
+    public AuthProviderResult auth(String login, String password, String ip) throws Throwable {
         String clientToken = UUID.randomUUID().toString().replaceAll("-", "");
         // https://wiki.vg/Authentication#Payload
         JsonObject request = Json.object().
@@ -47,13 +40,11 @@ public class MineSocialAuthProvider extends AuthProvider
 
         // Verify there's no error
         JsonObject response = HTTPRequestHelper.makeAuthlibRequest(URL, request, "MineSocial");
-        if (response == null)
-        {
+        if (response == null) {
             authError("Empty MineSocial Provider response");
         }
         JsonValue errorMessage = response.get("errorMessage");
-        if (errorMessage != null)
-        {
+        if (errorMessage != null) {
             authError(errorMessage.asString());
         }
 
@@ -69,26 +60,23 @@ public class MineSocialAuthProvider extends AuthProvider
     }
 
     @Override
-    public void close()
-    {
+    public void close() {
         // Do nothing
     }
 
     /**
      * Класс, отвечающий за безопасность отправляемых данных
      * на сервер MineSocial.NET (ну хотя бы попытка)
-     *
+     * <p>
      * Функция предназначена для обертки пароля в SHA1,
      * где он сверяется с BCrypt на стороне сервиса
-     *
+     * <p>
      * Я не могу хранить данные в открытом виде, поэтому хотя бы так.
      **/
 
     // TODO: Сверить хеш после технических работ
-    private static String getHash(String password)
-    {
-        try
-        {
+    private static String getHash(String password) {
+        try {
             MessageDigest md = MessageDigest.getInstance("SHA-1");
             byte[] array = md.digest(password.getBytes());
             StringBuilder sb = new StringBuilder();
@@ -97,9 +85,7 @@ public class MineSocialAuthProvider extends AuthProvider
                 sb.append(Integer.toHexString((b & 0xFF) | 0x100), 1, 3);
             }
             return sb.toString().toLowerCase(); // На всякий случай
-        }
-        catch (NoSuchAlgorithmException e)
-        {
+        } catch (NoSuchAlgorithmException e) {
             // Need?
             return null;
         }

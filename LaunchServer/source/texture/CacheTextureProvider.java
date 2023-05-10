@@ -19,8 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class CacheTextureProvider
-{
+public class CacheTextureProvider {
     @LauncherAPI
     public static final long CACHE_DURATION_MS = VerifyHelper.verifyLong(
             Long.parseLong(System.getProperty("launcher.mysql.cacheDurationHours", Integer.toString(24))),
@@ -32,51 +31,42 @@ public class CacheTextureProvider
     // Since November 2020, Mojang stopped supporting the timestamp parameter.
     // If a timestamp is provided, it is silently ignored and the current uuid is returned. Please remind them to fix this here:
     // https://bugs.mojang.com/browse/WEB-3367
-    protected CacheDataTexture getCached(UUID uuid, String username, String in_profileURL, String serviceName)
-    {
+    protected CacheDataTexture getCached(UUID uuid, String username, String in_profileURL, String serviceName) {
         CacheDataTexture result = cache.get(uuid);
 
         // Have cached result?
-        if (result != null && System.currentTimeMillis() < result.until)
-        {
-            if (result.exc != null)
-            {
+        if (result != null && System.currentTimeMillis() < result.until) {
+            if (result.exc != null) {
                 JVMHelper.UNSAFE.throwException(result.exc);
             }
             return result;
         }
 
-        try
-        {
+        try {
             // Obtain player profile
             URL profileURL = new URL(in_profileURL + IOHelper.urlEncode(serviceName.equals("ElyBy") ? username : uuid.toString())); // Как я это не хотел делать...
             JsonObject profileResponse = HTTPRequestHelper.makeAuthlibRequest(profileURL, null, serviceName);
-            if (profileResponse == null)
-            {
+            if (profileResponse == null) {
                 throw new IllegalArgumentException("Empty Authlib response");
             }
             JsonArray properties = (JsonArray) profileResponse.get("properties");
-            if (properties == null)
-            {
+            if (properties == null) {
                 LogHelper.subDebug("No properties");
                 return cache(username, null, null, null);
             }
 
             // Find textures property
             JsonObject texturesProperty = null;
-            for (JsonValue property : properties)
-            {
+            for (JsonValue property : properties) {
                 JsonObject property0 = property.asObject();
-                if (property0.get("name").asString().equals("textures"))
-                {
+                if (property0.get("name").asString().equals("textures")) {
                     byte[] asBytes = Base64.getDecoder().decode(property0.get("value").asString());
                     String asString = new String(asBytes, StandardCharsets.UTF_8);
                     texturesProperty = Json.parse(asString).asObject();
                     break;
                 }
             }
-            if (texturesProperty == null)
-            {
+            if (texturesProperty == null) {
                 LogHelper.subDebug("No textures property");
                 return cache(username, null, null, null);
             }
@@ -90,9 +80,7 @@ public class CacheTextureProvider
 
             // We're done
             return cache(username, skinTexture, cloakTexture, null);
-        }
-        catch (Throwable exc)
-        {
+        } catch (Throwable exc) {
             cache(username, null, null, exc);
             JVMHelper.UNSAFE.throwException(exc);
         }
@@ -101,12 +89,10 @@ public class CacheTextureProvider
         return result;
     }
 
-    private CacheDataTexture cache(String username, Texture skin, Texture cloak, Throwable exc)
-    {
+    private CacheDataTexture cache(String username, Texture skin, Texture cloak, Throwable exc) {
         long until = CACHE_DURATION_MS == 0L ? Long.MIN_VALUE : System.currentTimeMillis() + CACHE_DURATION_MS;
         CacheDataTexture data = exc == null ? new CacheDataTexture(skin, cloak, until) : new CacheDataTexture(exc, until);
-        if (CACHE_DURATION_MS != 0L)
-        {
+        if (CACHE_DURATION_MS != 0L) {
             cache.put(username, data);
         }
         return data;

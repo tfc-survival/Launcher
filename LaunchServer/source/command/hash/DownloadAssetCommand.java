@@ -13,28 +13,23 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 
-public final class DownloadAssetCommand extends Command
-{
-    public DownloadAssetCommand(LaunchServer server)
-    {
+public final class DownloadAssetCommand extends Command {
+    public DownloadAssetCommand(LaunchServer server) {
         super(server);
     }
 
     @Override
-    public String getArgsDescription()
-    {
+    public String getArgsDescription() {
         return "<version> <dir>";
     }
 
     @Override
-    public String getUsageDescription()
-    {
+    public String getUsageDescription() {
         return "Download asset dir";
     }
 
     @Override
-    public void invoke(String... args) throws Throwable
-    {
+    public void invoke(String... args) throws Throwable {
         verifyArgs(args, 2);
         String version = args[0];
         String dirName = IOHelper.verifyFileName(args[1]);
@@ -53,7 +48,7 @@ public final class DownloadAssetCommand extends Command
 
             // Download required asset
             LogHelper.subInfo("Downloading asset, it may take some time");
-            if(!UnzipHelper.downloadZip(assetUrl, assetDir)) return;
+            if (!UnzipHelper.downloadZip(assetUrl, assetDir)) return;
 
             // Finished
             server.syncUpdatesDir(Collections.singleton(dirName));

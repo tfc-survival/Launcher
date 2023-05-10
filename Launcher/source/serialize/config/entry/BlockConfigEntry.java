@@ -9,32 +9,26 @@ import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
 
-public final class BlockConfigEntry extends ConfigEntry<Map<String, ConfigEntry<?>>>
-{
+public final class BlockConfigEntry extends ConfigEntry<Map<String, ConfigEntry<?>>> {
     @LauncherAPI
-    public BlockConfigEntry(Map<String, ConfigEntry<?>> map, boolean ro, int cc)
-    {
+    public BlockConfigEntry(Map<String, ConfigEntry<?>> map, boolean ro, int cc) {
         super(map, ro, cc);
     }
 
     @LauncherAPI
-    public BlockConfigEntry(int cc)
-    {
+    public BlockConfigEntry(int cc) {
         super(Collections.emptyMap(), false, cc);
     }
 
     @LauncherAPI
-    public BlockConfigEntry(HInput input, boolean ro) throws IOException
-    {
+    public BlockConfigEntry(HInput input, boolean ro) throws IOException {
         super(readMap(input, ro), ro, 0);
     }
 
-    private static Map<String, ConfigEntry<?>> readMap(HInput input, boolean ro) throws IOException
-    {
+    private static Map<String, ConfigEntry<?>> readMap(HInput input, boolean ro) throws IOException {
         int entriesCount = input.readLength(0);
         Map<String, ConfigEntry<?>> map = new LinkedHashMap<>(entriesCount);
-        for (int i = 0; i < entriesCount; i++)
-        {
+        for (int i = 0; i < entriesCount; i++) {
             String name = VerifyHelper.verifyIDName(input.readString(255));
             ConfigEntry<?> entry = readEntry(input, ro);
 
@@ -45,21 +39,18 @@ public final class BlockConfigEntry extends ConfigEntry<Map<String, ConfigEntry<
     }
 
     @Override
-    public Type getType()
-    {
+    public Type getType() {
         return Type.BLOCK;
     }
 
     @Override
-    public Map<String, ConfigEntry<?>> getValue()
-    {
+    public Map<String, ConfigEntry<?>> getValue() {
         Map<String, ConfigEntry<?>> value = super.getValue();
         return ro ? value : Collections.unmodifiableMap(value); // Already RO
     }
 
     @Override
-    protected void uncheckedSetValue(Map<String, ConfigEntry<?>> value)
-    {
+    protected void uncheckedSetValue(Map<String, ConfigEntry<?>> value) {
         Map<String, ConfigEntry<?>> newValue = new LinkedHashMap<>(value);
         newValue.keySet().stream().forEach(VerifyHelper::verifyIDName);
 
@@ -68,56 +59,47 @@ public final class BlockConfigEntry extends ConfigEntry<Map<String, ConfigEntry<
     }
 
     @Override
-    public void write(HOutput output) throws IOException
-    {
+    public void write(HOutput output) throws IOException {
         Set<Entry<String, ConfigEntry<?>>> entries = getValue().entrySet();
         output.writeLength(entries.size(), 0);
-        for (Entry<String, ConfigEntry<?>> mapEntry : entries)
-        {
+        for (Entry<String, ConfigEntry<?>> mapEntry : entries) {
             output.writeString(mapEntry.getKey(), 255);
             writeEntry(mapEntry.getValue(), output);
         }
     }
 
     @LauncherAPI
-    public void clear()
-    {
+    public void clear() {
         super.getValue().clear();
     }
 
     @LauncherAPI
-    public <E extends ConfigEntry<?>> E getEntry(String name, Class<E> clazz)
-    {
+    public <E extends ConfigEntry<?>> E getEntry(String name, Class<E> clazz) {
         Map<String, ConfigEntry<?>> map = super.getValue();
         ConfigEntry<?> value = map.get(name);
-        if (!clazz.isInstance(value))
-        {
+        if (!clazz.isInstance(value)) {
             throw new NoSuchElementException(name);
         }
         return clazz.cast(value);
     }
 
     @LauncherAPI
-    public <V, E extends ConfigEntry<V>> V getEntryValue(String name, Class<E> clazz)
-    {
+    public <V, E extends ConfigEntry<V>> V getEntryValue(String name, Class<E> clazz) {
         return getEntry(name, clazz).getValue();
     }
 
     @LauncherAPI
-    public boolean hasEntry(String name)
-    {
+    public boolean hasEntry(String name) {
         return getValue().containsKey(name);
     }
 
     @LauncherAPI
-    public void remove(String name)
-    {
+    public void remove(String name) {
         super.getValue().remove(name);
     }
 
     @LauncherAPI
-    public void setEntry(String name, ConfigEntry<?> entry)
-    {
+    public void setEntry(String name, ConfigEntry<?> entry) {
         super.getValue().put(VerifyHelper.verifyIDName(name), entry);
     }
 }
