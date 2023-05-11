@@ -9,8 +9,8 @@ import java.net.URL;
 import java.nio.file.Path;
 
 public class Config {
-    public static String dir1 = "tfc-survival2"; // Launcher directory
-    public static String title = "TFC-survival launcher"; // Window title
+    public static String dir1 = "tfcsurvival"; // Launcher directory
+    public static String title = "tfc-survival launcher"; // Window title
     public static String[] icons = {"favicon.png"}; // Window icon paths
 
     // Auth config
@@ -31,7 +31,7 @@ public class Config {
     public static int settingsMagic = 0xC0DE5; // Ancient magic, don't touch
     public static boolean autoEnterDefault = false; // Should autoEnter be enabled by default?
     public static boolean fullScreenDefault = false; // Should fullScreen be enabled by default?
-    public static int ramDefault = 5120; // Default RAM amount (0 for auto)
+    public static int ramDefault = 4096; // Default RAM amount (0 for auto)
 
     public static Path dir;
 
