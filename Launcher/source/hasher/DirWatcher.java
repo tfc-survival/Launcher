@@ -102,7 +102,7 @@ public final class DirWatcher implements Runnable, AutoCloseable {
             // Resolve paths and verify is not exclusion
             Path path = watchDir.resolve((Path) event.context());
             Deque<String> stringPath = toPath(dir.relativize(path));
-            if (matcher != null && !matcher.shouldVerify(stringPath)) {
+            if (matcher != null && !matcher.shouldVerify_1(stringPath)) {
                 continue; // Exclusion; should not be verified
             }
 
@@ -148,7 +148,7 @@ public final class DirWatcher implements Runnable, AutoCloseable {
 
             // Maybe it's unnecessary to go deeper
             path.add(IOHelper.getFileName(dir));
-            if (matcher != null && !matcher.shouldVerify(path)) {
+            if (matcher != null && !matcher.shouldVerify_1(path)) {
                 return FileVisitResult.SKIP_SUBTREE;
             }
 

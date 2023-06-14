@@ -55,7 +55,7 @@ public abstract class AuthProvider extends ConfigObject implements AutoCloseable
     @LauncherAPI
     public static AuthProvider newProvider(String name, BlockConfigEntry block) {
         VerifyHelper.verifyIDName(name);
-        Adapter<AuthProvider> authHandlerAdapter = VerifyHelper.getMapValue(AUTH_PROVIDERS, name,
+        Adapter<AuthProvider> authHandlerAdapter = VerifyHelper.getMapValue_1(AUTH_PROVIDERS, name,
                 String.format("Unknown auth provider: '%s'", name));
         return authHandlerAdapter.convert(block);
     }

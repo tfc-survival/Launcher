@@ -1,7 +1,5 @@
 package launcher.runtime.dialog.overlay.settings;
 
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -13,7 +11,10 @@ import javafx.stage.DirectoryChooser;
 import launcher.Launcher;
 import launcher.client.ClientProfile;
 import launcher.hasher.HashedDir;
-import launcher.helper.*;
+import launcher.helper.IOHelper;
+import launcher.helper.JVMHelper;
+import launcher.helper.LogHelper;
+import launcher.helper.SecurityHelper;
 import launcher.runtime.Config;
 import launcher.runtime.dialog.Overlay;
 import launcher.runtime.dialog.overlay.Processing;
@@ -27,8 +28,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.security.SignatureException;
-import java.security.interfaces.RSAPublicKey;
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import static launcher.runtime.Api.newTask;
 import static launcher.runtime.Api.startTask;
@@ -39,8 +42,9 @@ import static launcher.runtime.LauncherApp.stage;
 
 public class Settings {
     public static Path file = dir.resolve("settings.bin"); // Settings file
-    public static ObservableList<Account> accounts = FXCollections.observableList(new ArrayList<>());
-    public static int profile = 0;
+    public static Map<String, byte[]> accounts = new HashMap<>();
+    public static String lastSelectedAcc = null;
+    public static int lastSelectedProfile = 0;
     public static Path updatesDir = null;
     public static boolean autoEnter = false;
     public static boolean fullScreen = false;
@@ -55,26 +59,20 @@ public class Settings {
         try (HInput input = new HInput(IOHelper.newInput(file))) {
             read(input);
         } catch (Exception e) {
-            LogHelper.error(e);
+            //LogHelper.error(e);
             setDefault();
         }
-
     }
 
     private static void setDefault() throws IllegalBlockSizeException, BadPaddingException {
         // Auth settings
-        profile = 0;
+        lastSelectedProfile = 0;
 
         // Client settings
         updatesDir = Config.defaultUpdatesDir;
         autoEnter = Config.autoEnterDefault;
         fullScreen = Config.fullScreenDefault;
         setRAM(Config.ramDefault);
-
-        // Offline cache
-        lastSign = null;
-        lastProfiles.clear();
-        lastHDirs.clear();
 
         // Apply CLI params
         CliParams.applySettings();
@@ -108,31 +106,18 @@ public class Settings {
         // Auth settings
         final int accountsSize = input.readVarInt();
         for (int i = 0; i < accountsSize; i++)
-            accounts.add(new Account(input.readString(255), input.readByteArray(IOHelper.BUFFER_SIZE)));
+            accounts.put(input.readString(255), input.readByteArray(IOHelper.BUFFER_SIZE));
 
-        profile = input.readLength(0);
+        if (input.readBoolean()) {
+            lastSelectedAcc = input.readString(255);
+            lastSelectedProfile = input.readInt();
+        }
 
         // Client settings
         updatesDir = IOHelper.toPath(input.readString(0));
         autoEnter = input.readBoolean();
         fullScreen = input.readBoolean();
         setRAM(input.readLength(JVMHelper.RAM));
-
-        // Offline cache
-        RSAPublicKey publicKey = Launcher.getConfig().publicKey;
-        lastSign = input.readBoolean() ? input.readByteArray(-SecurityHelper.RSA_KEY_LENGTH) : null;
-        lastProfiles.clear();
-        int lastProfilesCount = input.readLength(0);
-        for (int i = 0; i < lastProfilesCount; i++) {
-            lastProfiles.add(new SignedObjectHolder(input, publicKey, ClientProfile.RO_ADAPTER));
-        }
-        lastHDirs.clear();
-        int lastHDirsCount = input.readLength(0);
-        for (int i = 0; i < lastHDirsCount; i++) {
-            String name = IOHelper.verifyFileName(input.readString(255));
-            VerifyHelper.putIfAbsent(lastHDirs, name, new SignedObjectHolder(input, publicKey, HashedDir::new),
-                    java.lang.String.format("Duplicate offline hashed dir: '%s'", name));
-        }
 
         // Apply CLI params
         CliParams.applySettings();
@@ -146,33 +131,23 @@ public class Settings {
 
         // Auth settings
         output.writeVarInt(accounts.size());
-        for (Account a : accounts) {
-            output.writeString(a.login, 255);
-            output.writeByteArray(a.rsaPassword, IOHelper.BUFFER_SIZE);
+        for (Map.Entry<String, byte[]> a : accounts.entrySet()) {
+            output.writeString(a.getKey(), 255);
+            output.writeByteArray(a.getValue(), IOHelper.BUFFER_SIZE);
         }
 
-        output.writeLength(profile, 0);
+        output.writeBoolean(lastSelectedAcc != null);
+        if (lastSelectedAcc != null) {
+            output.writeString(lastSelectedAcc, 255);
+            output.writeInt(lastSelectedProfile);
+        }
+
 
         // Client settings
         output.writeString(IOHelper.toString(updatesDir), 0);
         output.writeBoolean(autoEnter);
         output.writeBoolean(fullScreen);
         output.writeLength(ram, JVMHelper.RAM);
-
-        // Offline cache
-        output.writeBoolean(lastSign != null);
-        if (lastSign != null) {
-            output.writeByteArray(lastSign, -SecurityHelper.RSA_KEY_LENGTH);
-        }
-        output.writeLength(lastProfiles.size(), 0);
-        for (SignedObjectHolder<ClientProfile> profile : lastProfiles) {
-            profile.write(output);
-        }
-        output.writeLength(lastHDirs.size(), 0);
-        for (Map.Entry<String, SignedObjectHolder<HashedDir>> entry : lastHDirs.entrySet()) {
-            output.writeString(entry.getKey(), 0);
-            entry.getValue().write(output);
-        }
     }
 
 
@@ -293,6 +268,6 @@ public class Settings {
     }
 
     public static boolean isAdmin() {
-        return accounts.stream().anyMatch(a -> a.login.equals("__xelo__") || a.login.equals("Taper4ik") || a.login.equals("Dimon5676") || a.login.equals("hohserg"));
+        return accounts.containsKey("__xelo__") || accounts.containsKey("Taper4ik") || accounts.containsKey("Dimon5676") || accounts.containsKey("hohserg");
     }
 }

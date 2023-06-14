@@ -5,6 +5,10 @@
     -fx-background-color: white;
 }
 
+#layout > #authList {
+    /*-fx-background-color: rgba(0, 0, 0, 0);*/
+}
+
 /* Auth pane styles */
 #layout > #authPane > #password.hasSaved {
     -fx-prompt-text-fill: black;

@@ -4,7 +4,6 @@ import launcher.Launcher;
 import launcher.Launcher.Config;
 import launcher.LauncherAPI;
 import launcher.client.ClientLauncher;
-import launcher.client.ClientProfile;
 import launcher.helper.IOHelper;
 import launcher.helper.JVMHelper;
 import launcher.helper.LogHelper;
@@ -13,14 +12,12 @@ import launcher.request.Request;
 import launcher.request.update.LauncherRequest.Result;
 import launcher.serialize.HInput;
 import launcher.serialize.HOutput;
-import launcher.serialize.signed.SignedObjectHolder;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.security.SignatureException;
 import java.security.interfaces.RSAPublicKey;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public final class LauncherRequest extends Request<Result> {
@@ -81,7 +78,7 @@ public final class LauncherRequest extends Request<Result> {
         // Verify launcher sign
         RSAPublicKey publicKey = config.publicKey;
         byte[] sign = input.readByteArray(-SecurityHelper.RSA_KEY_LENGTH);
-        boolean shouldUpdate = !SecurityHelper.isValidSign(BINARY_PATH, sign, publicKey);
+        boolean shouldUpdate = !SecurityHelper.isValidSign_1(BINARY_PATH, sign, publicKey);
 
         // Update launcher if need
         output.writeBoolean(shouldUpdate);
@@ -89,30 +86,20 @@ public final class LauncherRequest extends Request<Result> {
         if (shouldUpdate) {
             byte[] binary = input.readByteArray(0);
             SecurityHelper.verifySign(binary, sign, config.publicKey);
-            return new Result(binary, sign, Collections.emptyList());
-        }
-
-        // Read clients profiles list
-        int count = input.readLength(0);
-        List<SignedObjectHolder<ClientProfile>> profiles = new ArrayList<>(count);
-        for (int i = 0; i < count; i++) {
-            profiles.add(new SignedObjectHolder<>(input, publicKey, ClientProfile.RO_ADAPTER));
+            return new Result(binary, sign);
         }
 
         // Return request result
-        return new Result(null, sign, profiles);
+        return new Result(null, sign);
     }
 
     public static final class Result {
-        @LauncherAPI
-        public final List<SignedObjectHolder<ClientProfile>> profiles;
         private final byte[] binary;
         private final byte[] sign;
 
-        public Result(byte[] binary, byte[] sign, List<SignedObjectHolder<ClientProfile>> profiles) {
+        public Result(byte[] binary, byte[] sign) {
             this.binary = binary == null ? null : binary.clone();
             this.sign = sign.clone();
-            this.profiles = Collections.unmodifiableList(profiles);
         }
 
         @LauncherAPI

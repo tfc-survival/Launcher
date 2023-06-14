@@ -35,7 +35,7 @@ public class DelegateTextureProvider extends TextureProvider {
     }
 
     private TextureProvider getDelegate() {
-        return VerifyHelper.verify(delegate, Objects::nonNull, "Delegate texture provider wasn't set");
+        return VerifyHelper.verify_1(delegate, Objects::nonNull, "Delegate texture provider wasn't set");
     }
 
     @LauncherAPI

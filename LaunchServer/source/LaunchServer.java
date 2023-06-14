@@ -12,31 +12,20 @@ import launcher.serialize.config.TextConfigReader;
 import launcher.serialize.config.TextConfigWriter;
 import launcher.serialize.config.entry.*;
 import launcher.serialize.signed.SignedObjectHolder;
-import launchserver.auth.AuthException;
-import launchserver.auth.MySQLSourceConfig;
 import launchserver.auth.handler.AuthHandler;
-import launchserver.auth.handler.CachedAuthHandler;
-import launchserver.auth.handler.FileAuthHandler;
 import launchserver.auth.limiter.AuthLimiter;
 import launchserver.auth.limiter.AuthLimiterConfig;
 import launchserver.auth.limiter.AuthLimiterHWIDConfig;
 import launchserver.auth.limiter.AuthLimiterIPConfig;
 import launchserver.auth.provider.AuthProvider;
-import launchserver.auth.provider.DigestAuthProvider;
 import launchserver.binary.*;
-import launchserver.command.Command;
-import launchserver.command.CommandException;
 import launchserver.command.handler.CommandHandler;
 import launchserver.command.handler.JLineCommandHandler;
 import launchserver.command.handler.StdCommandHandler;
 import launchserver.helpers.HTTPRequestHelper;
-import launchserver.response.Response;
-import launchserver.response.Response.Factory;
 import launchserver.response.ServerSocketHandler;
-import launchserver.response.ServerSocketHandler.Listener;
 import launchserver.texture.TextureProvider;
 
-import javax.script.ScriptEngine;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -240,30 +229,6 @@ public final class LaunchServer implements Runnable, AutoCloseable {
         }
         long end = System.currentTimeMillis();
         LogHelper.debug("LaunchServer started in %dms", end - start);
-    }
-
-    public static void addLaunchServerClassBindings(ScriptEngine engine, Map<String, Object> bindings) {
-        Launcher.addClassBinding(engine, bindings, "LaunchServer", LaunchServer.class);
-
-        // Set auth class bindings
-        Launcher.addClassBinding(engine, bindings, "AuthHandler", AuthHandler.class);
-        Launcher.addClassBinding(engine, bindings, "FileAuthHandler", FileAuthHandler.class);
-        Launcher.addClassBinding(engine, bindings, "CachedAuthHandler", CachedAuthHandler.class);
-        Launcher.addClassBinding(engine, bindings, "AuthProvider", AuthProvider.class);
-        Launcher.addClassBinding(engine, bindings, "DigestAuthProvider", DigestAuthProvider.class);
-        Launcher.addClassBinding(engine, bindings, "MySQLSourceConfig", MySQLSourceConfig.class);
-        Launcher.addClassBinding(engine, bindings, "AuthException", AuthException.class);
-        Launcher.addClassBinding(engine, bindings, "TextureProvider", TextureProvider.class);
-
-        // Set command class bindings
-        Launcher.addClassBinding(engine, bindings, "Command", Command.class);
-        Launcher.addClassBinding(engine, bindings, "CommandHandler", CommandHandler.class);
-        Launcher.addClassBinding(engine, bindings, "CommandException", CommandException.class);
-
-        // Set response class bindings
-        Launcher.addClassBinding(engine, bindings, "Response", Response.class);
-        Launcher.addClassBinding(engine, bindings, "ResponseFactory", Factory.class);
-        Launcher.addClassBinding(engine, bindings, "ServerSocketHandlerListener", Listener.class);
     }
 
     @Override
@@ -534,7 +499,7 @@ public final class LaunchServer implements Runnable, AutoCloseable {
 
         @LauncherAPI
         public void verify() {
-            VerifyHelper.verify(getAddress(), VerifyHelper.NOT_EMPTY, "LaunchServer address can't be empty");
+            VerifyHelper.verify_1(getAddress(), VerifyHelper.NOT_EMPTY, "LaunchServer address can't be empty");
         }
     }
 

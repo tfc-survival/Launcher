@@ -39,7 +39,7 @@ public final class JoinServerRequest extends Request<Boolean> {
 
     @LauncherAPI
     public static String verifyServerID(String serverID) {
-        return VerifyHelper.verify(serverID, JoinServerRequest::isValidServerID,
+        return VerifyHelper.verify_1(serverID, JoinServerRequest::isValidServerID,
                 String.format("Invalid server ID: '%s'", serverID));
     }
 

@@ -1,16 +1,13 @@
 package launchserver.response.update;
 
-import launcher.client.ClientProfile;
 import launcher.helper.SecurityHelper;
 import launcher.serialize.HInput;
 import launcher.serialize.HOutput;
 import launcher.serialize.signed.SignedBytesHolder;
-import launcher.serialize.signed.SignedObjectHolder;
 import launchserver.LaunchServer;
 import launchserver.response.Response;
 
 import java.io.IOException;
-import java.util.Collection;
 
 public final class LauncherResponse extends Response {
     public LauncherResponse(LaunchServer server, String ip, HInput input, HOutput output) {
@@ -33,13 +30,6 @@ public final class LauncherResponse extends Response {
         if (input.readBoolean()) {
             output.writeByteArray(bytes.getBytes(), 0);
             return; // Launcher will be restarted
-        }
-
-        // Write clients profiles list
-        Collection<SignedObjectHolder<ClientProfile>> profiles = server.getProfiles();
-        output.writeLength(profiles.size(), 0);
-        for (SignedObjectHolder<ClientProfile> profile : profiles) {
-            profile.write(output);
         }
     }
 }

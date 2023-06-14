@@ -93,7 +93,7 @@ public final class ServerSocketHandler implements Runnable, AutoCloseable {
 
     @LauncherAPI
     public Response newCustomResponse(String name, String ip, HInput input, HOutput output) {
-        Factory factory = VerifyHelper.getMapValue(customResponses, name,
+        Factory factory = VerifyHelper.getMapValue_1(customResponses, name,
                 String.format("Unknown custom response: '%s'", name));
         return factory.newResponse(server, ip, input, output);
     }

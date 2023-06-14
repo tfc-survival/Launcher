@@ -28,7 +28,7 @@ public final class EnumSerializer<E extends Enum<?> & Itf> {
     @LauncherAPI
     public E read(HInput input) throws IOException {
         int n = input.readVarInt();
-        return VerifyHelper.getMapValue(map, n, "Unknown enum number: " + n);
+        return VerifyHelper.getMapValue_1(map, n, "Unknown enum number: " + n);
     }
 
     @FunctionalInterface

@@ -1,17 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import java.lang.*?>
+<?import java.net.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 <?import java.net.URL?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.layout.Pane?>
 
-<Pane xmlns:fx="http://javafx.com/fxml/1" fx:id="overlay" prefWidth="500.0" prefHeight="250.0">
+<Pane fx:id="overlay" prefHeight="250.0" prefWidth="348.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8">
     <stylesheets>
         <URL value="@update.css" />
     </stylesheets>
-
-    <!-- Update controls -->
-    <Label fx:id="utitle" layoutX="10.0" layoutY="10.0" prefWidth="480.0" text="Обновление" />
-    <Label fx:id="description" layoutX="10.0" layoutY="50.0" prefWidth="480.0" prefHeight="165.0" text="..." />
-    <ProgressBar fx:id="progress" layoutX="10.0" layoutY="220.0" prefWidth="480.0" prefHeight="20.0" />
+   <children>
+   
+       <!-- Update controls -->
+       <Label fx:id="utitle" layoutX="9.0" layoutY="14.0" prefHeight="27.0" prefWidth="330.0" text="Обновление" />
+       <Label fx:id="description" layoutX="10.0" layoutY="50.0" prefHeight="165.0" prefWidth="330.0" text="..." />
+       <ProgressBar fx:id="progress" layoutX="10.0" layoutY="220.0" prefHeight="20.0" prefWidth="330.0" />
+   </children>
 </Pane>

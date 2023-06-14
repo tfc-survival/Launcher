@@ -576,7 +576,7 @@ public final class IOHelper {
 
     @LauncherAPI
     public static String verifyFileName(String fileName) {
-        return VerifyHelper.verify(fileName, IOHelper::isValidFileName, String.format("Invalid file name: '%s'", fileName));
+        return VerifyHelper.verify_1(fileName, IOHelper::isValidFileName, String.format("Invalid file name: '%s'", fileName));
     }
 
     @LauncherAPI
@@ -589,7 +589,7 @@ public final class IOHelper {
 
     @LauncherAPI
     public static BufferedImage verifyTexture(BufferedImage skin, boolean cloak) {
-        return VerifyHelper.verify(skin, i -> isValidTextureBounds(i.getWidth(), i.getHeight(), cloak),
+        return VerifyHelper.verify_1(skin, i -> isValidTextureBounds(i.getWidth(), i.getHeight(), cloak),
                 String.format("Invalid texture bounds: %dx%d", skin.getWidth(), skin.getHeight()));
     }
 

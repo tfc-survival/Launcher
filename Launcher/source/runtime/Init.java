@@ -1,7 +1,6 @@
 package launcher.runtime;
 
 import javafx.fxml.FXMLLoader;
-import javafx.scene.layout.Pane;
 import launcher.Launcher;
 import launcher.helper.IOHelper;
 import launcher.helper.JVMHelper;
@@ -42,7 +41,7 @@ public class Init {
         javafx.application.Application.launch(LauncherApp.class, args);
     }
 
-    public static Pane loadFXML(String name) throws IOException {
+    public static <A> A loadFXML(String name) throws IOException {
         FXMLLoader loader = new FXMLLoader(Launcher.getResourceURL(name));
         loader.setCharset(IOHelper.UNICODE_CHARSET);
         return loader.load();

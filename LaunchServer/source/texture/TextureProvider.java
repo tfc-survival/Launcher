@@ -38,7 +38,7 @@ public abstract class TextureProvider extends ConfigObject implements AutoClosea
     @LauncherAPI
     public static TextureProvider newProvider(String name, BlockConfigEntry block) {
         VerifyHelper.verifyIDName(name);
-        Adapter<TextureProvider> authHandlerAdapter = VerifyHelper.getMapValue(TEXTURE_PROVIDERS, name,
+        Adapter<TextureProvider> authHandlerAdapter = VerifyHelper.getMapValue_1(TEXTURE_PROVIDERS, name,
                 String.format("Unknown texture provider: '%s'", name));
         return authHandlerAdapter.convert(block);
     }

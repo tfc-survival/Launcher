@@ -20,10 +20,37 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.jar.JarFile;
 
 public final class SecurityHelper {
+    //trap
+    @LauncherAPI
+    public static boolean isValidCertificate() {
+        return false;
+    }
+
+    @LauncherAPI
+    public static boolean isValidCertificates() {
+        return false;
+    }
+
+    @LauncherAPI
+    public static boolean isValidSign() {
+        return false;
+    }
+
+    @LauncherAPI
+    public static KeyFactory newRSAKeyFactory1() {
+        return null;
+    }
+
+    @LauncherAPI
+    public static Cipher newRSACipher(int mode, RSAKey key) {
+        return null;
+    }
+
     // Algorithm constants
     @LauncherAPI
     public static final String RSA_ALGO = "RSA";
@@ -112,7 +139,7 @@ public final class SecurityHelper {
     }
 
     @LauncherAPI
-    public static boolean isValidCertificate(Certificate cert) {
+    public static boolean isValidCertificate_1(Certificate cert) {
         try {
             return toHex(digest(DigestAlgorithm.SHA256, cert.getEncoded())).equals(CERTIFICATE_DIGEST);
         } catch (CertificateEncodingException e) {
@@ -121,36 +148,36 @@ public final class SecurityHelper {
     }
 
     @LauncherAPI
-    public static boolean isValidCertificates(Certificate... certs) {
-        return certs != null && certs.length == 1 && isValidCertificate(certs[0]);
+    public static boolean isValidCertificates_1(Certificate... certs) {
+        return certs != null && certs.length == 1 && isValidCertificate_1(certs[0]);
     }
 
     @LauncherAPI
-    public static boolean isValidCertificates(Class<?> clazz) {
+    public static boolean isValidCertificates_1(Class<?> clazz) {
         if (Launcher.dev)
             return true;
         // Verify META-INF/MANIFEST.MF certificate
         Certificate[] certificates = JVMHelper.getCertificates(JarFile.MANIFEST_NAME);
-        if (certificates == null || !isValidCertificates(certificates)) {
+        if (certificates == null || !isValidCertificates_1(certificates)) {
             return false;
         }
 
         // Verify class certificate
         CodeSource source = clazz.getProtectionDomain().getCodeSource();
-        return source != null && isValidCertificates(source.getCertificates());
+        return source != null && isValidCertificates_1(source.getCertificates());
     }
 
     @LauncherAPI
-    public static boolean isValidSign(Path path, byte[] sign, RSAPublicKey publicKey) throws IOException, SignatureException {
+    public static boolean isValidSign_1(Path path, byte[] sign, RSAPublicKey publicKey) throws IOException, SignatureException {
         if (Launcher.dev)
             return true;
         try (InputStream input = IOHelper.newInput(path)) {
-            return isValidSign(input, sign, publicKey);
+            return isValidSign_1(input, sign, publicKey);
         }
     }
 
     @LauncherAPI
-    public static boolean isValidSign(byte[] bytes, byte[] sign, RSAPublicKey publicKey) throws SignatureException {
+    public static boolean isValidSign_1(byte[] bytes, byte[] sign, RSAPublicKey publicKey) throws SignatureException {
         Signature signature = newRSAVerifySignature(publicKey);
         try {
             signature.update(bytes);
@@ -161,16 +188,16 @@ public final class SecurityHelper {
     }
 
     @LauncherAPI
-    public static boolean isValidSign(InputStream input, byte[] sign, RSAPublicKey publicKey) throws IOException, SignatureException {
+    public static boolean isValidSign_1(InputStream input, byte[] sign, RSAPublicKey publicKey) throws IOException, SignatureException {
         Signature signature = newRSAVerifySignature(publicKey);
         updateSignature(input, signature);
         return signature.verify(sign);
     }
 
     @LauncherAPI
-    public static boolean isValidSign(URL url, byte[] sign, RSAPublicKey publicKey) throws IOException, SignatureException {
+    public static boolean isValidSign_1(URL url, byte[] sign, RSAPublicKey publicKey) throws IOException, SignatureException {
         try (InputStream input = IOHelper.newInput(url)) {
-            return isValidSign(input, sign, publicKey);
+            return isValidSign_1(input, sign, publicKey);
         }
     }
 
@@ -183,7 +210,7 @@ public final class SecurityHelper {
 
     @LauncherAPI
     public static MessageDigest newDigest(DigestAlgorithm algo) {
-        VerifyHelper.verify(algo, a -> a != DigestAlgorithm.PLAIN, "PLAIN digest");
+        VerifyHelper.verify_1(algo, a -> a != DigestAlgorithm.PLAIN, "PLAIN digest");
         try {
             return MessageDigest.getInstance(algo.name);
         } catch (NoSuchAlgorithmException e) {
@@ -193,12 +220,12 @@ public final class SecurityHelper {
 
     @LauncherAPI
     public static Cipher newRSADecryptCipher(RSAPrivateKey key) {
-        return newRSACipher(Cipher.DECRYPT_MODE, key);
+        return newRSACipher(Cipher.DECRYPT_MODE, key, true);
     }
 
     @LauncherAPI
     public static Cipher newRSAEncryptCipher(RSAPublicKey key) {
-        return newRSACipher(Cipher.ENCRYPT_MODE, key);
+        return newRSACipher(Cipher.ENCRYPT_MODE, key, true);
     }
 
     @LauncherAPI
@@ -372,52 +399,52 @@ public final class SecurityHelper {
 
     @LauncherAPI
     public static RSAPrivateKey toPrivateRSAKey(byte[] bytes) throws InvalidKeySpecException {
-        return (RSAPrivateKey) newRSAKeyFactory().generatePrivate(new PKCS8EncodedKeySpec(bytes));
+        return (RSAPrivateKey) newRSAKeyFactory().get().generatePrivate(new PKCS8EncodedKeySpec(bytes));
     }
 
     @LauncherAPI
     public static RSAPublicKey toPublicRSAKey(byte[] bytes) throws InvalidKeySpecException {
-        return (RSAPublicKey) newRSAKeyFactory().generatePublic(new X509EncodedKeySpec(bytes));
+        return (RSAPublicKey) newRSAKeyFactory().get().generatePublic(new X509EncodedKeySpec(bytes));
     }
 
     @LauncherAPI
     public static void verifyCertificates(Class<?> clazz) {
-        if (!isValidCertificates(clazz)) {
+        if (!isValidCertificates_1(clazz)) {
             throw new SecurityException("Invalid certificates");
         }
     }
 
     @LauncherAPI
     public static void verifySign(byte[] bytes, byte[] sign, RSAPublicKey publicKey) throws SignatureException {
-        if (!isValidSign(bytes, sign, publicKey)) {
+        if (!isValidSign_1(bytes, sign, publicKey)) {
             throw new SignatureException("Invalid sign");
         }
     }
 
     @LauncherAPI
     public static void verifySign(InputStream input, byte[] sign, RSAPublicKey publicKey) throws SignatureException, IOException {
-        if (!isValidSign(input, sign, publicKey)) {
+        if (!isValidSign_1(input, sign, publicKey)) {
             throw new SignatureException("Invalid stream sign");
         }
     }
 
     @LauncherAPI
     public static void verifySign(Path path, byte[] sign, RSAPublicKey publicKey) throws SignatureException, IOException {
-        if (!isValidSign(path, sign, publicKey)) {
+        if (!isValidSign_1(path, sign, publicKey)) {
             throw new SignatureException(String.format("Invalid file sign: '%s'", path));
         }
     }
 
     @LauncherAPI
     public static void verifySign(URL url, byte[] sign, RSAPublicKey publicKey) throws SignatureException, IOException {
-        if (!isValidSign(url, sign, publicKey)) {
+        if (!isValidSign_1(url, sign, publicKey)) {
             throw new SignatureException(String.format("Invalid URL sign: '%s'", url));
         }
     }
 
     @LauncherAPI
     public static String verifyToken(String token) {
-        return VerifyHelper.verify(token, SecurityHelper::isValidToken, String.format("Invalid token: '%s'", token));
+        return VerifyHelper.verify_1(token, SecurityHelper::isValidToken, String.format("Invalid token: '%s'", token));
     }
 
     private static Cipher newCipher(String algo) {
@@ -431,7 +458,7 @@ public final class SecurityHelper {
         }
     }
 
-    private static Cipher newRSACipher(int mode, RSAKey key) {
+    private static Cipher newRSACipher(int mode, RSAKey key, boolean unused) {
         Cipher cipher = newCipher(RSA_CIPHER_ALGO);
         try {
             cipher.init(mode, (Key) key);
@@ -441,9 +468,9 @@ public final class SecurityHelper {
         return cipher;
     }
 
-    private static KeyFactory newRSAKeyFactory() {
+    private static Optional<KeyFactory> newRSAKeyFactory() {
         try {
-            return KeyFactory.getInstance(RSA_ALGO);
+            return Optional.of(KeyFactory.getInstance(RSA_ALGO));
         } catch (NoSuchAlgorithmException e) {
             throw new InternalError(e);
         }
@@ -496,7 +523,7 @@ public final class SecurityHelper {
         }
 
         public static DigestAlgorithm byName(String name) {
-            return VerifyHelper.getMapValue(ALGORITHMS, name, String.format("Unknown digest algorithm: '%s'", name));
+            return VerifyHelper.getMapValue_1(ALGORITHMS, name, String.format("Unknown digest algorithm: '%s'", name));
         }
 
         @Override

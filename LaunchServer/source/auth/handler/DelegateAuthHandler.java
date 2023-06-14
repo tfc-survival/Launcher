@@ -50,7 +50,7 @@ public class DelegateAuthHandler extends AuthHandler {
     }
 
     private AuthHandler getDelegate() {
-        return VerifyHelper.verify(delegate, Objects::nonNull, "Delegate auth handler wasn't set");
+        return VerifyHelper.verify_1(delegate, Objects::nonNull, "Delegate auth handler wasn't set");
     }
 
     @LauncherAPI

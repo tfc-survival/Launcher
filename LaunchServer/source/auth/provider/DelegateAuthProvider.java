@@ -28,7 +28,7 @@ public class DelegateAuthProvider extends AuthProvider {
     }
 
     private AuthProvider getDelegate() {
-        return VerifyHelper.verify(delegate, Objects::nonNull, "Delegate auth provider wasn't set");
+        return VerifyHelper.verify_1(delegate, Objects::nonNull, "Delegate auth provider wasn't set");
     }
 
     @LauncherAPI

@@ -29,7 +29,7 @@ public final class LogHelper {
 
     // Output settings
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss", Locale.US);
-    private static final AtomicBoolean DEBUG_ENABLED = new AtomicBoolean(true);//Boolean.getBoolean(DEBUG_PROPERTY));
+    private static final AtomicBoolean DEBUG_ENABLED = new AtomicBoolean(Boolean.getBoolean(DEBUG_PROPERTY));
     private static final Set<Output> OUTPUTS = Collections.newSetFromMap(new ConcurrentHashMap<>(2));
     private static final Output STD_OUTPUT;
 

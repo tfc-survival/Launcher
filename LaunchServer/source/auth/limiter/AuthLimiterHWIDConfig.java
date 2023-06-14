@@ -24,7 +24,7 @@ public class AuthLimiterHWIDConfig {
 
     private static final String getHardwareOfUser = "select hwid,banned from userhardware join hardware on hwidId=id and nickname=?";
     private static final String findHardware = "select * from hardware where hwid=?";
-    private static final String addNewHardware = "insert into hardware(id,hwid,banned) values(0,?,?)";
+    private static final String addNewHardware = "insert into hardware(id,hwid,banned) values(DEFAULT,?,?)";
     private static final String addHardwareToUser = "insert into userhardware(nickname,hwidId) values(?,?)";
     private static final String banUser = "update hardware set banned=1 where id in (select hwidId from userhardware where nickname=?)";
     private static final String pardonUser = "update hardware set banned=0 where id in (select hwidId from userhardware where nickname=?)";

@@ -1,8 +1,6 @@
 package launcher.runtime.dialog.overlay;
 
 import javafx.concurrent.Task;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -64,7 +62,7 @@ public class Processing {
         description.setText(e.toString());
     }
 
-    public static <A> void setTaskProperties(Task<A> task, Consumer<A> callback, EventHandler<ActionEvent> errorCallback, boolean hide) {
+    public static <A> void setTaskProperties(Task<A> task, Consumer<A> callback, Runnable errorCallback, boolean hide) {
         description.textProperty().bind(task.messageProperty());
         task.setOnFailed(event -> {
             description.textProperty().unbind();
@@ -72,7 +70,7 @@ public class Processing {
             if (hide) {
                 Overlay.hide(2500, errorCallback);
             } else if (errorCallback != null) {
-                errorCallback.handle(null);
+                errorCallback.run();
             }
         });
         task.setOnSucceeded(event -> {
@@ -93,7 +91,7 @@ public class Processing {
         SecurityHelper.verifySign(LauncherRequest.BINARY_PATH, Settings.lastSign, Launcher.getConfig().publicKey);
 
         // Return last sign and profiles
-        return new LauncherRequest.Result(null, Settings.lastSign, Settings.lastProfiles);
+        return new LauncherRequest.Result(null, Settings.lastSign);
     }
 
     public static Callable<AuthRequest.Result> offlineAuthRequest(String login) {
@@ -103,7 +101,7 @@ public class Processing {
             }
 
             // Return offline profile and random access token
-            return new AuthRequest.Result(PlayerProfile.newOfflineProfile(login), SecurityHelper.randomStringToken());
+            return new AuthRequest.Result(PlayerProfile.newOfflineProfile(login), SecurityHelper.randomStringToken(), Settings.lastProfiles);
         };
     }
 
@@ -113,7 +111,7 @@ public class Processing {
                 newRequestTask(new LauncherRequest());
 
         // Set task properties and start
-        Processing.setTaskProperties(task, callback, ee -> {
+        Processing.setTaskProperties(task, callback, () -> {
             if (Settings.offline) {
                 return;
             }
@@ -126,9 +124,9 @@ public class Processing {
         startTask(task);
     }
 
-    public static void makeAuthRequest(String login, byte[] rsaPassword, Consumer<AuthRequest.Result> callback) {
+    public static void makeAuthRequest(String login, byte[] rsaPassword, Consumer<AuthRequest.Result> onSuccess, Runnable onError) {
         PublicTask<AuthRequest.Result> task = rsaPassword == null ? newTask(offlineAuthRequest(login)) : newRequestTask(new AuthRequest(login, rsaPassword));
-        Processing.setTaskProperties(task, callback, null, true);
+        Processing.setTaskProperties(task, onSuccess, onError, true);
         task.updateMessage("Авторизация на сервере");
         startTask(task);
     }

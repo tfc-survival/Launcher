@@ -5,15 +5,17 @@ import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
-import javafx.scene.web.WebEngine;
-import javafx.scene.web.WebView;
 import launcher.Launcher;
 import launcher.client.ClientLauncher;
 import launcher.client.ClientProfile;
@@ -28,15 +30,12 @@ import launcher.runtime.Config;
 import launcher.runtime.dialog.overlay.Debug;
 import launcher.runtime.dialog.overlay.Processing;
 import launcher.runtime.dialog.overlay.Update;
-import launcher.runtime.dialog.overlay.settings.Account;
-import launcher.runtime.dialog.overlay.settings.CliParams;
 import launcher.runtime.dialog.overlay.settings.Settings;
 import launcher.serialize.config.entry.StringConfigEntry;
 import launcher.serialize.signed.SignedObjectHolder;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.nio.file.Path;
 import java.security.SignatureException;
 import java.util.HashMap;
@@ -48,30 +47,29 @@ import static launcher.runtime.Api.newTask;
 import static launcher.runtime.Api.startTask;
 import static launcher.runtime.Init.loadFXML;
 import static launcher.runtime.LauncherApp.*;
-import static launcher.runtime.dialog.overlay.Processing.*;
+import static launcher.runtime.dialog.overlay.Processing.launchClient;
+import static launcher.runtime.dialog.overlay.Processing.makeLauncherRequest;
 import static launcher.runtime.dialog.overlay.Update.makeUpdateRequest;
 
 public class Dialog {
     public static Pane rootPane;
-    public static WebView news;
-    public static ListView<Account> authList;
+    public static HBox authList;
     public static Pane authPane;
     public static Pane dimPane;
 
     public static TextField loginField;
     public static PasswordField passwordField;
-    public static CheckBox savePasswordBox;
     public static ComboBox<SignedObjectHolder<ClientProfile>> profilesBox;
+    private static Button authButton;
+    private static Button playButton;
 
     public static Map<ClientProfile, ServerPinger> pingers = new HashMap<>();
 
-    public static void initDialog() throws IOException {
-        // Lookup news WebView
-        news = (WebView) rootPane.lookup("#news");
-        WebEngine newsEngine = news.getEngine();
-        newsEngine.setUserDataDirectory(Config.dir.resolve("webview").toFile());
-        newsEngine.load(Config.newsURL);
+    private static PlayerProfile playerProfile;
+    private static String accessToken;
 
+
+    public static void initDialog() throws IOException {
         // Lookup auth pane and dim
         initAuthPane(rootPane);
         dimPane = (Pane) rootPane.lookup("#dim");
@@ -92,7 +90,9 @@ public class Dialog {
             }
         });
 
-        ((Button) rootPane.lookup("#goSettings")).setOnAction(Dialog::goSettings);
+        Button goSettings = (Button) rootPane.lookup("#goSettings");
+        goSettings.setGraphic(new ImageView(new Image(Dialog.class.getResourceAsStream("/runtime/dialog/settings.png"))));
+        goSettings.setOnAction(Dialog::goSettings);
 
         // Init overlays
         Debug.initOverlay();
@@ -102,116 +102,113 @@ public class Dialog {
 
         // Verify launcher & make request
         verifyLauncher();
+
+    }
+
+    private static void addAccount(String login, byte[] rsaPassword) {
+        if (!Settings.accounts.containsKey(login)) {
+            Settings.accounts.put(login, rsaPassword);
+            addAccButton(login);
+        }
+    }
+
+    private static void addAccButton(String login) {
+        Button accountButton = new Button();
+        accountButton.setOnAction(selectAccount(login));
+        accountButton.setTooltip(new Tooltip(login));
+        accountButton.setPadding(new Insets(1, 1, 1, 1));
+        accountButton.setContextMenu(new ContextMenu(new MenuItem("удалить") {{
+            setOnAction(e -> removeAccount(login));
+        }}));
+
+        ImageView skin = new ImageView();
+        Image image = new Image("https://tfc.su/static/skins/" + login + ".png");
+        double w = image.getWidth();
+        double h = image.getHeight();
+        double slicedX = 8d / 64 * w;
+        double slicesY = 8d / 64 * h;
+
+        if (slicedX < 32) {
+            int scale = 4;
+            image = new Image("https://tfc.su/static/skins/" + login + ".png", w * scale, h * scale, false, false);
+            slicedX *= scale;
+            slicesY *= scale;
+        }
+
+        skin.setImage(image);
+        skin.setViewport(new Rectangle2D(slicedX, slicesY, slicedX, slicesY));
+        skin.setFitHeight(32);
+        skin.setFitWidth(32);
+
+        accountButton.setGraphic(skin);
+        authList.getChildren().add(accountButton);
+
+        if (image.isError()) {
+            skin.setImage(new Image(Dialog.class.getResourceAsStream("/steve.png"), 32, 32, false, false));
+        }
+    }
+
+    private static void removeAccount(String login) {
+        if (Settings.accounts.containsKey(login)) {
+            Settings.accounts.remove(login);
+            Settings.lastSelectedAcc = null;
+            authList.getChildren().removeIf(n -> n instanceof Button && ((Button) n).getTooltip().getText().equals(login));
+        }
     }
 
     private static void initAuthPane(Pane rootPane) {
-        authList = (ListView<Account>) rootPane.lookup("#authList");
+        authList = (HBox) rootPane.lookup("#authList");
         authPane = (Pane) rootPane.lookup("#authPane");
-
-        authList.setCellFactory(Dialog::newAccauntCell);
-        authList.setItems(Settings.accounts);
+        Settings.accounts.keySet().forEach(Dialog::addAccButton);
+        authList.setSpacing(5);
 
         // Lookup login field
         loginField = (TextField) authPane.lookup("#login");
-        loginField.setOnAction(Dialog::addNewAccount);
+        loginField.setOnAction(Dialog::goAuth);
+        loginField.setOnKeyPressed(Dialog::unselectAccount);
 
 
         // Lookup password field
         passwordField = (PasswordField) authPane.lookup("#password");
-        passwordField.setOnAction(Dialog::addNewAccount);
+        passwordField.setOnAction(Dialog::goAuth);
+        passwordField.setOnKeyPressed(Dialog::unselectAccount);
 
         // Lookup action buttons
-        ((Button) authPane.lookup("#addAccount")).setOnAction(Dialog::addNewAccount);
+        authButton = (Button) authPane.lookup("#goAuth");
+        authButton.setOnAction(Dialog::goAuth);
+        playButton = (Button) authPane.lookup("#goPlay");
+        playButton.setOnAction(Dialog::goPlay);
     }
 
-    public static ListCell<Account> newAccauntCell(ListView<Account> listView) {
-        final Pane authPane;
-        try {
-            authPane = loadFXML("dialog/authPane.fxml");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        // Lookup labels
-        ImageView skin = (ImageView) authPane.lookup("#skin");
-        Label login = (Label) authPane.lookup("#login");
-        Button goAuth = (Button) authPane.lookup("#goAuth");
-        Button removeAcc = (Button) authPane.lookup("#removeAcc");
-
-        // Create and return new cell
-        ListCell<Account> cell = new ListCell<Account>() {
-            @Override
-            protected void updateItem(Account item, boolean empty) {
-                super.updateItem(item, empty);
-                setGraphic(empty ? null : authPane);
-                if (!empty) {
-                    Image image = new Image("https://tfc.su/static/skins/" + item.login + ".png");
-                    double w = image.getWidth();
-                    double h = image.getHeight();
-                    double slicedX = 8d / 64 * w;
-                    double slicesY = 8d / 64 * h;
-
-                    if (slicedX < 32) {
-                        int scale = 4;
-                        image = new Image("https://tfc.su/static/skins/" + item.login + ".png", w * scale, h * scale, false, false);
-                        slicedX *= scale;
-                        slicesY *= scale;
-                    }
-
-                    skin.setImage(image);
-                    skin.setViewport(new Rectangle2D(slicedX, slicesY, slicedX, slicesY));
-                    login.setText(item.login);
-                    goAuth.setOnAction(goAuth(item));
-                    authPane.setOnMouseClicked(predicate(goAuth(item), mouseEvent -> mouseEvent.getClickCount() == 2));
-                    removeAcc.setOnAction(removeAcc(item, removeAcc));
-                }
-            }
-        };
-        cell.setText(null);
-        return cell;
+    private static void unselectAccount(KeyEvent event) {
+        Settings.lastSelectedAcc = null;
+        profilesBox.setVisible(false);
+        authButton.setVisible(true);
+        playButton.setVisible(false);
     }
 
-    private static boolean removeAccPressedOnce = false;
-
-    private static EventHandler<ActionEvent> removeAcc(Account account, Button removeAcc) {
-        final String original = removeAcc.getText();
-        return event -> {
-            if (!removeAccPressedOnce) {
-                removeAccPressedOnce = true;
-                removeAcc.setText("Подтвердить вменяемость");
-            } else {
-                removeAccPressedOnce = false;
-                Settings.accounts.remove(account);
-                removeAcc.setText(original);
-            }
+    private static EventHandler<ActionEvent> selectAccount(String login) {
+        return __ -> {
+            loginField.setText(login);
+            loginField.setAlignment(Pos.CENTER);
+            setPasswordSaved();
+            Settings.lastSelectedAcc = login;
+            profilesBox.setVisible(false);
+            authButton.setVisible(true);
+            playButton.setVisible(false);
         };
+    }
+
+    private static void setPasswordSaved() {
+        passwordField.getStyleClass().add("hasSaved");
+        passwordField.setText("*** Сохранённый ***");
+        passwordField.setAlignment(Pos.CENTER);
     }
 
     private static <A extends Event> EventHandler<A> predicate(EventHandler<A> f, Predicate<A> p) {
         return e -> {
             if (p.test(e))
                 f.handle(e);
-        };
-    }
-
-    private static <A extends Event> EventHandler<A> goAuth(Account account) {
-        return event -> {
-            try {
-                // Verify there's no other overlays
-                if (Overlay.current != null) {
-                    return;
-                }
-
-                // Get profile
-                SignedObjectHolder<ClientProfile> profile = profilesBox.getSelectionModel().getSelectedItem();
-                if (profile == null) {
-                    return; // No profile selected
-                }
-
-                doAuth(profile, account.login, account.rsaPassword);
-            } catch (Throwable e) {
-                throw new RuntimeException(e);
-            }
         };
     }
 
@@ -279,7 +276,7 @@ public class Dialog {
 
         // Set login field as username field
         loginField.setPromptText("Имя пользователя");
-        if (!VerifyHelper.isValidUsername(Settings.accounts.get(0).login)) {
+        if (!VerifyHelper.isValidUsername("")) {
             loginField.setText(""); // Reset if not valid
         }
 
@@ -287,40 +284,52 @@ public class Dialog {
         passwordField.setDisable(true);
         passwordField.setPromptText("Недоступно");
         passwordField.setText("");
-
-        // Switch news view to offline page
-        URL offlineURL = Launcher.getResourceURL("dialog/offline/offline.html");
-        news.getEngine().load(offlineURL.toString());
     }
 
 
-    public static void addNewAccount(ActionEvent actionEvent) {
+    public static void goPlay(ActionEvent actionEvent) {
+        if (Overlay.current != null) {
+            return;
+        }
+
+        SignedObjectHolder<ClientProfile> profile = profilesBox.getSelectionModel().getSelectedItem();
+        if (profile == null) {
+            return;
+        }
+
+        doUpdate(profile, playerProfile, accessToken);
+    }
+
+    public static void goAuth(ActionEvent actionEvent) {
         try {
             // Verify there's no other overlays
             if (Overlay.current != null) {
                 return;
             }
 
-            // Get login
-            String login = loginField.getText();
-            if (!login.isEmpty()) {
+            if (Settings.lastSelectedAcc != null) {
+                doAuth(Settings.lastSelectedAcc, Settings.accounts.get(Settings.lastSelectedAcc));
 
-                String password = passwordField.getText();
-                if (!password.isEmpty()) {
-                    byte[] rsaPassword = Settings.encryptePassword(password);
-                    if (Settings.accounts.size() == 3 && !Settings.isAdmin()) {
-                        Processing.setError(new Exception("Превышено число аккаунтов") {
-                            @Override
-                            public String toString() {
-                                return "Превышено число аккаунтов";
-                            }
-                        });
-                        Overlay.show(Processing.overlay, null);
-                        Overlay.hide(2000, null);
-                    } else {
-                        Settings.accounts.add(new Account(login, rsaPassword));
-                        loginField.setText("");
-                        passwordField.setText("");
+            } else {
+                String login = loginField.getText();
+                if (!login.isEmpty()) {
+                    String password = passwordField.getText();
+                    if (!password.isEmpty()) {
+                        byte[] rsaPassword = Settings.encryptePassword(password);
+                        if (Settings.accounts.size() == 3 && !Settings.isAdmin()) {
+                            Processing.setError(new Exception("Превышено число аккаунтов") {
+                                @Override
+                                public String toString() {
+                                    return "Превышено число аккаунтов";
+                                }
+                            });
+                            Overlay.show(Processing.overlay, null);
+                            Overlay.hide(2000, null);
+                        } else {
+                            addAccount(login, rsaPassword);
+                            Settings.lastSelectedAcc = login;
+                            doAuth(login, rsaPassword);
+                        }
                     }
                 }
             }
@@ -329,9 +338,26 @@ public class Dialog {
         }
     }
 
-    public static void doAuth(SignedObjectHolder<ClientProfile> profile, String login, byte[] rsaPassword) {
+    public static void doAuth(String login, byte[] rsaPassword) {
         Processing.resetOverlay();
-        Overlay.show(Processing.overlay, event -> makeAuthRequest(login, rsaPassword, result -> doUpdate(profile, result.pp, result.accessToken)));
+        Overlay.show(Processing.overlay, event -> doAuthRequest(login, rsaPassword));
+    }
+
+    private static void doAuthRequest(String login, byte[] rsaPassword) {
+        Processing.makeAuthRequest(login, rsaPassword, result -> {
+            playerProfile = result.pp;
+            accessToken = result.accessToken;
+            profilesBox.setVisible(true);
+            authButton.setVisible(false);
+            playButton.setVisible(true);
+            // Update profiles list and hide overlay
+            Settings.lastProfiles = result.profiles;
+            setPasswordSaved();
+            updateProfilesList(result.profiles);
+            Overlay.hide(0, null);
+        }, () -> {
+            removeAccount(login);
+        });
     }
 
 
@@ -341,7 +367,7 @@ public class Dialog {
         // Update JVM dir
         Update.resetOverlay("Обновление файлов JVM");
         String jvmCustomDir = profile.object.block.getEntryValue("jvmVersion", StringConfigEntry.class) + jvmDirName;
-        Overlay.swap(0, Update.overlay, event -> {
+        Overlay.show(Update.overlay, event -> {
             Path jvmDir = Settings.updatesDir.resolve(jvmCustomDir);
             makeUpdateRequest(jvmCustomDir, jvmDir, null, digest, jvmHDir -> {
                 Settings.lastHDirs.put(jvmDirName, jvmHDir);
@@ -394,13 +420,11 @@ public class Dialog {
         }
 
         // Set profiles selection model
-        SingleSelectionModel sm = profilesBox.getSelectionModel();
-        sm.selectedIndexProperty().addListener(
-                (o, ov, nv) -> Settings.profile = nv.intValue()); // Store selected profile index
-
+        SingleSelectionModel<SignedObjectHolder<ClientProfile>> sm = profilesBox.getSelectionModel();
+        // Store selected profile index
+        sm.selectedIndexProperty().addListener((o, ov, nv) -> Settings.lastSelectedProfile = nv.intValue());
         // Restore selected item
-        int i = Settings.profile;
-        sm.select(i < profiles.size() ? i : 0);
+        sm.select(Settings.lastSelectedProfile < profiles.size() ? Settings.lastSelectedProfile : 0);
     }
 
     public static void verifyLauncher() {
@@ -417,7 +441,6 @@ public class Dialog {
 
             // Parse response
             Settings.lastSign = result.getSign();
-            Settings.lastProfiles = result.profiles;
             if (Settings.offline) {
                 try {
                     initOffline();
@@ -426,12 +449,15 @@ public class Dialog {
                 }
             }
 
-            // Update profiles list and hide overlay
-            updateProfilesList(result.profiles);
-            Overlay.hide(0, event1 -> {
-                if (CliParams.autoLogin)
-                    goAuth(null);
-            });
+            doAuthLast();
+            Overlay.hide(0, null);
         }));
+    }
+
+    public static void doAuthLast() {
+        if (Settings.lastSelectedAcc != null) {
+            selectAccount(Settings.lastSelectedAcc).handle(null);
+            doAuthRequest(Settings.lastSelectedAcc, Settings.accounts.get(Settings.lastSelectedAcc));
+        }
     }
 }

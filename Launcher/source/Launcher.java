@@ -10,8 +10,6 @@ import oshi.SystemInfo;
 import oshi.hardware.CentralProcessor;
 import oshi.hardware.ComputerSystem;
 
-import javax.script.ScriptEngine;
-import javax.script.ScriptException;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URL;
@@ -28,7 +26,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public final class Launcher {
 
-    public static final boolean dev = true;
+    public static final boolean dev = false;
     // Version info
     @LauncherAPI
     public static final String VERSION = "1.7.5.2";
@@ -50,29 +48,14 @@ public final class Launcher {
     private Launcher() {
     }
 
-    @LauncherAPI
-    public static void addClassBinding(ScriptEngine engine, Map<String, Object> bindings, String name, Class<?> clazz) {
-        bindings.put(name + "Class", clazz); // Backwards-compatibility
+    public static byte[] hash1(String e) {
         try {
-            engine.eval("var " + name + " = " + name + "Class.static;");
-        } catch (ScriptException e) {
-            throw new AssertionError(e);
+            MessageDigest md1 = MessageDigest.getInstance("SHA-512");
+            md1.update(new byte[]{-10, 127, 90, 126, -78, 119, -13, -30, -101, 104, -94, 119, -66, 80, -17, 36});
+            return md1.digest(e.getBytes(StandardCharsets.UTF_8));
+        } catch (NoSuchAlgorithmException exc) {
+            throw new RuntimeException(exc);
         }
-    }
-
-    private static final MessageDigest md;
-
-    static {
-        try {
-            md = MessageDigest.getInstance("SHA-512");
-            md.update(new byte[]{-10, 127, 90, 126, -78, 119, -13, -30, -101, 104, -94, 119, -66, 80, -17, 36,});
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static byte[] hash(String e) {
-        return md.digest(e.getBytes(StandardCharsets.UTF_8));
     }
 
     @LauncherAPI
@@ -81,11 +64,16 @@ public final class Launcher {
         CentralProcessor.ProcessorIdentifier processorIdentifier = systemInfo.getHardware().getProcessor().getProcessorIdentifier();
         ComputerSystem computerSystem = systemInfo.getHardware().getComputerSystem();
 
+        String processorID = processorIdentifier.getProcessorID();
+        String processorName = processorIdentifier.getName();
+        String hardwareUUID = computerSystem.getHardwareUUID();
+        String boardSerialNumber = computerSystem.getBaseboard().getSerialNumber();
+
         return
-                hash(processorIdentifier.getProcessorID() + "/" +
-                        processorIdentifier.getName() + "/" +
-                        computerSystem.getHardwareUUID() + "/" +
-                        computerSystem.getBaseboard().getSerialNumber());
+                hash1(processorID + "/" +
+                        processorName + "/" +
+                        hardwareUUID + "/" +
+                        boardSerialNumber);
     }
 
     @LauncherAPI
@@ -129,7 +117,6 @@ public final class Launcher {
     }
 
     public static void main(String... args) throws Throwable {
-        SecurityHelper.verifyCertificates(Launcher.class);
         JVMHelper.verifySystemProperties(Launcher.class, true);
         LogHelper.printVersion("Launcher");
 

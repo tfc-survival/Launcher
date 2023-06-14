@@ -24,7 +24,7 @@ public final class MariaDBAuthProvider extends AuthProvider {
         mySQLHolder = new MariaDBSourceConfig("authProviderPool", block);
 
         // Read query
-        query = VerifyHelper.verify(block.getEntryValue("query", StringConfigEntry.class),
+        query = VerifyHelper.verify_1(block.getEntryValue("query", StringConfigEntry.class),
                 VerifyHelper.NOT_EMPTY, "MySQL query can't be empty");
         queryParams = block.getEntry("queryParams", ListConfigEntry.class).
                 stream(StringConfigEntry.class).toArray(String[]::new);

@@ -12,11 +12,13 @@ import launcher.serialize.stream.StreamObject;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("ComparableImplementedButEqualsNotOverridden")
 public final class ClientProfile extends ConfigObject implements Comparable<ClientProfile> {
     @LauncherAPI
-    public static final StreamObject.Adapter<ClientProfile> RO_ADAPTER = input -> new ClientProfile(input, true);
+    public static final StreamObject.Adapter<ClientProfile> RO_ADAPTER = (HInput input) -> new ClientProfile(input, true);
     private static final FileNameMatcher ASSET_MATCHER = new FileNameMatcher(
             new String[0], new String[]{"indexes", "objects"}, new String[0]);
 
@@ -42,6 +44,7 @@ public final class ClientProfile extends ConfigObject implements Comparable<Clie
     private final ListConfigEntry jvmArgs;
     private final ListConfigEntry classPath;
     private final ListConfigEntry clientArgs;
+    private final ListConfigEntry whitelist;
 
     @LauncherAPI
     public ClientProfile(BlockConfigEntry block) {
@@ -69,6 +72,8 @@ public final class ClientProfile extends ConfigObject implements Comparable<Clie
         classPath = block.getEntry("classPath", ListConfigEntry.class);
         jvmArgs = block.getEntry("jvmArgs", ListConfigEntry.class);
         clientArgs = block.getEntry("clientArgs", ListConfigEntry.class);
+
+        whitelist = block.getEntry("whitelist", ListConfigEntry.class);
     }
 
     @LauncherAPI
@@ -179,15 +184,20 @@ public final class ClientProfile extends ConfigObject implements Comparable<Clie
         return updateFastCheck.getValue();
     }
 
+    public boolean isWhitelisted(String login) {
+        Set<String> whitelist = this.whitelist.stream(StringConfigEntry.class).collect(Collectors.toSet());
+        return whitelist.isEmpty() || whitelist.contains(login);
+    }
+
     @LauncherAPI
     public void verify() {
         // Version
-        VerifyHelper.verify(getVersion(), VerifyHelper.NOT_EMPTY, "Game version can't be empty");
+        VerifyHelper.verify_1(getVersion(), VerifyHelper.NOT_EMPTY, "Game version can't be empty");
         IOHelper.verifyFileName(getAssetIndex()); // А в смысле, там же версия, какой нахуй FileName?
 
         // Client
-        VerifyHelper.verify(getTitle(), VerifyHelper.NOT_EMPTY, "Profile title can't be empty");
-        VerifyHelper.verify(getServerAddress(), VerifyHelper.NOT_EMPTY, "Server address can't be empty");
+        VerifyHelper.verify_1(getTitle(), VerifyHelper.NOT_EMPTY, "Profile title can't be empty");
+        VerifyHelper.verify_1(getServerAddress(), VerifyHelper.NOT_EMPTY, "Server address can't be empty");
         VerifyHelper.verifyInt(getServerPort(), VerifyHelper.range(0, 65535), "Illegal server port: " + getServerPort());
 
         //  Updater and client watch service
@@ -199,7 +209,8 @@ public final class ClientProfile extends ConfigObject implements Comparable<Clie
         jvmArgs.verifyOfType(Type.STRING);
         classPath.verifyOfType(Type.STRING);
         clientArgs.verifyOfType(Type.STRING);
-        VerifyHelper.verify(getTitle(), VerifyHelper.NOT_EMPTY, "Main class can't be empty");
+        whitelist.verifyOfType(Type.STRING);
+        VerifyHelper.verify_1(getTitle(), VerifyHelper.NOT_EMPTY, "Main class can't be empty");
     }
 
     // Можно конечно угореть и парсить версии с https://launchermeta.mojang.com/mc/game/version_manifest.json

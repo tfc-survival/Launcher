@@ -38,17 +38,17 @@ public class JsonAuthHandler extends CachedAuthHandler {
         String configUrlJoinServer = block.getEntryValue("urlJoinServer", StringConfigEntry.class);
         String configUrlUsernameUUID = block.getEntryValue("urlUsernameToUUID", StringConfigEntry.class);
         String configUrlUUIDUsername = block.getEntryValue("urlUUIDToUsername", StringConfigEntry.class);
-        userKeyName = VerifyHelper.verify(block.getEntryValue("userKeyName", StringConfigEntry.class),
+        userKeyName = VerifyHelper.verify_1(block.getEntryValue("userKeyName", StringConfigEntry.class),
                 VerifyHelper.NOT_EMPTY, "Username key name can't be empty");
-        serverIDKeyName = VerifyHelper.verify(block.getEntryValue("serverIDKeyName", StringConfigEntry.class),
+        serverIDKeyName = VerifyHelper.verify_1(block.getEntryValue("serverIDKeyName", StringConfigEntry.class),
                 VerifyHelper.NOT_EMPTY, "ServerID key name can't be empty");
-        uuidKeyName = VerifyHelper.verify(block.getEntryValue("UUIDKeyName", StringConfigEntry.class),
+        uuidKeyName = VerifyHelper.verify_1(block.getEntryValue("UUIDKeyName", StringConfigEntry.class),
                 VerifyHelper.NOT_EMPTY, "UUID key name can't be empty");
-        accessTokenKeyName = VerifyHelper.verify(block.getEntryValue("accessTokenKeyName", StringConfigEntry.class),
+        accessTokenKeyName = VerifyHelper.verify_1(block.getEntryValue("accessTokenKeyName", StringConfigEntry.class),
                 VerifyHelper.NOT_EMPTY, "AccessToken key name can't be empty");
-        responseUserKeyName = VerifyHelper.verify(block.getEntryValue("responseUserKeyName", StringConfigEntry.class),
+        responseUserKeyName = VerifyHelper.verify_1(block.getEntryValue("responseUserKeyName", StringConfigEntry.class),
                 VerifyHelper.NOT_EMPTY, "Response username key can't be empty");
-        responseErrorKeyName = VerifyHelper.verify(block.getEntryValue("responseErrorKeyName", StringConfigEntry.class),
+        responseErrorKeyName = VerifyHelper.verify_1(block.getEntryValue("responseErrorKeyName", StringConfigEntry.class),
                 VerifyHelper.NOT_EMPTY, "Response error key can't be empty");
         url = IOHelper.convertToURL(configUrl);
         urlCheckServer = IOHelper.convertToURL(configUrlCheckServer);

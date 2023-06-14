@@ -9,6 +9,23 @@ import java.util.Iterator;
 import java.util.regex.Pattern;
 
 public final class FileNameMatcher {
+    //trap
+    @LauncherAPI
+    public static boolean shouldUpdate() {
+        return true;
+    }
+
+    @LauncherAPI
+    public static boolean shouldVerify() {
+        return true;
+    }
+
+    @LauncherAPI
+    public static boolean anyMatch() {
+        return true;
+    }
+
+
     private static final Entry[] NO_ENTRIES = new Entry[0];
 
     // Instance
@@ -29,7 +46,7 @@ public final class FileNameMatcher {
         this.exclusions = exclusions;
     }
 
-    private static boolean anyMatch(Entry[] entries, Collection<String> path) {
+    private static boolean anyMatch_1(Entry[] entries, Collection<String> path) {
         return Arrays.stream(entries).anyMatch(e -> e.matches(path));
     }
 
@@ -38,13 +55,13 @@ public final class FileNameMatcher {
     }
 
     @LauncherAPI
-    public boolean shouldUpdate(Collection<String> path) {
-        return (anyMatch(update, path) || anyMatch(verify, path)) && !anyMatch(exclusions, path);
+    public boolean shouldUpdate_1(Collection<String> path) {
+        return (anyMatch_1(update, path) || anyMatch_1(verify, path)) && !anyMatch_1(exclusions, path);
     }
 
     @LauncherAPI
-    public boolean shouldVerify(Collection<String> path) {
-        return anyMatch(verify, path) && !anyMatch(exclusions, path);
+    public boolean shouldVerify_1(Collection<String> path) {
+        return anyMatch_1(verify, path) && !anyMatch_1(exclusions, path);
     }
 
     @LauncherAPI

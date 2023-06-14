@@ -15,7 +15,6 @@ public class Overlay {
 
     public static void show(Pane newOverlay, EventHandler<ActionEvent> onFinished) {
         // Freeze root pane
-        news.setDisable(true);
         authList.setDisable(true);
         current = newOverlay;
 
@@ -37,21 +36,20 @@ public class Overlay {
         });
     }
 
-    public static void hide(int delay, EventHandler<ActionEvent> onFinished) {
+    public static void hide(int delay, Runnable onFinished) {
         fade(current, delay, 1.0, 0.0, event -> {
             dimPane.getChildren().remove(current);
             fade(dimPane, 0, 1.0, 0.0, event1 -> {
                 dimPane.setVisible(false);
 
                 // Unfreeze root pane
-                news.setDisable(false);
                 authList.setDisable(false);
                 rootPane.requestFocus();
 
                 // Reset overlay state
                 current = null;
                 if (onFinished != null) {
-                    onFinished.handle(event1);
+                    onFinished.run();
                 }
             });
         });

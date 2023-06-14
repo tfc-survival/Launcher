@@ -55,7 +55,7 @@ public class CliParams {
 
     public static void applySettings() throws IllegalBlockSizeException, BadPaddingException {
         if (profile >= 0)
-            Settings.profile = profile;
+            Settings.lastSelectedProfile = profile;
 
 
         // Apply client params

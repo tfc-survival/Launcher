@@ -49,6 +49,7 @@ public class LauncherApp extends JSApplication {
         stage.sizeToScene();
         stage.centerOnScreen();
         stage.show();
+
     }
 
     @Override

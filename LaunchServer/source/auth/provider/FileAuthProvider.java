@@ -77,7 +77,7 @@ public final class FileAuthProvider extends DigestAuthProvider {
         Set<Map.Entry<String, ConfigEntry<?>>> entrySet = authFile.getValue().entrySet();
         for (Map.Entry<String, ConfigEntry<?>> entry : entrySet) {
             String login = entry.getKey();
-            ConfigEntry<?> value = VerifyHelper.verify(entry.getValue(), v -> v.getType() == Type.BLOCK,
+            ConfigEntry<?> value = VerifyHelper.verify_1(entry.getValue(), v -> v.getType() == Type.BLOCK,
                     String.format("Illegal config entry type: '%s'", login));
 
             // Add auth entry
@@ -98,9 +98,9 @@ public final class FileAuthProvider extends DigestAuthProvider {
         private Entry(BlockConfigEntry block) {
             super(block);
             username = VerifyHelper.verifyUsername(block.getEntryValue("username", StringConfigEntry.class));
-            password = VerifyHelper.verify(block.getEntryValue("password", StringConfigEntry.class),
+            password = VerifyHelper.verify_1(block.getEntryValue("password", StringConfigEntry.class),
                     VerifyHelper.NOT_EMPTY, String.format("Password can't be empty: '%s'", username));
-            ip = block.hasEntry("ip") ? VerifyHelper.verify(block.getEntryValue("ip", StringConfigEntry.class),
+            ip = block.hasEntry("ip") ? VerifyHelper.verify_1(block.getEntryValue("ip", StringConfigEntry.class),
                     VerifyHelper.NOT_EMPTY, String.format("IP can't be empty: '%s'", username)) : null;
         }
     }

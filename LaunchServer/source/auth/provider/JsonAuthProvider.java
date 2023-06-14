@@ -30,11 +30,11 @@ public final class JsonAuthProvider extends AuthProvider {
     JsonAuthProvider(BlockConfigEntry block) {
         super(block);
         String configUrl = block.getEntryValue("url", StringConfigEntry.class);
-        userKeyName = VerifyHelper.verify(block.getEntryValue("userKeyName", StringConfigEntry.class), VerifyHelper.NOT_EMPTY, "Username key name can't be empty");
-        passKeyName = VerifyHelper.verify(block.getEntryValue("passKeyName", StringConfigEntry.class), VerifyHelper.NOT_EMPTY, "Password key name can't be empty");
-        ipKeyName = VerifyHelper.verify(block.getEntryValue("ipKeyName", StringConfigEntry.class), VerifyHelper.NOT_EMPTY, "IP key name can't be empty");
-        responseUserKeyName = VerifyHelper.verify(block.getEntryValue("responseUserKeyName", StringConfigEntry.class), VerifyHelper.NOT_EMPTY, "Response username key can't be empty");
-        responseErrorKeyName = VerifyHelper.verify(block.getEntryValue("responseErrorKeyName", StringConfigEntry.class), VerifyHelper.NOT_EMPTY, "Response error key can't be empty");
+        userKeyName = VerifyHelper.verify_1(block.getEntryValue("userKeyName", StringConfigEntry.class), VerifyHelper.NOT_EMPTY, "Username key name can't be empty");
+        passKeyName = VerifyHelper.verify_1(block.getEntryValue("passKeyName", StringConfigEntry.class), VerifyHelper.NOT_EMPTY, "Password key name can't be empty");
+        ipKeyName = VerifyHelper.verify_1(block.getEntryValue("ipKeyName", StringConfigEntry.class), VerifyHelper.NOT_EMPTY, "IP key name can't be empty");
+        responseUserKeyName = VerifyHelper.verify_1(block.getEntryValue("responseUserKeyName", StringConfigEntry.class), VerifyHelper.NOT_EMPTY, "Response username key can't be empty");
+        responseErrorKeyName = VerifyHelper.verify_1(block.getEntryValue("responseErrorKeyName", StringConfigEntry.class), VerifyHelper.NOT_EMPTY, "Response error key can't be empty");
         url = IOHelper.convertToURL(configUrl);
     }
 

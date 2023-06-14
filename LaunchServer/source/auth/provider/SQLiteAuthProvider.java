@@ -37,7 +37,7 @@ public final class SQLiteAuthProvider extends AuthProvider {
         }
 
         this.sqliteconnection = sqliteconnection1;
-        this.query = VerifyHelper.verify(block.getEntryValue("query", StringConfigEntry.class), VerifyHelper.NOT_EMPTY, "Sqlite query can't be empty");
+        this.query = VerifyHelper.verify_1(block.getEntryValue("query", StringConfigEntry.class), VerifyHelper.NOT_EMPTY, "Sqlite query can't be empty");
         /*
         this.queryParams = block.getEntry("queryParams", ListConfigEntry.class).stream(StringConfigEntry.class).toArray((x$0) -> {
             return new String[x$0];

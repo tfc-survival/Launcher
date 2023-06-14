@@ -11,6 +11,18 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 public final class VerifyHelper {
+    //trap
+    @LauncherAPI
+    public static <K, V> V getMapValue(Map<K, V> map, K key, String error) {
+        return null;
+    }
+
+    @LauncherAPI
+    public static <T> T verify(T object, Predicate<T> predicate, String error) {
+        return null;
+    }
+
+
     @LauncherAPI
     public static final IntPredicate POSITIVE = i -> i > 0;
     @LauncherAPI
@@ -28,8 +40,8 @@ public final class VerifyHelper {
     }
 
     @LauncherAPI
-    public static <K, V> V getMapValue(Map<K, V> map, K key, String error) {
-        return verify(map.get(key), Objects::nonNull, error);
+    public static <K, V> V getMapValue_1(Map<K, V> map, K key, String error) {
+        return verify_1(map.get(key), Objects::nonNull, error);
     }
 
     @LauncherAPI
@@ -49,7 +61,7 @@ public final class VerifyHelper {
 
     @LauncherAPI
     public static <K, V> void putIfAbsent(Map<K, V> map, K key, V value, String error) {
-        verify(map.putIfAbsent(key, value), Objects::isNull, error);
+        verify_1(map.putIfAbsent(key, value), Objects::isNull, error);
     }
 
     @LauncherAPI
@@ -58,7 +70,7 @@ public final class VerifyHelper {
     }
 
     @LauncherAPI
-    public static <T> T verify(T object, Predicate<T> predicate, String error) {
+    public static <T> T verify_1(T object, Predicate<T> predicate, String error) {
         if (predicate.test(object)) {
             return object;
         }
@@ -75,7 +87,7 @@ public final class VerifyHelper {
 
     @LauncherAPI
     public static String verifyIDName(String name) {
-        return verify(name, VerifyHelper::isValidIDName, String.format("Invalid name: '%s'", name));
+        return verify_1(name, VerifyHelper::isValidIDName, String.format("Invalid name: '%s'", name));
     }
 
     @LauncherAPI
@@ -96,6 +108,6 @@ public final class VerifyHelper {
 
     @LauncherAPI
     public static String verifyUsername(String username) {
-        return verify(username, VerifyHelper::isValidUsername, String.format("Invalid username: '%s'", username));
+        return verify_1(username, VerifyHelper::isValidUsername, String.format("Invalid username: '%s'", username));
     }
 }

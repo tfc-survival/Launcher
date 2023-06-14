@@ -51,7 +51,7 @@ public abstract class AuthHandler extends ConfigObject implements AutoCloseable 
 
     @LauncherAPI
     public static AuthHandler newHandler(String name, BlockConfigEntry block) {
-        Adapter<AuthHandler> authHandlerAdapter = VerifyHelper.getMapValue(AUTH_HANDLERS, name,
+        Adapter<AuthHandler> authHandlerAdapter = VerifyHelper.getMapValue_1(AUTH_HANDLERS, name,
                 String.format("Unknown auth handler: '%s'", name));
         return authHandlerAdapter.convert(block);
     }

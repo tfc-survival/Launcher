@@ -119,7 +119,7 @@ public final class HashedDir extends HashedEntry {
             path.add(name);
 
             // Should update?
-            boolean shouldUpdate = matcher == null || matcher.shouldUpdate(path);
+            boolean shouldUpdate = matcher == null || matcher.shouldUpdate_1(path);
 
             // Not found or of different type
             Type type = entry.getType();
@@ -247,7 +247,7 @@ public final class HashedDir extends HashedEntry {
 
             // Add file (may be unhashed, if exclusion)
             path.add(IOHelper.getFileName(file));
-            boolean doDigest = digest && (matcher == null || matcher.shouldUpdate(path));
+            boolean doDigest = digest && (matcher == null || matcher.shouldUpdate_1(path));
             current.map.put(path.removeLast(), new HashedFile(file, attrs.size(), doDigest));
             return super.visitFile(file, attrs);
         }

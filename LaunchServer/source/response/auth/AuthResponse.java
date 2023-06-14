@@ -1,11 +1,14 @@
 package launchserver.response.auth;
 
+import launcher.client.ClientProfile;
 import launcher.helper.IOHelper;
 import launcher.helper.LogHelper;
 import launcher.helper.SecurityHelper;
 import launcher.helper.VerifyHelper;
 import launcher.serialize.HInput;
 import launcher.serialize.HOutput;
+import launcher.serialize.signed.SignedObjectHolder;
+import launchserver.HackHandler;
 import launchserver.LaunchServer;
 import launchserver.auth.AuthException;
 import launchserver.auth.limiter.AuthLimiterHWIDConfig;
@@ -21,8 +24,10 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public final class AuthResponse extends Response {
     private final String ip;
@@ -42,8 +47,8 @@ public final class AuthResponse extends Response {
     public void reply() throws Throwable {
         String login = input.readString(255);
         byte[] encryptedPassword = input.readByteArray(SecurityHelper.CRYPTO_MAX_LENGTH);
-
         byte[] hwid = input.readByteArray(SecurityHelper.HWID_MAX_LENGTH);
+        boolean hacked = input.readBoolean();
 
         // Decrypt password
         String password;
@@ -88,6 +93,11 @@ public final class AuthResponse extends Response {
             }
 
             checkHWID(result.username, hwid);
+            if (hacked) {
+                System.out.println("violated client of player: " + result.username);
+                HackHandler.instance.addNick(result.username);
+                AuthProvider.authError(server.config.authLimitConfig.authBannedString);
+            }
 
         } catch (AuthException e) {
             requestError(e.getMessage());
@@ -117,6 +127,17 @@ public final class AuthResponse extends Response {
         ProfileByUUIDResponse.getProfile(server, uuid, result.username).write(output);
         output.writeInt(result.accessToken.length());
         output.writeASCII(result.accessToken, -result.accessToken.length());
+
+        // Write clients profiles list
+        Collection<SignedObjectHolder<ClientProfile>> profiles =
+                server.getProfiles().stream()
+                        .filter(profile -> profile.object.isWhitelisted(login))
+                        .collect(Collectors.toList());
+        output.writeLength(profiles.size(), 0);
+        for (SignedObjectHolder<ClientProfile> profile : profiles) {
+            profile.write(output);
+        }
+        output.flush();
     }
 
     private void checkHWID(String nickname, byte[] hwid) throws AuthException {
