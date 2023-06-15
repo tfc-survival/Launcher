@@ -1,7 +1,7 @@
 package launchserver.binary;
 
-import launcher.Launcher;
 import launcher.LauncherAPI;
+import launcher.helper.CommonHelper;
 import launcher.helper.IOHelper;
 import launcher.helper.LogHelper;
 import launchserver.LaunchServer;
@@ -74,13 +74,13 @@ public final class EXEL4JLauncherBinary extends LauncherBinary {
         // Prepare version info (product)
         VersionInfo info = new VersionInfo();
         info.setProductName(server.config.launch4JConfig.productName);
-        info.setProductVersion(Launcher.VERSION);
-        info.setTxtProductVersion(Launcher.VERSION + ", build " + Launcher.BUILD);
+        info.setProductVersion(CommonHelper.VERSION);
+        info.setTxtProductVersion(CommonHelper.VERSION + ", build " + CommonHelper.BUILD);
 
         // Prepare version info (file)
         info.setFileDescription(server.config.launch4JConfig.fileDesc);
-        info.setFileVersion(Launcher.VERSION);
-        info.setTxtFileVersion(Launcher.VERSION + ", build " + Launcher.BUILD);
+        info.setFileVersion(CommonHelper.VERSION);
+        info.setTxtFileVersion(CommonHelper.VERSION + ", build " + CommonHelper.BUILD);
         info.setOriginalFilename(binaryFile.getFileName().toString());
 
         // Prepare version info (misc)

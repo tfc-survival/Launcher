@@ -1,10 +1,6 @@
 package launchserver.response;
 
-import launcher.Launcher;
-import launcher.helper.IOHelper;
-import launcher.helper.LogHelper;
-import launcher.helper.SecurityHelper;
-import launcher.helper.VerifyHelper;
+import launcher.helper.*;
 import launcher.request.Request.Type;
 import launcher.request.RequestException;
 import launcher.serialize.HInput;
@@ -92,8 +88,8 @@ public final class ResponseThread implements Runnable {
 
         // Verify magic number
         int magicNumber = input.readInt();
-        if (magicNumber != Launcher.PROTOCOL_MAGIC) {
-            if (magicNumber != Launcher.PROTOCOL_MAGIC - 1) { // Previous launcher protocol
+        if (magicNumber != CommonHelper.PROTOCOL_MAGIC) {
+            if (magicNumber != CommonHelper.PROTOCOL_MAGIC - 1) { // Previous launcher protocol
                 output.writeBoolean(false);
                 if (LogHelper.isDebugEnabled())
                     throw new IOException(String.format("[%s] Protocol magic mismatch", ip));

@@ -5,6 +5,7 @@ import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
+import launcher.Config;
 import launcher.Launcher;
 import launcher.client.ClientLauncher;
 import launcher.client.ClientProfile;
@@ -88,7 +89,7 @@ public class Processing {
         }
 
         // Verify launcher signature
-        SecurityHelper.verifySign(LauncherRequest.BINARY_PATH, Settings.lastSign, Launcher.getConfig().publicKey);
+        SecurityHelper.verifySign(LauncherRequest.BINARY_PATH, Settings.lastSign, Config.getConfig().publicKey);
 
         // Return last sign and profiles
         return new LauncherRequest.Result(null, Settings.lastSign);

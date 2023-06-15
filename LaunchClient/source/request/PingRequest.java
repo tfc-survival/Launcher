@@ -1,6 +1,6 @@
 package launcher.request;
 
-import launcher.Launcher.Config;
+import launcher.Config;
 import launcher.LauncherAPI;
 import launcher.serialize.HInput;
 import launcher.serialize.HOutput;

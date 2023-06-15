@@ -2,7 +2,6 @@ package launchserver;
 
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonObject;
-import launcher.Launcher;
 import launcher.LauncherAPI;
 import launcher.client.ClientProfile;
 import launcher.hasher.HashedDir;
@@ -180,7 +179,7 @@ public final class LaunchServer implements Runnable, AutoCloseable {
                 String date = object.get("date").asString();
                 String note = object.get("note").asString();
 
-                if (Launcher.VERSION.equals(version)) {
+                if (CommonHelper.VERSION.equals(version)) {
                     LogHelper.info("You have the latest version!");
                 } else {
                     LogHelper.info("================================");

@@ -1,6 +1,5 @@
 package launcher.helper;
 
-import launcher.Launcher;
 import launcher.LauncherAPI;
 
 import javax.crypto.Cipher;
@@ -154,7 +153,7 @@ public final class SecurityHelper {
 
     @LauncherAPI
     public static boolean isValidCertificates_1(Class<?> clazz) {
-        if (Launcher.dev)
+        if (CommonHelper.dev)
             return true;
         // Verify META-INF/MANIFEST.MF certificate
         Certificate[] certificates = JVMHelper.getCertificates(JarFile.MANIFEST_NAME);
@@ -169,7 +168,7 @@ public final class SecurityHelper {
 
     @LauncherAPI
     public static boolean isValidSign_1(Path path, byte[] sign, RSAPublicKey publicKey) throws IOException, SignatureException {
-        if (Launcher.dev)
+        if (CommonHelper.dev)
             return true;
         try (InputStream input = IOHelper.newInput(path)) {
             return isValidSign_1(input, sign, publicKey);

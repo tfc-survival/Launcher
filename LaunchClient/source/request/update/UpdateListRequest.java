@@ -1,6 +1,6 @@
 package launcher.request.update;
 
-import launcher.Launcher.Config;
+import launcher.Config;
 import launcher.LauncherAPI;
 import launcher.helper.IOHelper;
 import launcher.request.Request;

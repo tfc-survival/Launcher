@@ -1,6 +1,5 @@
 package launcher.helper;
 
-import launcher.Launcher;
 import launcher.LauncherAPI;
 
 import javax.imageio.ImageIO;
@@ -155,7 +154,7 @@ public final class IOHelper {
 
     @LauncherAPI
     public static URL getResourceURL(String name) throws NoSuchFileException {
-        URL url = Launcher.class.getResource('/' + name);
+        URL url = IOHelper.class.getResource('/' + name);
         if (url == null) {
             throw new NoSuchFileException(name);
         }

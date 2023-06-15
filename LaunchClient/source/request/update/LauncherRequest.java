@@ -1,7 +1,6 @@
 package launcher.request.update;
 
-import launcher.Launcher;
-import launcher.Launcher.Config;
+import launcher.Config;
 import launcher.LauncherAPI;
 import launcher.client.ClientLauncher;
 import launcher.helper.IOHelper;
@@ -22,7 +21,7 @@ import java.util.List;
 
 public final class LauncherRequest extends Request<Result> {
     @LauncherAPI
-    public static final Path BINARY_PATH = IOHelper.getCodeSource(Launcher.class);
+    public static final Path BINARY_PATH = IOHelper.getCodeSource(ClientLauncher.class);
     @LauncherAPI
     public static final boolean EXE_BINARY = IOHelper.hasExtension(BINARY_PATH, "exe");
 

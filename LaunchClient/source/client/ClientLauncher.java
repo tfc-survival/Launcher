@@ -3,8 +3,7 @@ package launcher.client;
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.WriterConfig;
-import launcher.Launcher;
-import launcher.Launcher.Config;
+import launcher.Config;
 import launcher.LauncherAPI;
 import launcher.client.ClientProfile.Version;
 import launcher.hasher.DirWatcher;
@@ -157,7 +156,7 @@ public final class ClientLauncher {
         Params params;
         SignedObjectHolder<ClientProfile> profile;
         SignedObjectHolder<HashedDir> jvmHDir, assetHDir, clientHDir;
-        RSAPublicKey publicKey = Launcher.getConfig().publicKey;
+        RSAPublicKey publicKey = Config.getConfig().publicKey;
         try (HInput input = new HInput(IOHelper.newInput(paramsFile))) {
             params = new Params(input);
             profile = new SignedObjectHolder<>(input, publicKey, ClientProfile.RO_ADAPTER);
@@ -261,7 +260,7 @@ public final class ClientLauncher {
         Collections.addAll(args, "--assetsDir", params.assetDir.toString());
         Collections.addAll(args, "--resourcePackDir", params.clientDir.resolve(RESOURCEPACKS_DIR).toString());
         if (Version.compare(version, "1.9.0") >= 0) { // Just to show it in debug screen
-            Collections.addAll(args, "--versionType", "KJ-Launcher v" + Launcher.VERSION);
+            Collections.addAll(args, "--versionType", "KJ-Launcher v" + CommonHelper.VERSION);
         }
 
         // Add server args
@@ -316,7 +315,7 @@ public final class ClientLauncher {
         LAUNCHED.set(true);
         JVMHelper.fullGC();
         System.setProperty("minecraft.launcher.brand", "KeeperJerry's NekroLauncher");
-        System.setProperty("minecraft.launcher.version", Launcher.VERSION);
+        System.setProperty("minecraft.launcher.version", CommonHelper.VERSION);
         System.setProperty("minecraft.applet.TargetDirectory", params.clientDir.toString()); // For 1.5.2
         mainMethod.invoke((Object) args.toArray(EMPTY_ARRAY));
     }

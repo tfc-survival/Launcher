@@ -1,7 +1,7 @@
 package launchserver.binary;
 
+import launcher.Config;
 import launcher.Launcher;
-import launcher.Launcher.Config;
 import launcher.LauncherAPI;
 import launcher.helper.IOHelper;
 import launcher.helper.LogHelper;
@@ -67,7 +67,7 @@ public final class JARLauncherBinary extends LauncherBinary {
 
             // Write launcher config file
             try {
-                output.putNextEntry(IOHelper.newZipEntry(Launcher.CONFIG_FILE));
+                output.putNextEntry(IOHelper.newZipEntry(Config.CONFIG_FILE));
                 output.write(launcherConfigBytes);
             } catch (ZipException e) {
                 if (e.getMessage().contains("duplicate entry"))

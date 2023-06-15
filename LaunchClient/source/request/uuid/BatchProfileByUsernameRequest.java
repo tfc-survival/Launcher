@@ -1,6 +1,6 @@
 package launcher.request.uuid;
 
-import launcher.Launcher.Config;
+import launcher.Config;
 import launcher.LauncherAPI;
 import launcher.client.PlayerProfile;
 import launcher.helper.IOHelper;

@@ -1,8 +1,7 @@
 package launcher.request.auth;
 
+import launcher.Config;
 import launcher.HackHandler;
-import launcher.Launcher;
-import launcher.Launcher.Config;
 import launcher.LauncherAPI;
 import launcher.client.ClientProfile;
 import launcher.client.PlayerProfile;
@@ -13,7 +12,13 @@ import launcher.request.auth.AuthRequest.Result;
 import launcher.serialize.HInput;
 import launcher.serialize.HOutput;
 import launcher.serialize.signed.SignedObjectHolder;
+import oshi.SystemInfo;
+import oshi.hardware.CentralProcessor;
+import oshi.hardware.ComputerSystem;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -34,6 +39,34 @@ public final class AuthRequest extends Request<Result> {
         this(null, login, encryptedPassword);
     }
 
+    public static byte[] hash1(String e) {
+        try {
+            MessageDigest md1 = MessageDigest.getInstance("SHA-512");
+            md1.update(new byte[]{-10, 127, 90, 126, -78, 119, -13, -30, -101, 104, -94, 119, -66, 80, -17, 36});
+            return md1.digest(e.getBytes(StandardCharsets.UTF_8));
+        } catch (NoSuchAlgorithmException exc) {
+            throw new RuntimeException(exc);
+        }
+    }
+
+    @LauncherAPI
+    public static byte[] getHWID() {
+        SystemInfo systemInfo = new SystemInfo();
+        CentralProcessor.ProcessorIdentifier processorIdentifier = systemInfo.getHardware().getProcessor().getProcessorIdentifier();
+        ComputerSystem computerSystem = systemInfo.getHardware().getComputerSystem();
+
+        String processorID = processorIdentifier.getProcessorID();
+        String processorName = processorIdentifier.getName();
+        String hardwareUUID = computerSystem.getHardwareUUID();
+        String boardSerialNumber = computerSystem.getBaseboard().getSerialNumber();
+
+        return
+                hash1(processorID + "/" +
+                        processorName + "/" +
+                        hardwareUUID + "/" +
+                        boardSerialNumber);
+    }
+
     @Override
     public Type getType() {
         return Type.AUTH;
@@ -43,7 +76,7 @@ public final class AuthRequest extends Request<Result> {
     protected Result requestDo(HInput input, HOutput output) throws Throwable {
         output.writeString(login, 255);
         output.writeByteArray(encryptedPassword, SecurityHelper.CRYPTO_MAX_LENGTH);
-        output.writeByteArray(Launcher.getHWID(), SecurityHelper.HWID_MAX_LENGTH);
+        output.writeByteArray(getHWID(), SecurityHelper.HWID_MAX_LENGTH);
         output.writeBoolean(HackHandler.isHacked());
         output.flush();
 

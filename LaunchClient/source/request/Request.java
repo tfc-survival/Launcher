@@ -1,8 +1,8 @@
 package launcher.request;
 
-import launcher.Launcher;
-import launcher.Launcher.Config;
+import launcher.Config;
 import launcher.LauncherAPI;
+import launcher.helper.CommonHelper;
 import launcher.helper.IOHelper;
 import launcher.helper.SecurityHelper;
 import launcher.serialize.HInput;
@@ -21,7 +21,7 @@ public abstract class Request<R> {
 
     @LauncherAPI
     protected Request(Config config) {
-        this.config = config == null ? Launcher.getConfig() : config;
+        this.config = config == null ? Config.getConfig() : config;
     }
 
     @LauncherAPI
@@ -68,7 +68,7 @@ public abstract class Request<R> {
 
     private void writeHandshake(HInput input, HOutput output) throws IOException {
         // Write handshake
-        output.writeInt(Launcher.PROTOCOL_MAGIC);
+        output.writeInt(CommonHelper.PROTOCOL_MAGIC);
         output.writeBigInteger(config.publicKey.getModulus(), SecurityHelper.RSA_KEY_LENGTH + 1);
         EnumSerializer.write(output, getType());
         output.flush();

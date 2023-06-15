@@ -1,6 +1,5 @@
 package launcher.helper;
 
-import launcher.Launcher;
 import launcher.LauncherAPI;
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.Ansi.Attribute;
@@ -263,8 +262,8 @@ public final class LogHelper {
         return new Ansi().bold(). // Setup
                 fgBright(Color.MAGENTA).a("KeeperJerry's "). // Autor mirror
                 fgBright(Color.CYAN).a(product). // Product
-                fgBright(Color.WHITE).a(" v").fgBright(Color.BLUE).a(Launcher.VERSION). // Version
-                fgBright(Color.WHITE).a(" (build #").fgBright(Color.RED).a(Launcher.BUILD).fgBright(Color.WHITE).a(')'). // Build#
+                fgBright(Color.WHITE).a(" v").fgBright(Color.BLUE).a(CommonHelper.VERSION). // Version
+                fgBright(Color.WHITE).a(" (build #").fgBright(Color.RED).a(CommonHelper.BUILD).fgBright(Color.WHITE).a(')'). // Build#
                 reset().toString(); // To string
     }
 
@@ -276,7 +275,7 @@ public final class LogHelper {
     }
 
     private static String formatVersion(String product) {
-        return String.format("KeeperJerry's %s v%s (build #%s)", product, Launcher.VERSION, Launcher.BUILD);
+        return String.format("KeeperJerry's %s v%s (build #%s)", product, CommonHelper.VERSION, CommonHelper.BUILD);
     }
 
     @LauncherAPI

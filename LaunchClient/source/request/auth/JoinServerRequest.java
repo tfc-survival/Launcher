@@ -1,6 +1,6 @@
 package launcher.request.auth;
 
-import launcher.Launcher.Config;
+import launcher.Config;
 import launcher.LauncherAPI;
 import launcher.helper.SecurityHelper;
 import launcher.helper.VerifyHelper;

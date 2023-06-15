@@ -6,6 +6,7 @@
         <element id="file-copy" path="$PROJECT_DIR$/Launcher/MANIFEST.MF" />
       </element>
       <element id="module-output" name="Launcher" />
+      <element id="module-output" name="LaunchClient" />
       <element id="extracted-dir" path="$PROJECT_DIR$/compat/authlib/authlib-clean.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/build/libraries/minimal-json-0.9.5.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/build/libraries/input/jsr305-3.0.2.jar" path-in-jar="/" />
