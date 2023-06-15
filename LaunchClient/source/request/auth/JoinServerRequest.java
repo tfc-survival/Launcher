@@ -1,6 +1,6 @@
 package launcher.request.auth;
 
-import launcher.Config;
+import launcher.ConfigBin;
 import launcher.LauncherAPI;
 import launcher.helper.SecurityHelper;
 import launcher.helper.VerifyHelper;
@@ -20,7 +20,7 @@ public final class JoinServerRequest extends Request<Boolean> {
     private final String serverID;
 
     @LauncherAPI
-    public JoinServerRequest(Config config, String username, String accessToken, String serverID) {
+    public JoinServerRequest(ConfigBin config, String username, String accessToken, String serverID) {
         super(config);
         this.username = VerifyHelper.verifyUsername(username);
         this.accessToken = SecurityHelper.verifyToken(accessToken);

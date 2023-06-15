@@ -1,6 +1,6 @@
 package launcher.request.update;
 
-import launcher.Config;
+import launcher.ConfigBin;
 import launcher.LauncherAPI;
 import launcher.client.ClientLauncher;
 import launcher.helper.IOHelper;
@@ -26,7 +26,7 @@ public final class LauncherRequest extends Request<Result> {
     public static final boolean EXE_BINARY = IOHelper.hasExtension(BINARY_PATH, "exe");
 
     @LauncherAPI
-    public LauncherRequest(Config config) {
+    public LauncherRequest(ConfigBin config) {
         super(config);
     }
 
@@ -36,7 +36,7 @@ public final class LauncherRequest extends Request<Result> {
     }
 
     @LauncherAPI
-    public static void update(Config config, Result result) throws SignatureException, IOException {
+    public static void update(ConfigBin config, Result result) throws SignatureException, IOException {
         SecurityHelper.verifySign(result.binary, result.sign, config.publicKey);
 
         // Prepare process builder to start new instance (java -jar works for Launch4J's EXE too)
@@ -45,8 +45,8 @@ public final class LauncherRequest extends Request<Result> {
         if (LogHelper.isDebugEnabled()) {
             args.add(ClientLauncher.jvmProperty(LogHelper.DEBUG_PROPERTY, Boolean.toString(LogHelper.isDebugEnabled())));
         }
-        if (Config.ADDRESS_OVERRIDE != null) {
-            args.add(ClientLauncher.jvmProperty(Config.ADDRESS_OVERRIDE_PROPERTY, Config.ADDRESS_OVERRIDE));
+        if (ConfigBin.ADDRESS_OVERRIDE != null) {
+            args.add(ClientLauncher.jvmProperty(ConfigBin.ADDRESS_OVERRIDE_PROPERTY, ConfigBin.ADDRESS_OVERRIDE));
         }
         args.add("-jar");
         args.add(BINARY_PATH.toString());

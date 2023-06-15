@@ -1,6 +1,6 @@
 package launcher.request;
 
-import launcher.Config;
+import launcher.ConfigBin;
 import launcher.LauncherAPI;
 import launcher.helper.CommonHelper;
 import launcher.helper.IOHelper;
@@ -16,12 +16,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class Request<R> {
     @LauncherAPI
-    protected final Config config;
+    protected final ConfigBin config;
     private final AtomicBoolean started = new AtomicBoolean(false);
 
     @LauncherAPI
-    protected Request(Config config) {
-        this.config = config == null ? Config.getConfig() : config;
+    protected Request(ConfigBin config) {
+        this.config = config == null ? ConfigBin.getConfig() : config;
     }
 
     @LauncherAPI

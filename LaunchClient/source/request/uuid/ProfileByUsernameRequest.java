@@ -1,6 +1,6 @@
 package launcher.request.uuid;
 
-import launcher.Config;
+import launcher.ConfigBin;
 import launcher.LauncherAPI;
 import launcher.client.PlayerProfile;
 import launcher.helper.VerifyHelper;
@@ -14,7 +14,7 @@ public final class ProfileByUsernameRequest extends Request<PlayerProfile> {
     private final String username;
 
     @LauncherAPI
-    public ProfileByUsernameRequest(Config config, String username) {
+    public ProfileByUsernameRequest(ConfigBin config, String username) {
         super(config);
         this.username = VerifyHelper.verifyUsername(username);
     }

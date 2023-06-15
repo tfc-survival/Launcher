@@ -3,7 +3,7 @@ package launcher.client;
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.WriterConfig;
-import launcher.Config;
+import launcher.ConfigBin;
 import launcher.LauncherAPI;
 import launcher.client.ClientProfile.Version;
 import launcher.hasher.DirWatcher;
@@ -99,8 +99,8 @@ public final class ClientLauncher {
             args.add("-Xmx" + params.ram + 'M');
         }
         args.add(jvmProperty(LogHelper.DEBUG_PROPERTY, Boolean.toString(LogHelper.isDebugEnabled())));
-        if (Config.ADDRESS_OVERRIDE != null) {
-            args.add(jvmProperty(Config.ADDRESS_OVERRIDE_PROPERTY, Config.ADDRESS_OVERRIDE));
+        if (ConfigBin.ADDRESS_OVERRIDE != null) {
+            args.add(jvmProperty(ConfigBin.ADDRESS_OVERRIDE_PROPERTY, ConfigBin.ADDRESS_OVERRIDE));
         }
         if (JVMHelper.OS_TYPE == OS.MUSTDIE && JVMHelper.OS_VERSION.startsWith("10.")) {
             LogHelper.debug("MustDie 10 fix is applied");
@@ -156,7 +156,7 @@ public final class ClientLauncher {
         Params params;
         SignedObjectHolder<ClientProfile> profile;
         SignedObjectHolder<HashedDir> jvmHDir, assetHDir, clientHDir;
-        RSAPublicKey publicKey = Config.getConfig().publicKey;
+        RSAPublicKey publicKey = ConfigBin.getConfig().publicKey;
         try (HInput input = new HInput(IOHelper.newInput(paramsFile))) {
             params = new Params(input);
             profile = new SignedObjectHolder<>(input, publicKey, ClientProfile.RO_ADAPTER);

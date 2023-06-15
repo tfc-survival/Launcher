@@ -25,7 +25,7 @@ public final class Launcher {
 
     @LauncherAPI
     public static URL getResourceURL(String name) throws IOException {
-        Config config = Config.getConfig();
+        ConfigBin config = ConfigBin.getConfig();
         URL url = IOHelper.getResourceURL(RUNTIME_DIR + '/' + name);
         if (!CommonHelper.dev) {
             byte[] validDigest = config.runtime.get(name);

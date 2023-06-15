@@ -15,14 +15,14 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
-public final class Config extends StreamObject {
+public final class ConfigBin extends StreamObject {
     @LauncherAPI
     public static final String ADDRESS_OVERRIDE_PROPERTY = "launcher.addressOverride";
     @LauncherAPI
     public static final String ADDRESS_OVERRIDE = System.getProperty(ADDRESS_OVERRIDE_PROPERTY, null);
     @LauncherAPI
     public static final String CONFIG_FILE = "config.bin";
-    private static final AtomicReference<Config> CONFIG = new AtomicReference<>();
+    private static final AtomicReference<ConfigBin> CONFIG = new AtomicReference<>();
 
     // Instance
     @LauncherAPI
@@ -34,14 +34,14 @@ public final class Config extends StreamObject {
 
     @LauncherAPI
     @SuppressWarnings("AssignmentToCollectionOrArrayFieldFromParameter")
-    public Config(String address, int port, RSAPublicKey publicKey, Map<String, byte[]> runtime) {
+    public ConfigBin(String address, int port, RSAPublicKey publicKey, Map<String, byte[]> runtime) {
         this.address = InetSocketAddress.createUnresolved(address, port);
         this.publicKey = Objects.requireNonNull(publicKey, "publicKey");
         this.runtime = Collections.unmodifiableMap(new HashMap<>(runtime));
     }
 
     @LauncherAPI
-    public Config(HInput input) throws IOException, InvalidKeySpecException {
+    public ConfigBin(HInput input) throws IOException, InvalidKeySpecException {
         String localAddress = input.readASCII(255);
         address = InetSocketAddress.createUnresolved(
                 ADDRESS_OVERRIDE == null ? localAddress : ADDRESS_OVERRIDE, input.readLength(65535));
@@ -65,11 +65,11 @@ public final class Config extends StreamObject {
     }
 
     @LauncherAPI
-    public static Config getConfig() {
-        Config config = CONFIG.get();
+    public static ConfigBin getConfig() {
+        ConfigBin config = CONFIG.get();
         if (config == null) {
             try (HInput input = new HInput(IOHelper.newInput(IOHelper.getResourceURL(CONFIG_FILE)))) {
-                config = new Config(input);
+                config = new ConfigBin(input);
             } catch (IOException | InvalidKeySpecException e) {
                 throw new SecurityException(e);
             }

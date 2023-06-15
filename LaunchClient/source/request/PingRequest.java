@@ -1,6 +1,6 @@
 package launcher.request;
 
-import launcher.Config;
+import launcher.ConfigBin;
 import launcher.LauncherAPI;
 import launcher.serialize.HInput;
 import launcher.serialize.HOutput;
@@ -12,7 +12,7 @@ public final class PingRequest extends Request<Void> {
     public static final byte EXPECTED_BYTE = 0b01010101;
 
     @LauncherAPI
-    public PingRequest(Config config) {
+    public PingRequest(ConfigBin config) {
         super(config);
     }
 

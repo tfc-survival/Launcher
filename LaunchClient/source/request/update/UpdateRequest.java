@@ -1,6 +1,6 @@
 package launcher.request.update;
 
-import launcher.Config;
+import launcher.ConfigBin;
 import launcher.LauncherAPI;
 import launcher.hasher.FileNameMatcher;
 import launcher.hasher.HashedDir;
@@ -53,7 +53,7 @@ public final class UpdateRequest extends Request<SignedObjectHolder<HashedDir>> 
     private Instant startTime;
 
     @LauncherAPI
-    public UpdateRequest(Config config, String dirName, Path dir, FileNameMatcher matcher, boolean digest) {
+    public UpdateRequest(ConfigBin config, String dirName, Path dir, FileNameMatcher matcher, boolean digest) {
         super(config);
         this.dirName = IOHelper.verifyFileName(dirName);
         this.dir = Objects.requireNonNull(dir, "dir");

@@ -1,6 +1,6 @@
 package launcher.request.auth;
 
-import launcher.Config;
+import launcher.ConfigBin;
 import launcher.HackHandler;
 import launcher.LauncherAPI;
 import launcher.client.ClientProfile;
@@ -28,7 +28,7 @@ public final class AuthRequest extends Request<Result> {
     private final byte[] encryptedPassword;
 
     @LauncherAPI
-    public AuthRequest(Config config, String login, byte[] encryptedPassword) {
+    public AuthRequest(ConfigBin config, String login, byte[] encryptedPassword) {
         super(config);
         this.login = VerifyHelper.verify_1(login, VerifyHelper.NOT_EMPTY, "Login can't be empty");
         this.encryptedPassword = encryptedPassword.clone();

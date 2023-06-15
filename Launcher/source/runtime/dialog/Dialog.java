@@ -16,6 +16,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import launcher.ConfigBin;
 import launcher.client.ClientLauncher;
 import launcher.client.ClientProfile;
 import launcher.client.PlayerProfile;
@@ -431,7 +432,7 @@ public class Dialog {
         Overlay.show(Processing.overlay, event -> makeLauncherRequest(result -> {
             if (result.getBinary() != null) {
                 try {
-                    LauncherRequest.update(launcher.Config.getConfig(), result);
+                    LauncherRequest.update(ConfigBin.getConfig(), result);
                 } catch (SignatureException | IOException e) {
                     throw new RuntimeException(e);
                 }

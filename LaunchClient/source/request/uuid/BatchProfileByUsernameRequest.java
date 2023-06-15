@@ -1,6 +1,6 @@
 package launcher.request.uuid;
 
-import launcher.Config;
+import launcher.ConfigBin;
 import launcher.LauncherAPI;
 import launcher.client.PlayerProfile;
 import launcher.helper.IOHelper;
@@ -17,7 +17,7 @@ public final class BatchProfileByUsernameRequest extends Request<PlayerProfile[]
     private final String[] usernames;
 
     @LauncherAPI
-    public BatchProfileByUsernameRequest(Config config, String... usernames) throws IOException {
+    public BatchProfileByUsernameRequest(ConfigBin config, String... usernames) throws IOException {
         super(config);
         this.usernames = usernames.clone();
         IOHelper.verifyLength(this.usernames.length, MAX_BATCH_SIZE);

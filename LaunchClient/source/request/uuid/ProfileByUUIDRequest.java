@@ -1,6 +1,6 @@
 package launcher.request.uuid;
 
-import launcher.Config;
+import launcher.ConfigBin;
 import launcher.LauncherAPI;
 import launcher.client.PlayerProfile;
 import launcher.request.Request;
@@ -15,7 +15,7 @@ public final class ProfileByUUIDRequest extends Request<PlayerProfile> {
     private final UUID uuid;
 
     @LauncherAPI
-    public ProfileByUUIDRequest(Config config, UUID uuid) {
+    public ProfileByUUIDRequest(ConfigBin config, UUID uuid) {
         super(config);
         this.uuid = Objects.requireNonNull(uuid, "uuid");
     }

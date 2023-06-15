@@ -8,6 +8,7 @@ import javafx.scene.control.Slider;
 import javafx.scene.layout.Pane;
 import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
+import launcher.ConfigBin;
 import launcher.client.ClientProfile;
 import launcher.hasher.HashedDir;
 import launcher.helper.IOHelper;
@@ -263,7 +264,7 @@ public class Settings {
     }
 
     public static byte[] encryptePassword(String password) throws IllegalBlockSizeException, BadPaddingException {
-        return SecurityHelper.newRSAEncryptCipher(launcher.Config.getConfig().publicKey).doFinal(IOHelper.encode(password));
+        return SecurityHelper.newRSAEncryptCipher(ConfigBin.getConfig().publicKey).doFinal(IOHelper.encode(password));
     }
 
     public static boolean isAdmin() {
