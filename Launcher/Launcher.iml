@@ -7,6 +7,7 @@
       <sourceFolder url="file://$MODULE_DIR$/source-testing" isTestSource="true" packagePrefix="launcher" />
       <sourceFolder url="file://$MODULE_DIR$/source-authlib" isTestSource="false" packagePrefix="com.mojang.authlib" />
       <sourceFolder url="file://$MODULE_DIR$/resources" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/resources-testing" type="java-test-resource" isTestSource="true" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="module-library" scope="PROVIDED">
