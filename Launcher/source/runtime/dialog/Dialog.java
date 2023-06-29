@@ -352,7 +352,7 @@ public class Dialog {
             playButton.setVisible(true);
             // Update profiles list and hide overlay
             Settings.lastProfiles = result.profiles;
-            setPasswordSaved();
+            //setPasswordSaved();
             updateProfilesList(result.profiles);
             Overlay.hide(0, null);
         }, () -> {
