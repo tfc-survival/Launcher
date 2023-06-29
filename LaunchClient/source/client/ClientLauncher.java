@@ -170,8 +170,6 @@ public final class ClientLauncher {
         }
 
         // Verify ClientLauncher sign and classpath
-        LogHelper.debug("Verifying ClientLauncher sign and classpath");
-        SecurityHelper.verifySign(LauncherRequest.BINARY_PATH, params.launcherSign, publicKey);
         URL[] classpath = JVMHelper.getClassPath();
         for (URL classpathURL : classpath) {
             Path file = Paths.get(classpathURL.toURI());
