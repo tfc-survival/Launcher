@@ -30,6 +30,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 
+@LauncherAPI
 public final class ClientLauncher {
     // Authlib constants
     @LauncherAPI
