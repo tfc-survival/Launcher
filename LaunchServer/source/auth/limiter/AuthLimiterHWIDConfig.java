@@ -19,12 +19,12 @@ public class AuthLimiterHWIDConfig {
 
     private final SQLSourceConfig sourceConfig;
 
-    private static final String createTable1 = "create table userhardware(nickname varchar(255), hwidId int)";
-    private static final String createTable2 = "create table hardware(id int, hwid blob(64), banned bit)";
+    private static final String createTable1 = "create table userhardware(id1 int AUTO_INCREMENT, nickname varchar(255), hwidId int, primary key(id1))";
+    private static final String createTable2 = "create table hardware(id int AUTO_INCREMENT, hwid blob(64), banned bit, primary key(id))";
 
     private static final String getHardwareOfUser = "select hwid,banned from userhardware join hardware on hwidId=id and nickname=?";
     private static final String findHardware = "select * from hardware where hwid=?";
-    private static final String addNewHardware = "insert into hardware(id,hwid,banned) values(DEFAULT,?,?)";
+    private static final String addNewHardware = "insert into hardware(hwid,banned) values(?,?)";
     private static final String addHardwareToUser = "insert into userhardware(nickname,hwidId) values(?,?)";
     private static final String banUser = "update hardware set banned=1 where id in (select hwidId from userhardware where nickname=?)";
     private static final String pardonUser = "update hardware set banned=0 where id in (select hwidId from userhardware where nickname=?)";
@@ -100,13 +100,20 @@ public class AuthLimiterHWIDConfig {
                     add.setBytes(1, hwid);
                     add.setBoolean(2, banned);
                     add.executeUpdate();
-                    try (ResultSet addResult = add.getGeneratedKeys()) {
-                        return Pair.of(addResult.getInt("id"), banned);
-                    }
                 }
             }
         }
 
+        try (Connection c = sourceConfig.getConnection();
+             PreparedStatement find = c.prepareStatement(findHardware)) {
+            find.setQueryTimeout(MySQLSourceConfig.TIMEOUT);
+
+            find.setBytes(1, hwid);
+            try (ResultSet findResult = find.executeQuery()) {
+                findResult.next();
+                return Pair.of(findResult.getInt("id"), findResult.getBoolean("banned"));
+            }
+        }
     }
 
     public void addHardwareToUser(String nickname, int id) throws SQLException {
