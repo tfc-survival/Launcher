@@ -13,10 +13,8 @@ import launchserver.LaunchServer;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
+import java.net.URI;
+import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
 import java.util.Map;
@@ -45,16 +43,17 @@ public final class JARLauncherBinary extends LauncherBinary {
 
         // Build launcher binary
         LogHelper.info("Building launcher binary file");
-        try (JarOutputStream output = new JarOutputStream(IOHelper.newOutput(binaryFile))) {
-            output.setMethod(ZipOutputStream.DEFLATED);
-            output.setLevel(Deflater.BEST_COMPRESSION);
+        try (JarOutputStream outputLauncher = new JarOutputStream(IOHelper.newOutput(binaryFile))) {
+            outputLauncher.setMethod(ZipOutputStream.DEFLATED);
+            outputLauncher.setLevel(Deflater.BEST_COMPRESSION);
+
             try (InputStream input = new GZIPInputStream(IOHelper.newInput(IOHelper.getResourceURL("Launcher.pack.gz")))) {
-                Pack200.newUnpacker().unpack(input, output);
+                Pack200.newUnpacker().unpack(input, outputLauncher);
             }
 
             // Write launcher runtime dir
             Map<String, byte[]> runtime = new HashMap<>(256);
-            IOHelper.walk(runtimeDir, new RuntimeDirVisitor(output, runtime), false);
+            IOHelper.walk(runtimeDir, new RuntimeDirVisitor(outputLauncher, runtime), false);
 
             // Create launcher config file
             byte[] launcherConfigBytes;
@@ -67,13 +66,21 @@ public final class JARLauncherBinary extends LauncherBinary {
 
             // Write launcher config file
             try {
-                output.putNextEntry(IOHelper.newZipEntry(ConfigBin.CONFIG_FILE));
-                output.write(launcherConfigBytes);
+                outputLauncher.putNextEntry(IOHelper.newZipEntry(ConfigBin.CONFIG_FILE));
+                outputLauncher.write(launcherConfigBytes);
             } catch (ZipException e) {
                 if (e.getMessage().contains("duplicate entry"))
                     LogHelper.warning(e.getMessage());
                 else
                     throw e;
+            }
+
+            Map<String, String> env = new HashMap<>();
+            env.put("create", "true");
+            Path path = server.dir.resolve("LaunchClient.jar");
+            URI uri = URI.create("jar:" + path.toUri());
+            try (FileSystem fs = FileSystems.newFileSystem(uri, env)) {
+                Files.write(fs.getPath(ConfigBin.CONFIG_FILE), launcherConfigBytes);
             }
         }
     }
