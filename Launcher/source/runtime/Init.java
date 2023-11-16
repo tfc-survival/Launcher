@@ -17,7 +17,7 @@ public class Init {
         // Set JVM dir name
         LogHelper.debug("Setting JVM dir name");
         switch (JVMHelper.OS_TYPE) {
-            case MUSTDIE:
+            case WINDOWS:
                 jvmDirName = JVMHelper.OS_BITS == 32 ? "-win32" : JVMHelper.OS_BITS == 64 ? "-win64" : "-unknown";
                 break; // 64-bit Mustdie
             case LINUX:

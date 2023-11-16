@@ -39,7 +39,7 @@ public class Config {
 
     static {
         dir = IOHelper.HOME_DIR.resolve(dir1);
-        if (JVMHelper.OS_TYPE == JVMHelper.OS.MUSTDIE) {
+        if (JVMHelper.OS_TYPE == JVMHelper.OS.WINDOWS) {
             dir = IOHelper.HOME_DIR_WIN.resolve(dir1);
         }
         if (!IOHelper.isDir(dir)) {

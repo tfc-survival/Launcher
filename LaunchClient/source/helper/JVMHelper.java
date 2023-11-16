@@ -156,7 +156,7 @@ public final class JVMHelper {
     @SuppressWarnings("CallToSystemGetenv")
     private static int getCorrectOSArch() {
         // As always, mustdie must die
-        if (OS_TYPE == OS.MUSTDIE) {
+        if (OS_TYPE == OS.WINDOWS) {
             return System.getenv("ProgramFiles(x86)") == null ? 32 : 64;
         }
 
@@ -182,7 +182,7 @@ public final class JVMHelper {
 
     @LauncherAPI
     public enum OS {
-        MUSTDIE("mustdie"), LINUX("linux"), MACOSX("macosx");
+        WINDOWS("windows"), LINUX("linux"), MACOSX("macosx");
         public final String name;
 
         OS(String name) {
@@ -191,7 +191,7 @@ public final class JVMHelper {
 
         public static OS byName(String name) {
             if (name.startsWith("Windows")) {
-                return MUSTDIE;
+                return WINDOWS;
             }
             if (name.startsWith("Linux")) {
                 return LINUX;
