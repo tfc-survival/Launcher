@@ -19,7 +19,7 @@ import java.util.LinkedList;
 import java.util.Objects;
 
 public final class DirWatcher implements Runnable, AutoCloseable {
-    private static final boolean FILE_TREE_SUPPORTED = JVMHelper.OS_TYPE == OS.MUSTDIE;
+    private static final boolean FILE_TREE_SUPPORTED = JVMHelper.OS_TYPE == OS.WINDOWS;
 
     // Constants
     private static final Modifier[] MODIFIERS = {
