@@ -103,7 +103,7 @@ public final class ClientLauncher {
         if (ConfigBin.ADDRESS_OVERRIDE != null) {
             args.add(jvmProperty(ConfigBin.ADDRESS_OVERRIDE_PROPERTY, ConfigBin.ADDRESS_OVERRIDE));
         }
-        if (JVMHelper.OS_TYPE == OS.MUSTDIE && JVMHelper.OS_VERSION.startsWith("10.")) {
+        if (JVMHelper.OS_TYPE == OS.WINDOWS && JVMHelper.OS_VERSION.startsWith("10.")) {
             LogHelper.debug("MustDie 10 fix is applied");
             args.add(jvmProperty("os.name", "Windows 10"));
             args.add(jvmProperty("os.version", "10.0"));
@@ -191,6 +191,8 @@ public final class ClientLauncher {
             CommonHelper.newThread("JVM Directory Watcher", true, jvmWatcher).start();
             CommonHelper.newThread("Asset Directory Watcher", true, assetWatcher).start();
             CommonHelper.newThread("Client Directory Watcher", true, clientWatcher).start();
+
+            //CommonHelper.newThread("SystemThreadValidator", true, new SystemThreadValidator()).start();
 
             // Verify current state of all dirs
             verifyHDir(IOHelper.JVM_DIR, jvmHDir.object, null, digest);
