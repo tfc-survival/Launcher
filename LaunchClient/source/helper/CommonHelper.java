@@ -9,7 +9,7 @@ import java.util.Locale;
 
 public final class CommonHelper {
 
-    public static final boolean dev = false;
+    public static final boolean dev = true;
     @LauncherAPI
     public static final int PROTOCOL_MAGIC = 0x724724_00 + 23;
     // Version info
