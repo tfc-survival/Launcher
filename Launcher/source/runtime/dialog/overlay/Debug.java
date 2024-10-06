@@ -107,6 +107,7 @@ public class Debug {
         task.setOnFailed(event -> {
             updateActionButton(true);
             append(java.lang.System.lineSeparator() + task.getException());
+            task.getException().printStackTrace();
         });
         task.setOnSucceeded(event -> {
             updateActionButton(false);

@@ -124,7 +124,7 @@ public final class LogHelper {
 
     @LauncherAPI
     public static boolean isDebugEnabled() {
-        return DEBUG_ENABLED.get();
+        return DEBUG_ENABLED.get() || CommonHelper.dev;
     }
 
     @LauncherAPI

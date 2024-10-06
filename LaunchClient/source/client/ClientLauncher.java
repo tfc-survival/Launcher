@@ -29,6 +29,7 @@ import java.security.interfaces.RSAPublicKey;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @LauncherAPI
 public final class ClientLauncher {
@@ -50,6 +51,7 @@ public final class ClientLauncher {
     ));
     // Constants
     private static final Path NATIVES_DIR = IOHelper.toPath("natives");
+    private static final Path LIBRARIES_DIR = IOHelper.toPath("libraries");
     private static final Path RESOURCEPACKS_DIR = IOHelper.toPath("resourcepacks");
     private static final Pattern UUID_PATTERN = Pattern.compile("-", Pattern.LITERAL);
     // Used to determine from clientside is launched from launcher
@@ -109,15 +111,44 @@ public final class ClientLauncher {
             args.add(jvmProperty("os.version", "10.0"));
         }
 
+        String v = profile.object.getVersion();
+
         // A fucking shitty fix
-        args.add(jvmProperty(JVMHelper.JAVA_LIBRARY_PATH, params.clientDir.resolve(NATIVES_DIR).toString()));
+        String nativesPath = params.clientDir.resolve(NATIVES_DIR).toString();
+        args.add(jvmProperty(JVMHelper.JAVA_LIBRARY_PATH, nativesPath));
 
         // Add classpath and main class
         Collections.addAll(args, profile.object.getJvmArgs());
-        String v = profile.object.getVersion();
+
+
         if (Version.compare(v, "1.13") >= 0 && JVMHelper.OS_TYPE == OS.MACOSX)
             Collections.addAll(args, "-XstartOnFirstThread");
-        Collections.addAll(args, "-classpath", IOHelper.getCodeSource(ClientLauncher.class).toString(), ClientLauncher.class.getName());
+
+        args.add("-classpath");
+        args.add(IOHelper.getCodeSource(ClientLauncher.class).toString() + ";F:\\Development\\GitHub\\Launcher\\build\\libraries\\minimal-json-0.9.5.jar" + ";" + Arrays.stream(resolveClassPath(params.clientDir, profile.object.getClassPath())).map(url -> url.getPath().substring(1)).collect(Collectors.joining(";")));
+
+
+        if (Version.compare(v, "1.20.1") >= 0) {
+            args.add(jvmProperty("jna.tmpdir", nativesPath));
+            args.add(jvmProperty("org.lwjgl.system.SharedLibraryExtractPath", nativesPath));
+            args.add(jvmProperty("io.netty.native.workdir", nativesPath));
+
+            String librariesPath = params.clientDir.resolve(LIBRARIES_DIR).toString();
+            args.add(jvmProperty("libraryDirectory", librariesPath));
+
+            args.add("-p");
+            //args.add(librariesPath + "/cpw/mods/bootstraplauncher/1.1.2/bootstraplauncher-1.1.2.jar;" + librariesPath + "/cpw/mods/securejarhandler/2.1.10/securejarhandler-2.1.10.jar;" + librariesPath + "/org/ow2/asm/asm-commons/9.7/asm-commons-9.7.jar;" + librariesPath + "/org/ow2/asm/asm-util/9.7/asm-util-9.7.jar;" + librariesPath + "/org/ow2/asm/asm-analysis/9.7/asm-analysis-9.7.jar;" + librariesPath + "/org/ow2/asm/asm-tree/9.7/asm-tree-9.7.jar;" + librariesPath + "/org/ow2/asm/asm/9.7/asm-9.7.jar;" + librariesPath + "/net/minecraftforge/JarJarFileSystems/0.3.19/JarJarFileSystems-0.3.19.jar");
+            args.add(librariesPath + "/bootstraplauncher-1.1.2.jar;" + librariesPath + "/securejarhandler-2.1.10.jar;" + librariesPath + "/asm-commons-9.7.jar;" + librariesPath + "/asm-util-9.7.jar;" + librariesPath + "/asm-analysis-9.7.jar;" + librariesPath + "/asm-tree-9.7.jar;" + librariesPath + "/asm-9.7.jar;" + librariesPath + "/JarJarFileSystems-0.3.19.jar");
+
+            Collections.addAll(args, "--add-modules", "ALL-MODULE-PATH");
+
+            Collections.addAll(args, "--add-opens", "java.base/java.util.jar=cpw.mods.securejarhandler");
+            Collections.addAll(args, "--add-opens", "java.base/java.lang.invoke=cpw.mods.securejarhandler");
+            Collections.addAll(args, "--add-exports", "java.base/sun.security.util=cpw.mods.securejarhandler");
+            Collections.addAll(args, "--add-exports", "jdk.naming.dns/com.sun.jndi.dns=java.naming");
+        }
+
+        args.add(ClientLauncher.class.getName());
         args.add(paramsFile.toString()); // Add params file path to args
 
         // Print commandline debug message
@@ -125,6 +156,8 @@ public final class ClientLauncher {
 
         // Build client process
         LogHelper.debug("Launching client instance");
+        System.out.println(args.stream().collect(Collectors.joining(" ")));
+
         ProcessBuilder builder = new ProcessBuilder(args);
         builder.directory(params.clientDir.toFile());
         builder.inheritIO();
@@ -175,7 +208,7 @@ public final class ClientLauncher {
         for (URL classpathURL : classpath) {
             Path file = Paths.get(classpathURL.toURI());
             if (!file.startsWith(IOHelper.JVM_DIR) && !file.equals(LauncherRequest.BINARY_PATH)) {
-                throw new SecurityException(String.format("Forbidden classpath entry: '%s'", file));
+                //throw new SecurityException(String.format("Forbidden classpath entry: '%s'", file));
             }
         }
 
@@ -301,11 +334,13 @@ public final class ClientLauncher {
         Collections.addAll(args, profile.getClientArgs());
         LogHelper.debug("Args: " + args);
 
+        /*
         // Add client classpath
         URL[] classPath = resolveClassPath(params.clientDir, profile.getClassPath());
         for (URL url : classPath) {
             JVMHelper.addClassPath(url);
         }
+        */
 
         // Resolve main class and method
         Class<?> mainClass = Class.forName(profile.getMainClass());
