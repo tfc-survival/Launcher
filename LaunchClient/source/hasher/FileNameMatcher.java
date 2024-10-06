@@ -32,18 +32,18 @@ public final class FileNameMatcher {
     private final Entry[] update;
     private final Entry[] verify;
     private final Entry[] exclusions;
+    private final Entry[] optional;
 
     @LauncherAPI
-    public FileNameMatcher(String[] update, String[] verify, String[] exclusions) {
-        this.update = toEntries(update);
-        this.verify = toEntries(verify);
-        this.exclusions = toEntries(exclusions);
+    public FileNameMatcher(String[] update, String[] verify, String[] exclusions, String[] updateOptionalArray) {
+        this(toEntries(update), toEntries(verify), toEntries(exclusions), toEntries(updateOptionalArray));
     }
 
-    private FileNameMatcher(Entry[] update, Entry[] verify, Entry[] exclusions) {
+    private FileNameMatcher(Entry[] update, Entry[] verify, Entry[] exclusions, Entry[] optional) {
         this.update = update;
         this.verify = verify;
         this.exclusions = exclusions;
+        this.optional = optional;
     }
 
     private static boolean anyMatch_1(Entry[] entries, Collection<String> path) {
@@ -56,17 +56,17 @@ public final class FileNameMatcher {
 
     @LauncherAPI
     public boolean shouldUpdate_1(Collection<String> path) {
-        return (anyMatch_1(update, path) || anyMatch_1(verify, path)) && !anyMatch_1(exclusions, path);
+        return (anyMatch_1(update, path) || anyMatch_1(verify, path)) && !anyMatch_1(exclusions, path) || anyMatch_1(optional, path);
     }
 
     @LauncherAPI
     public boolean shouldVerify_1(Collection<String> path) {
-        return anyMatch_1(verify, path) && !anyMatch_1(exclusions, path);
+        return anyMatch_1(verify, path) && !anyMatch_1(exclusions, path) || anyMatch_1(optional, path);
     }
 
     @LauncherAPI
     public FileNameMatcher verifyOnly() {
-        return new FileNameMatcher(NO_ENTRIES, verify, exclusions);
+        return new FileNameMatcher(NO_ENTRIES, verify, exclusions, optional);
     }
 
     private static final class Entry {

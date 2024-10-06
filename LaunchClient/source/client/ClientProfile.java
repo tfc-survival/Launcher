@@ -19,8 +19,7 @@ import java.util.stream.Collectors;
 public final class ClientProfile extends ConfigObject implements Comparable<ClientProfile> {
     @LauncherAPI
     public static final StreamObject.Adapter<ClientProfile> RO_ADAPTER = (HInput input) -> new ClientProfile(input, true);
-    private static final FileNameMatcher ASSET_MATCHER = new FileNameMatcher(
-            new String[0], new String[]{"indexes", "objects"}, new String[0]);
+    private static final FileNameMatcher ASSET_MATCHER = new FileNameMatcher(new String[0], new String[]{"indexes", "objects"}, new String[0], new String[0]);
 
     // Version
     private final StringConfigEntry version;
@@ -38,6 +37,7 @@ public final class ClientProfile extends ConfigObject implements Comparable<Clie
     private final ListConfigEntry updateExclusions;
     private final ListConfigEntry updateVerify;
     private final BooleanConfigEntry updateFastCheck;
+    private final ListConfigEntry updateOptional;
 
     // Client launcher
     private final StringConfigEntry mainClass;
@@ -66,6 +66,7 @@ public final class ClientProfile extends ConfigObject implements Comparable<Clie
         updateVerify = block.getEntry("updateVerify", ListConfigEntry.class);
         updateExclusions = block.getEntry("updateExclusions", ListConfigEntry.class);
         updateFastCheck = block.getEntry("updateFastCheck", BooleanConfigEntry.class);
+        updateOptional = block.getEntry("updateOptional", ListConfigEntry.class);
 
         // Client launcher
         mainClass = block.getEntry("mainClass", StringConfigEntry.class);
@@ -121,7 +122,8 @@ public final class ClientProfile extends ConfigObject implements Comparable<Clie
         String[] updateArray = update.stream(StringConfigEntry.class).toArray(String[]::new);
         String[] verifyArray = updateVerify.stream(StringConfigEntry.class).toArray(String[]::new);
         String[] exclusionsArray = updateExclusions.stream(StringConfigEntry.class).toArray(String[]::new);
-        return new FileNameMatcher(updateArray, verifyArray, exclusionsArray);
+        String[] updateOptionalArray = updateOptional.stream(StringConfigEntry.class).toArray(String[]::new);
+        return new FileNameMatcher(updateArray, verifyArray, exclusionsArray, updateOptionalArray);
     }
 
     @LauncherAPI
