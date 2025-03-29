@@ -1,6 +1,6 @@
 package launcher.runtime.dialog;
 
-import javafx.collections.FXCollections;
+import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
@@ -12,7 +12,7 @@ import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.HBox;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
@@ -53,31 +53,77 @@ import static launcher.runtime.dialog.overlay.Update.makeUpdateRequest;
 
 public class Dialog {
     public static Pane rootPane;
-    public static HBox authList;
+    public static Pane currentPane;
+
     public static Pane authPane;
+
+
+    //public static HBox authList;
     public static Pane dimPane;
 
     public static TextField loginField;
     public static PasswordField passwordField;
-    public static ComboBox<SignedObjectHolder<ClientProfile>> profilesBox;
+    //public static ComboBox<SignedObjectHolder<ClientProfile>> profilesBox;
     private static Button authButton;
-    private static Button playButton;
+    //private static Button playButton;
 
     public static Map<ClientProfile, ServerPinger> pingers = new HashMap<>();
 
     private static PlayerProfile playerProfile;
     private static String accessToken;
 
+    private static boolean mousePressed = false;
+    private static double relMouseX;
+    private static double relMouseY;
+
 
     public static void initDialog() throws IOException {
-        // Lookup auth pane and dim
-        initAuthPane(rootPane);
+        rootPane = loadFXML("dialog/dialog.fxml");
+        authPane = loadFXML("dialog/auth.fxml");
+
+        //authList = (HBox) rootPane.lookup("#authList");
+        //Settings.accounts.keySet().forEach(Dialog::addAccButton);
+        //authList.setSpacing(5);
+
+        // Lookup login field
+        loginField = (TextField) authPane.lookup("#login");
+        loginField.setOnAction(Dialog::goAuth);
+        loginField.setOnKeyPressed(Dialog::unselectAccount);
+
+
+        // Lookup password field
+        passwordField = (PasswordField) authPane.lookup("#password");
+        passwordField.setOnAction(Dialog::goAuth);
+        passwordField.setOnKeyPressed(Dialog::unselectAccount);
+
+        // Lookup action buttons
+        authButton = (Button) authPane.lookup("#goAuth");
+        authButton.setOnAction(Dialog::goAuth);
+        //playButton = (Button) authPane.lookup("#goPlay");
+        //playButton.setOnAction(Dialog::goPlay);
+
+        rootPane.addEventHandler(MouseEvent.MOUSE_PRESSED, event -> {
+            mousePressed = true;
+            relMouseX = event.getX();
+            relMouseY = event.getY();
+        });
+
+        rootPane.addEventHandler(MouseEvent.MOUSE_RELEASED, event -> {
+            mousePressed = false;
+        });
+        rootPane.addEventHandler(MouseEvent.MOUSE_DRAGGED, event -> {
+            rootPane.getScene().getWindow().setX(event.getScreenX() - relMouseX);
+            rootPane.getScene().getWindow().setY(event.getScreenY() - relMouseY);
+        });
+
         dimPane = (Pane) rootPane.lookup("#dim");
 
         // Lookup profiles combobox
-        profilesBox = (ComboBox<SignedObjectHolder<ClientProfile>>) rootPane.lookup("#profiles");
-        profilesBox.setCellFactory(Dialog::newProfileCell);
-        profilesBox.setButtonCell(newProfileCell(null));
+        if (false) {
+            //profilesBox = (ComboBox<SignedObjectHolder<ClientProfile>>) rootPane.lookup("#profiles");
+            //profilesBox.setCellFactory(Dialog::newProfileCell);
+            //profilesBox.setButtonCell(newProfileCell(null));
+        }
 
         // Lookup hyperlink text and actions
         Hyperlink link = (Hyperlink) rootPane.lookup("#link");
@@ -94,6 +140,10 @@ public class Dialog {
         goSettings.setGraphic(new ImageView(new Image(Dialog.class.getResourceAsStream("/runtime/dialog/settings.png"))));
         goSettings.setOnAction(Dialog::goSettings);
 
+        Button close = (Button) rootPane.lookup("#close");
+        close.setGraphic(new ImageView(new Image(Dialog.class.getResourceAsStream("/runtime/dialog/close.png"))));
+        close.setOnAction(Dialog::close);
+
         // Init overlays
         Debug.initOverlay();
         Processing.initOverlay();
@@ -105,6 +155,10 @@ public class Dialog {
 
     }
 
+    private static void close(ActionEvent actionEvent) {
+        Platform.exit();
+    }
+
     private static void addAccount(String login, byte[] rsaPassword) {
         if (!Settings.accounts.containsKey(login)) {
             Settings.accounts.put(login, rsaPassword);
@@ -113,6 +167,8 @@ public class Dialog {
     }
 
     private static void addAccButton(String login) {
+        if (true)
+            return;
         Button accountButton = new Button();
         accountButton.setOnAction(selectAccount(login));
         accountButton.setTooltip(new Tooltip(login));
@@ -141,7 +197,7 @@ public class Dialog {
         skin.setFitWidth(32);
 
         accountButton.setGraphic(skin);
-        authList.getChildren().add(accountButton);
+        //authList.getChildren().add(accountButton);
 
         if (image.isError()) {
             skin.setImage(new Image(Dialog.class.getResourceAsStream("/steve.png"), 32, 32, false, false));
@@ -152,39 +208,15 @@ public class Dialog {
         if (Settings.accounts.containsKey(login)) {
             Settings.accounts.remove(login);
             Settings.lastSelectedAcc = null;
-            authList.getChildren().removeIf(n -> n instanceof Button && ((Button) n).getTooltip().getText().equals(login));
+            //authList.getChildren().removeIf(n -> n instanceof Button && ((Button) n).getTooltip().getText().equals(login));
         }
-    }
-
-    private static void initAuthPane(Pane rootPane) {
-        authList = (HBox) rootPane.lookup("#authList");
-        authPane = (Pane) rootPane.lookup("#authPane");
-        Settings.accounts.keySet().forEach(Dialog::addAccButton);
-        authList.setSpacing(5);
-
-        // Lookup login field
-        loginField = (TextField) authPane.lookup("#login");
-        loginField.setOnAction(Dialog::goAuth);
-        loginField.setOnKeyPressed(Dialog::unselectAccount);
-
-
-        // Lookup password field
-        passwordField = (PasswordField) authPane.lookup("#password");
-        passwordField.setOnAction(Dialog::goAuth);
-        passwordField.setOnKeyPressed(Dialog::unselectAccount);
-
-        // Lookup action buttons
-        authButton = (Button) authPane.lookup("#goAuth");
-        authButton.setOnAction(Dialog::goAuth);
-        playButton = (Button) authPane.lookup("#goPlay");
-        playButton.setOnAction(Dialog::goPlay);
     }
 
     private static void unselectAccount(KeyEvent event) {
         Settings.lastSelectedAcc = null;
-        profilesBox.setVisible(false);
+        //profilesBox.setVisible(false);
         authButton.setVisible(true);
-        playButton.setVisible(false);
+        //playButton.setVisible(false);
     }
 
     private static EventHandler<ActionEvent> selectAccount(String login) {
@@ -193,9 +225,9 @@ public class Dialog {
             loginField.setAlignment(Pos.CENTER);
             setPasswordSaved();
             Settings.lastSelectedAcc = login;
-            profilesBox.setVisible(false);
+            //profilesBox.setVisible(false);
             authButton.setVisible(true);
-            playButton.setVisible(false);
+            //playButton.setVisible(false);
         };
     }
 
@@ -292,12 +324,12 @@ public class Dialog {
             return;
         }
 
-        SignedObjectHolder<ClientProfile> profile = profilesBox.getSelectionModel().getSelectedItem();
-        if (profile == null) {
-            return;
-        }
-
-        doUpdate(profile, playerProfile, accessToken);
+//        SignedObjectHolder<ClientProfile> profile = profilesBox.getSelectionModel().getSelectedItem();
+//        if (profile == null) {
+//            return;
+//        }
+//
+//        doUpdate(profile, playerProfile, accessToken);
     }
 
     public static void goAuth(ActionEvent actionEvent) {
@@ -347,14 +379,18 @@ public class Dialog {
         Processing.makeAuthRequest(login, rsaPassword, result -> {
             playerProfile = result.pp;
             accessToken = result.accessToken;
-            profilesBox.setVisible(true);
+//            profilesBox.setVisible(true);
             authButton.setVisible(false);
-            playButton.setVisible(true);
+//            playButton.setVisible(true);
             // Update profiles list and hide overlay
             Settings.lastProfiles = result.profiles;
             //setPasswordSaved();
             updateProfilesList(result.profiles);
             Overlay.hide(0, null);
+            if (currentPane == authPane) {
+                rootPane.getChildren().remove(currentPane);
+                currentPane = null;
+            }
         }, () -> {
             removeAccount(login);
         });
@@ -397,7 +433,7 @@ public class Dialog {
     public static void doLaunchClient(Path jvmDir, SignedObjectHolder<HashedDir> jvmHDir, Path assetDir, SignedObjectHolder<HashedDir> assetHDir, Path clientDir, SignedObjectHolder<HashedDir> clientHDir, SignedObjectHolder<ClientProfile> profile, PlayerProfile pp, String accessToken) {
         Processing.resetOverlay();
         Overlay.swap(0, Processing.overlay, event ->
-                launchClient(jvmDir, jvmHDir, assetHDir, clientHDir, profile, new ClientLauncher.Params(Settings.lastSign, assetDir, clientDir, pp, accessToken, Settings.autoEnter, Settings.fullScreen, Settings.ram, 0, 0), Dialog::doDebugClient)
+            launchClient(jvmDir, jvmHDir, assetHDir, clientHDir, profile, new ClientLauncher.Params(Settings.lastSign, assetDir, clientDir, pp, accessToken, Settings.autoEnter, Settings.fullScreen, Settings.ram, 0, 0), Dialog::doDebugClient)
         );
     }
 
@@ -414,17 +450,17 @@ public class Dialog {
 
     public static void updateProfilesList(List<SignedObjectHolder<ClientProfile>> profiles) {
         // Set profiles items
-        profilesBox.setItems(FXCollections.observableList(profiles));
+//        profilesBox.setItems(FXCollections.observableList(profiles));
         for (SignedObjectHolder<ClientProfile> profile : profiles) {
             pingers.put(profile.object, new ServerPinger(profile.object.getServerSocketAddress(), profile.object.getVersion()));
         }
 
         // Set profiles selection model
-        SingleSelectionModel<SignedObjectHolder<ClientProfile>> sm = profilesBox.getSelectionModel();
-        // Store selected profile index
-        sm.selectedIndexProperty().addListener((o, ov, nv) -> Settings.lastSelectedProfile = nv.intValue());
-        // Restore selected item
-        sm.select(Settings.lastSelectedProfile < profiles.size() ? Settings.lastSelectedProfile : 0);
+//        SingleSelectionModel<SignedObjectHolder<ClientProfile>> sm = profilesBox.getSelectionModel();
+//        // Store selected profile index
+//        sm.selectedIndexProperty().addListener((o, ov, nv) -> Settings.lastSelectedProfile = nv.intValue());
+//        // Restore selected item
+//        sm.select(Settings.lastSelectedProfile < profiles.size() ? Settings.lastSelectedProfile : 0);
     }
 
     public static void verifyLauncher() {
@@ -458,6 +494,12 @@ public class Dialog {
         if (Settings.lastSelectedAcc != null) {
             selectAccount(Settings.lastSelectedAcc).handle(null);
             doAuthRequest(Settings.lastSelectedAcc, Settings.accounts.get(Settings.lastSelectedAcc));
+        } else {
+            if (Settings.accounts.isEmpty()) {
+                currentPane = authPane;
+                rootPane.getChildren().add(authPane);
+                authPane.requestFocus();
+            }
         }
     }
 }

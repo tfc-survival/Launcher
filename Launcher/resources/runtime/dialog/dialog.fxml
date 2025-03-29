@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.*?>
+<?import javafx.scene.effect.*?>
+<?import java.lang.*?>
+<?import java.net.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.web.WebView?>
@@ -8,53 +15,56 @@
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.layout.HBox?>
-<Pane xmlns:fx="http://javafx.com/fxml/1" fx:id="layout" prefWidth="348.0" prefHeight="510.0">
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.layout.VBox?>
+
+<StackPane fx:id="layout" prefHeight="510.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
     <stylesheets>
-        <URL value="@dialog.css"/>
+        <URL value="@dialog.css" />
     </stylesheets>
-
-    <ImageView fitHeight="510.0" fitWidth="348.0">
-        <image>
-            <Image url="@../banner.png" />
-        </image>
-    </ImageView>
-
-    <!-- Auth pane -->
-    <Pane fx:id="authPane" prefHeight="510.0" prefWidth="348.0">
-            <!-- First row -->
-            <TextField fx:id="login" alignment="CENTER" layoutX="60.0" layoutY="134.0" prefHeight="30.0" prefWidth="228.0" promptText="Логин">
-                <font>
-                    <Font size="13.0" />
-                </font>
-            </TextField>
-
-            <PasswordField fx:id="password" alignment="CENTER" layoutX="60.0" layoutY="179.0" prefHeight="30.0" prefWidth="228.0" promptText="Пароль">
-                <font>
-                    <Font size="14.0" />
-                </font>
-            </PasswordField>
-
-            <Button fx:id="goAuth" defaultButton="true" layoutX="77.0" layoutY="421.0" prefHeight="45.0" prefWidth="195.0" style="-fx-background-color: #7E7F7A;" text="Авторизация" textFill="WHITE">
-                <font>
-                    <Font size="20.0" />
-                </font>
-            </Button>
-
-            <Button fx:id="goPlay" defaultButton="true" layoutX="77.0" layoutY="421.0" prefHeight="45.0" prefWidth="195.0" style="-fx-background-color: #7E7F7A;" text="Играть" textFill="WHITE" visible="false">
-                <font>
-                    <Font size="20.0" />
-                </font>
-            </Button>
-    </Pane>
-
-
-    <HBox fx:id="authList"  layoutY="85.0" prefWidth="348" prefHeight="50" alignment="CENTER"/>
-
-    <!-- Second row -->
-    <ComboBox fx:id="profiles" layoutX="60" layoutY="245" prefHeight="30" prefWidth="228" visible="false"/>
-    <Button fx:id="goSettings" layoutX="309" layoutY="7" prefWidth="18" prefHeight="18" maxWidth="18" maxHeight="18" style="-fx-background-color: #7E7F7A;" alignment="TOP_RIGHT" />
-    <Hyperlink fx:id="link" contentDisplay="CENTER" layoutX="144" layoutY="466" prefWidth="150" prefHeight="30" textAlignment="CENTER" textFill="WHITE" />
-
-    <!-- Overlay -->
-    <Pane fx:id="dim" prefWidth="348.0" prefHeight="510.0" visible="false" />
-</Pane>
+   <children>
+   
+       <ImageView fitHeight="510.0" fitWidth="800.0">
+           <image>
+               <Image url="@../banner.png" />
+           </image>
+       </ImageView>
+   
+       <!-- Overlay -->
+       <Pane fx:id="dim" prefHeight="510.0" prefWidth="800.0" visible="false" />
+        <Hyperlink fx:id="link" alignment="CENTER" contentDisplay="CENTER" ellipsisString="" focusTraversable="false" graphicTextGap="0.0" pickOnBounds="false" prefHeight="0.0" prefWidth="123.0" text="Наш сайт" textAlignment="CENTER" textFill="WHITE" StackPane.alignment="BOTTOM_CENTER">
+         <StackPane.margin>
+            <Insets bottom="15.0" />
+         </StackPane.margin>
+      </Hyperlink>
+        <HBox fx:id="toolBar" alignment="TOP_RIGHT" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="50.0" prefWidth="120.0" spacing="20" StackPane.alignment="TOP_RIGHT">
+           <children>
+               <Button fx:id="goSettings" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="40.0" prefWidth="50" style="-fx-background-color: #7E7F7A; -fx-background-radius: 10;">
+                   <graphic>
+                       <ImageView fitHeight="30.0" fitWidth="30.0">
+                          <image>
+                              <Image url="@../dialog/settings.png" />
+                          </image>
+                       </ImageView>
+                   </graphic>
+               </Button>
+               <Button fx:id="close" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="40.0" prefWidth="50" style="-fx-background-color: #991e1e; -fx-background-radius: 10;">
+                   <graphic>
+                       <ImageView fitHeight="40.0" fitWidth="30.0">
+                          <image>
+                              <Image url="@../dialog/close.png" />
+                          </image>
+                       </ImageView>
+                   </graphic>
+               </Button>
+           </children>
+         <StackPane.margin>
+            <Insets right="15.0" top="15.0" />
+         </StackPane.margin>
+        </HBox>
+   </children>
+   <opaqueInsets>
+      <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+   </opaqueInsets>
+</StackPane>

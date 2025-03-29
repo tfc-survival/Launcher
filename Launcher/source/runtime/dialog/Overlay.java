@@ -15,7 +15,8 @@ public class Overlay {
 
     public static void show(Pane newOverlay, EventHandler<ActionEvent> onFinished) {
         // Freeze root pane
-        authList.setDisable(true);
+        if (false)
+            authList.setDisable(true);
         current = newOverlay;
 
         // Show dim pane
@@ -43,7 +44,8 @@ public class Overlay {
                 dimPane.setVisible(false);
 
                 // Unfreeze root pane
-                authList.setDisable(false);
+                if (false)
+                    authList.setDisable(false);
                 rootPane.requestFocus();
 
                 // Reset overlay state

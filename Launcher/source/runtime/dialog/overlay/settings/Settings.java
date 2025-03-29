@@ -268,6 +268,6 @@ public class Settings {
     }
 
     public static boolean isAdmin() {
-        return accounts.containsKey("__xelo__") || accounts.containsKey("Taper4ik") || accounts.containsKey("Dimon5676") || accounts.containsKey("hohserg");
+        return accounts.containsKey("__xelo__") || accounts.containsKey("Taper4ik") || accounts.containsKey("Dimon5676") || accounts.containsKey("hohserg") || accounts.containsKey("hohserg1");
     }
 }

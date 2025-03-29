@@ -2,14 +2,14 @@ package launcher.runtime;
 
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import launcher.Launcher;
 import launcher.helper.js.JSApplication;
 import launcher.runtime.dialog.Dialog;
 import launcher.runtime.dialog.overlay.settings.CliParams;
 import launcher.runtime.dialog.overlay.settings.Settings;
-
-import static launcher.runtime.Init.loadFXML;
 
 public class LauncherApp extends JSApplication {
     public static JSApplication app;
@@ -28,6 +28,7 @@ public class LauncherApp extends JSApplication {
     @Override
     public void start(Stage primaryStage) throws Exception {
         stage = primaryStage;
+        stage.initStyle(StageStyle.TRANSPARENT);
         stage.setResizable(false);
         stage.setTitle(Config.title);
 
@@ -38,11 +39,11 @@ public class LauncherApp extends JSApplication {
         }
 
         // Load dialog FXML
-        Dialog.rootPane = loadFXML("dialog/dialog.fxml");
         Dialog.initDialog();
 
         // Set scene
         scene = new Scene(Dialog.rootPane);
+        scene.setFill(Color.TRANSPARENT);
         stage.setScene(scene);
 
         // Center and show stage
