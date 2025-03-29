@@ -1,17 +1,6 @@
 @import url(styles/common.css);
 
-#authPane > #removeAcc {
-    -fx-background-color: #DB2828;
-    -fx-text-fill: white;
-}
-
-#authPane > #login {
-    -fx-background-color: #FFFFFF;
-    -fx-color-label-visible: #000000;
-    -fx-text-fill: black;
-}
-
-#authPane {
-    -fx-background-color: #FFFFFF;
-    -fx-color-label-visible: #000000;
+#btn {
+    -fx-font-size: 14pt;
+    -fx-font-weight: bold;
 }

@@ -43,3 +43,40 @@
     -fx-background-color: white;
     -fx-background-radius: 5px;
 }
+
+#layout > #link {
+    -fx-font-size: 14pt;
+}
+
+#layout > #selectAccountButton {
+    -fx-font-size: 14pt;
+    -fx-font-weight: bold;
+}
+
+
+#layout > #toolBar > #goSettings {
+    -fx-background-color: #7E7F7A;
+}
+
+#layout > #toolBar > #goSettings:hover,
+#layout > #toolBar > #goSettings:focused {
+    -fx-background-color: #949886;
+}
+
+#layout > #toolBar > #goSettings:pressed {
+    -fx-background-color: #6b6c65;
+}
+
+
+#layout > #toolBar > #close {
+    -fx-background-color: #991e1e;
+}
+
+#layout > #toolBar > #close:hover,
+#layout > #toolBar > #close:focused {
+    -fx-background-color: #bb2323;
+}
+
+#layout > #toolBar > #close:pressed {
+    -fx-background-color: #d31a1a;
+}

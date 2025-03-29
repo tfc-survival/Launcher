@@ -8,15 +8,16 @@ import javafx.scene.Node;
 import javafx.scene.layout.Pane;
 import javafx.util.Duration;
 
-import static launcher.runtime.dialog.Dialog.*;
+import static launcher.runtime.dialog.Dialog.dimPane;
+import static launcher.runtime.dialog.Dialog.rootPane;
 
 public class Overlay {
     public static Node current = null;
 
     public static void show(Pane newOverlay, EventHandler<ActionEvent> onFinished) {
         // Freeze root pane
-        if (false)
-            authList.setDisable(true);
+        dimPane.getChildren().remove(current);
+        dimPane.getChildren().remove(newOverlay);
         current = newOverlay;
 
         // Show dim pane
@@ -44,8 +45,6 @@ public class Overlay {
                 dimPane.setVisible(false);
 
                 // Unfreeze root pane
-                if (false)
-                    authList.setDisable(false);
                 rootPane.requestFocus();
 
                 // Reset overlay state

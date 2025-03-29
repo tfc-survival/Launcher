@@ -16,50 +16,78 @@
 <?import javafx.scene.text.Text?>
 <?import javafx.scene.text.TextFlow?>
 
-<Pane fx:id="overlay" prefHeight="320.0" prefWidth="348.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+<StackPane fx:id="overlay" prefHeight="350.0" prefWidth="450.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
     <stylesheets>
         <URL value="@settings.css" />
     </stylesheets>
     <children>
-
-        <!-- Settings -->
-        <Label fx:id="settingsTitle" layoutX="24.0" layoutY="1.0" prefHeight="27.0" prefWidth="300.0" text="Настройки" />
-        <Separator layoutX="20.0" layoutY="35.0" prefHeight="3.0" prefWidth="300.0" />
-        <CheckBox fx:id="autoEnter" layoutX="17.0" layoutY="45.0" text="Автовход на сервер">
-            <font>
-                <Font size="10.0" />
-            </font></CheckBox>
-        <CheckBox fx:id="fullScreen" layoutX="195.0" layoutY="45.0" text="Клиент в полный экран">
-            <font>
-                <Font size="10.0" />
-            </font></CheckBox>
-
-        <!-- RAM settings -->
-        <TextFlow layoutX="20.0" layoutY="70.0">
-            <children>
-                <Text>Выделение памяти: </Text>
-                <Text fx:id="ramLabel" />
-            </children>
-        </TextFlow>
-        <Slider fx:id="ramSlider" layoutX="20.0" layoutY="101.0" prefHeight="3.0" prefWidth="300.0" />
-        <Separator layoutX="20.0" layoutY="145.0" prefHeight="1.0" prefWidth="300.0" />
-
-        <!-- Dir settings -->
-        <TextFlow layoutX="20.0" layoutY="135.0" />
-        <Button fx:id="changeDir" layoutX="20.0" layoutY="207.0" prefHeight="30.0" prefWidth="150.0" text="Сменить директорию">
-            <font>
-                <Font size="10.0" />
-            </font></Button>
-        <Button fx:id="deleteDir" layoutX="184.0" layoutY="207.0" prefHeight="30.0" prefWidth="150.0" text="Удалить всё содержимое">
-            <font>
-                <Font size="10.0" />
-            </font></Button>
-        <Separator layoutX="20.0" layoutY="251.0" prefHeight="3.0" prefWidth="300.0" />
-
-        <!-- Debug checkbox and apply button -->
-        <CheckBox fx:id="debug" layoutX="14.0" layoutY="276.0" prefHeight="30.0" text="Режим отладки" />
-        <Button fx:id="apply" defaultButton="true" layoutX="225.0" layoutY="276.0" prefHeight="30.0" prefWidth="100.0" text="Применить" />
-        <Text layoutX="25.0" layoutY="165.0">Директория загрузок: </Text>
-        <Hyperlink fx:id="dirLabel" layoutX="21.0" layoutY="169.0" />
+      <VBox fx:id="top_v_box" alignment="CENTER" maxWidth="-Infinity" minWidth="-Infinity" prefHeight="200.0" prefWidth="400.0" spacing="10.0" StackPane.alignment="CENTER">
+         <children>
+      
+              <!-- Settings -->
+              <Label fx:id="settingsTitle" alignment="BASELINE_CENTER" contentDisplay="CENTER" prefHeight="27.0" prefWidth="300.0" text="Настройки" textAlignment="CENTER">
+               <font>
+                  <Font size="14.0" />
+               </font>
+            </Label>
+              <Separator prefHeight="3.0" prefWidth="300.0" />
+            <HBox alignment="TOP_CENTER" prefHeight="20.0" prefWidth="200.0" spacing="30.0">
+               <children>
+                    <CheckBox fx:id="autoEnter" text="Автовход на сервер">
+                        <font>
+                            <Font size="10.0" />
+                        </font>
+                  </CheckBox>
+                    <CheckBox fx:id="fullScreen" text="Клиент в полный экран">
+                        <font>
+                            <Font size="10.0" />
+                        </font>
+                  </CheckBox>
+               </children>
+            </HBox>
+      
+              <!-- RAM settings -->
+              <TextFlow>
+                  <children>
+                      <Text>Выделение памяти: </Text>
+                      <Text fx:id="ramLabel">
+                     <font>
+                        <Font name="System Bold" size="12.0" />
+                     </font>
+                  </Text>
+                  </children>
+              </TextFlow>
+              <Slider fx:id="ramSlider" prefHeight="3.0" prefWidth="300.0" />
+      
+              <!-- Dir settings -->
+              <TextFlow />
+              <Separator prefHeight="3.0" prefWidth="300.0" />
+              <Text>Директория загрузок: </Text>
+              <Hyperlink fx:id="dirLabel" />
+            <HBox fx:id="low_h_box" alignment="CENTER" prefHeight="50.0" prefWidth="200.0" spacing="10.0">
+               <children>
+                    <Button fx:id="changeDir" prefHeight="30.0" prefWidth="150.0" text="Сменить директорию">
+                        <font>
+                            <Font size="10.0" />
+                        </font>
+                  </Button>
+                    <Button fx:id="deleteDir" prefHeight="30.0" prefWidth="150.0" text="Удалить всё содержимое">
+                        <font>
+                            <Font size="10.0" />
+                        </font>
+                  </Button>
+               </children>
+            </HBox>
+              <Separator prefHeight="1.0" prefWidth="300.0" />
+            <StackPane prefHeight="50.0" prefWidth="200.0">
+               <children>
+            
+                    <!-- Debug checkbox and apply button -->
+                    <CheckBox fx:id="debug" prefHeight="30.0" text="Режим отладки" StackPane.alignment="CENTER_LEFT" />
+                    <Button fx:id="apply" defaultButton="true" prefHeight="30.0" prefWidth="100.0" text="Применить" StackPane.alignment="CENTER_RIGHT" />
+               </children>
+            </StackPane>
+         </children>
+      </VBox>
     </children>
-</Pane>
+</StackPane>

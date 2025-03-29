@@ -5,17 +5,19 @@ import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.scene.shape.Rectangle;
 import launcher.ConfigBin;
 import launcher.client.ClientLauncher;
 import launcher.client.ClientProfile;
@@ -35,6 +37,7 @@ import launcher.serialize.config.entry.StringConfigEntry;
 import launcher.serialize.signed.SignedObjectHolder;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.security.SignatureException;
@@ -57,14 +60,17 @@ public class Dialog {
 
     public static Pane authPane;
 
+    public static Pane accounts;
 
     //public static HBox authList;
     public static Pane dimPane;
 
     public static TextField loginField;
     public static PasswordField passwordField;
-    //public static ComboBox<SignedObjectHolder<ClientProfile>> profilesBox;
+    public static HBox profilesBox;
     private static Button authButton;
+    private static Button selectAccountButton;
+    private static ImageView selectAccountButtonSkin;
     //private static Button playButton;
 
     public static Map<ClientProfile, ServerPinger> pingers = new HashMap<>();
@@ -75,30 +81,97 @@ public class Dialog {
     private static boolean mousePressed = false;
     private static double relMouseX;
     private static double relMouseY;
+    private static Button newAccountButton;
+
+    enum State {
+        auth {
+            @Override
+            public void enter() {
+                selectAccountButton.setVisible(false);
+                authPane.setVisible(true);
+                authPane.requestFocus();
+            }
+
+            @Override
+            public void exit() {
+                authPane.setVisible(false);
+            }
+        },
+        profileSelection {
+            @Override
+            public void enter() {
+                selectAccountButton.setVisible(true);
+                setSkinImage(selectAccountButtonSkin, Settings.lastSelectedAcc);
+                selectAccountButton.setText(Settings.lastSelectedAcc);
+                profilesBox.setVisible(true);
+                profilesBox.requestFocus();
+            }
+
+            @Override
+            public void exit() {
+                profilesBox.setVisible(false);
+            }
+        },
+        accountSelection {
+            @Override
+            public void enter() {
+                selectAccountButton.setVisible(false);
+                accounts.setVisible(true);
+                accounts.requestFocus();
+                if (Settings.accounts.size() >= 3) {
+                    accounts.getChildren().remove(newAccountButton);
+                }
+            }
+
+            @Override
+            public void exit() {
+                accounts.setVisible(false);
+            }
+        };
+
+        public abstract void enter();
+
+        public abstract void exit();
+    }
+
+    public static State state = State.auth;
+
+    public static void changeState(State next) {
+        state.exit();
+        state = next;
+        state.enter();
+    }
 
 
     public static void initDialog() throws IOException {
         rootPane = loadFXML("dialog/dialog.fxml");
-        authPane = loadFXML("dialog/auth.fxml");
+        authPane = (Pane) rootPane.lookup("#authPane");
+        accounts = (Pane) rootPane.lookup("#accounts");
 
         //authList = (HBox) rootPane.lookup("#authList");
-        //Settings.accounts.keySet().forEach(Dialog::addAccButton);
+        Settings.accounts.keySet().forEach(Dialog::addAccButton);
+        newAccountButton = (Button) accounts.lookup("#newAccountButton");
+        newAccountButton.setOnAction(event -> changeState(State.auth));
+
         //authList.setSpacing(5);
 
         // Lookup login field
         loginField = (TextField) authPane.lookup("#login");
         loginField.setOnAction(Dialog::goAuth);
-        loginField.setOnKeyPressed(Dialog::unselectAccount);
 
 
         // Lookup password field
         passwordField = (PasswordField) authPane.lookup("#password");
         passwordField.setOnAction(Dialog::goAuth);
-        passwordField.setOnKeyPressed(Dialog::unselectAccount);
 
         // Lookup action buttons
         authButton = (Button) authPane.lookup("#goAuth");
         authButton.setOnAction(Dialog::goAuth);
+
+        selectAccountButton = (Button) rootPane.lookup("#selectAccountButton");
+        selectAccountButton.setOnAction(event -> changeState(State.accountSelection));
+        selectAccountButton.setText("" + Settings.lastSelectedAcc);
+        selectAccountButtonSkin = (ImageView) ((Pane) selectAccountButton.getGraphic()).getChildren().get(0);
         //playButton = (Button) authPane.lookup("#goPlay");
         //playButton.setOnAction(Dialog::goPlay);
 
@@ -119,15 +192,11 @@ public class Dialog {
         dimPane = (Pane) rootPane.lookup("#dim");
 
         // Lookup profiles combobox
-        if (false) {
-            //profilesBox = (ComboBox<SignedObjectHolder<ClientProfile>>) rootPane.lookup("#profiles");
-            //profilesBox.setCellFactory(Dialog::newProfileCell);
-            //profilesBox.setButtonCell(newProfileCell(null));
-        }
+        profilesBox = (HBox) rootPane.lookup("#profilesBox");
+
 
         // Lookup hyperlink text and actions
         Hyperlink link = (Hyperlink) rootPane.lookup("#link");
-        link.setText(Config.linkText);
         link.setOnAction(event -> {
             try {
                 app.getHostServices().showDocument(String.valueOf(Config.linkURL.toURI()));
@@ -137,11 +206,11 @@ public class Dialog {
         });
 
         Button goSettings = (Button) rootPane.lookup("#goSettings");
-        goSettings.setGraphic(new ImageView(new Image(Dialog.class.getResourceAsStream("/runtime/dialog/settings.png"))));
+        //goSettings.setGraphic(new ImageView(new Image(Dialog.class.getResourceAsStream("/runtime/dialog/settings.png"))));
         goSettings.setOnAction(Dialog::goSettings);
 
         Button close = (Button) rootPane.lookup("#close");
-        close.setGraphic(new ImageView(new Image(Dialog.class.getResourceAsStream("/runtime/dialog/close.png"))));
+        //close.setGraphic(new ImageView(new Image(Dialog.class.getResourceAsStream("/runtime/dialog/close.png"))));
         close.setOnAction(Dialog::close);
 
         // Init overlays
@@ -166,68 +235,74 @@ public class Dialog {
         }
     }
 
-    private static void addAccButton(String login) {
-        if (true)
-            return;
-        Button accountButton = new Button();
-        accountButton.setOnAction(selectAccount(login));
-        accountButton.setTooltip(new Tooltip(login));
-        accountButton.setPadding(new Insets(1, 1, 1, 1));
-        accountButton.setContextMenu(new ContextMenu(new MenuItem("удалить") {{
-            setOnAction(e -> removeAccount(login));
-        }}));
-
-        ImageView skin = new ImageView();
+    private static void setSkinImage(ImageView to, String login) {
         Image image = new Image("https://tfc.su/static/skins/" + login + ".png");
         double w = image.getWidth();
         double h = image.getHeight();
         double slicedX = 8d / 64 * w;
         double slicesY = 8d / 64 * h;
 
-        if (slicedX < 32) {
-            int scale = 4;
+        if (slicedX < 48) {
+            int scale = 6;
             image = new Image("https://tfc.su/static/skins/" + login + ".png", w * scale, h * scale, false, false);
             slicedX *= scale;
             slicesY *= scale;
         }
 
-        skin.setImage(image);
-        skin.setViewport(new Rectangle2D(slicedX, slicesY, slicedX, slicesY));
-        skin.setFitHeight(32);
-        skin.setFitWidth(32);
-
-        accountButton.setGraphic(skin);
-        //authList.getChildren().add(accountButton);
-
+        to.setImage(image);
         if (image.isError()) {
-            skin.setImage(new Image(Dialog.class.getResourceAsStream("/steve.png"), 32, 32, false, false));
+            to.setImage(new Image(Dialog.class.getResourceAsStream("/runtime/steve.png"), 48, 48, false, false));
         }
+        to.setViewport(new Rectangle2D(slicedX, slicesY, slicedX, slicesY));
+        to.setFitHeight(48);
+        to.setFitWidth(48);
+    }
+
+    private static void addAccButton(String login) {
+        try {
+            Button accountElement = loadFXML("dialog/accountButton.fxml");
+            Pane graphic = (Pane) accountElement.getGraphic();
+
+            Rectangle rect = new Rectangle(200, 300);
+            rect.setArcHeight(20);
+            rect.setArcWidth(20);
+
+            setSkinImage((ImageView) graphic.lookup("#skin"), login);
+
+            ((Label) graphic.lookup("#nickname")).setText(login);
+
+            accountElement.setOnAction(selectAccount(login));
+
+            accounts.getChildren().add(0, accountElement);
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
     private static void removeAccount(String login) {
         if (Settings.accounts.containsKey(login)) {
             Settings.accounts.remove(login);
             Settings.lastSelectedAcc = null;
-            //authList.getChildren().removeIf(n -> n instanceof Button && ((Button) n).getTooltip().getText().equals(login));
+            accounts.getChildren().removeIf(e -> {
+                Node maybeNickname = ((Button) e).getGraphic().lookup("#nickname");
+                if (maybeNickname instanceof Label)
+                    return login.equals(((Label) maybeNickname).getText());
+                else
+                    return false;
+            });
+            if (Settings.accounts.isEmpty())
+                changeState(State.auth);
+            else
+                changeState(State.accountSelection);
         }
-    }
-
-    private static void unselectAccount(KeyEvent event) {
-        Settings.lastSelectedAcc = null;
-        //profilesBox.setVisible(false);
-        authButton.setVisible(true);
-        //playButton.setVisible(false);
     }
 
     private static EventHandler<ActionEvent> selectAccount(String login) {
         return __ -> {
-            loginField.setText(login);
-            loginField.setAlignment(Pos.CENTER);
-            setPasswordSaved();
             Settings.lastSelectedAcc = login;
-            //profilesBox.setVisible(false);
-            authButton.setVisible(true);
-            //playButton.setVisible(false);
+            doAuth(Settings.lastSelectedAcc, Settings.accounts.get(Settings.lastSelectedAcc));
         };
     }
 
@@ -244,52 +319,19 @@ public class Dialog {
         };
     }
 
-    public static ListCell<SignedObjectHolder<ClientProfile>> newProfileCell(ListView<SignedObjectHolder<ClientProfile>> listView) {
-        final Pane statusBox;
-        try {
-            statusBox = loadFXML("dialog/profileCell.fxml");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        // Lookup labels
-        Label title = (Label) statusBox.lookup("#profileTitle");
-        Label status = (Label) statusBox.lookup("#serverStatus");
-        Circle statusCircle = (Circle) title.getGraphic();
-
-        // Create and return new cell
-        ListCell<SignedObjectHolder<ClientProfile>> cell = new ListCell<SignedObjectHolder<ClientProfile>>() {
-            @Override
-            protected void updateItem(SignedObjectHolder<ClientProfile> item, boolean empty) {
-                super.updateItem(item, empty);
-                setGraphic(empty ? null : statusBox);
-                if (empty) { // No need to update state
-                    return;
-                }
-
-                // Update title and server status
-                title.setText(item.object.getTitle());
-                pingServer(status, statusCircle, item);
-            }
-        };
-        cell.setText(null);
-        return cell;
-    }
-
-    public static void pingServer(Label status, Circle statusCircle, SignedObjectHolder<ClientProfile> profile) {
-        setServerStatus(status, statusCircle, javafx.scene.paint.Color.GREY, "...");
+    public static void pingServer(Circle statusCircle, SignedObjectHolder<ClientProfile> profile) {
+        setServerStatus(statusCircle, javafx.scene.paint.Color.GREY, "...");
         Task<ServerPinger.Result> task = newTask(() -> pingers.get(profile.object).ping());
         task.setOnSucceeded((event) -> {
             ServerPinger.Result result = task.getValue();
             Color color = result.isOverfilled() ? Color.YELLOW : Color.GREEN;
-            setServerStatus(status, statusCircle, color, java.lang.String.format("%d из %d", result.onlinePlayers, result.maxPlayers));
+            setServerStatus(statusCircle, color, java.lang.String.format("%d из %d", result.onlinePlayers, result.maxPlayers));
         });
-        task.setOnFailed(event -> setServerStatus(status, statusCircle, javafx.scene.paint.Color.RED, "Недоступен"));
+        task.setOnFailed(event -> setServerStatus(statusCircle, javafx.scene.paint.Color.RED, "Недоступен"));
         startTask(task);
     }
 
-    public static void setServerStatus(Label status, Circle statusCircle, javafx.scene.paint.Color color, String description) {
-        status.setText(description);
+    public static void setServerStatus(Circle statusCircle, javafx.scene.paint.Color color, String description) {
         statusCircle.setFill(color);
     }
 
@@ -339,29 +381,24 @@ public class Dialog {
                 return;
             }
 
-            if (Settings.lastSelectedAcc != null) {
-                doAuth(Settings.lastSelectedAcc, Settings.accounts.get(Settings.lastSelectedAcc));
-
-            } else {
-                String login = loginField.getText();
-                if (!login.isEmpty()) {
-                    String password = passwordField.getText();
-                    if (!password.isEmpty()) {
-                        byte[] rsaPassword = Settings.encryptePassword(password);
-                        if (Settings.accounts.size() == 3 && !Settings.isAdmin()) {
-                            Processing.setError(new Exception("Превышено число аккаунтов") {
-                                @Override
-                                public String toString() {
-                                    return "Превышено число аккаунтов";
-                                }
-                            });
-                            Overlay.show(Processing.overlay, null);
-                            Overlay.hide(2000, null);
-                        } else {
-                            addAccount(login, rsaPassword);
-                            Settings.lastSelectedAcc = login;
-                            doAuth(login, rsaPassword);
-                        }
+            String login = loginField.getText();
+            if (!login.isEmpty()) {
+                String password = passwordField.getText();
+                if (!password.isEmpty()) {
+                    byte[] rsaPassword = Settings.encryptePassword(password);
+                    if (Settings.accounts.size() == 3 && !Settings.isAdmin()) {
+                        Processing.setError(new Exception("Превышено число аккаунтов") {
+                            @Override
+                            public String toString() {
+                                return "Превышено число аккаунтов";
+                            }
+                        });
+                        Overlay.show(Processing.overlay, null);
+                        Overlay.hide(2000, null);
+                    } else {
+                        addAccount(login, rsaPassword);
+                        Settings.lastSelectedAcc = login;
+                        doAuth(login, rsaPassword);
                     }
                 }
             }
@@ -379,18 +416,14 @@ public class Dialog {
         Processing.makeAuthRequest(login, rsaPassword, result -> {
             playerProfile = result.pp;
             accessToken = result.accessToken;
-//            profilesBox.setVisible(true);
-            authButton.setVisible(false);
-//            playButton.setVisible(true);
             // Update profiles list and hide overlay
             Settings.lastProfiles = result.profiles;
             //setPasswordSaved();
+            loginField.setText("");
+            passwordField.setText("");
             updateProfilesList(result.profiles);
             Overlay.hide(0, null);
-            if (currentPane == authPane) {
-                rootPane.getChildren().remove(currentPane);
-                currentPane = null;
-            }
+            changeState(State.profileSelection);
         }, () -> {
             removeAccount(login);
         });
@@ -449,18 +482,36 @@ public class Dialog {
     }
 
     public static void updateProfilesList(List<SignedObjectHolder<ClientProfile>> profiles) {
-        // Set profiles items
-//        profilesBox.setItems(FXCollections.observableList(profiles));
+        Image defaultLogo = new Image(Dialog.class.getResourceAsStream("/runtime/profiles/default.png"));
+        profilesBox.getChildren().clear();
         for (SignedObjectHolder<ClientProfile> profile : profiles) {
             pingers.put(profile.object, new ServerPinger(profile.object.getServerSocketAddress(), profile.object.getVersion()));
-        }
 
-        // Set profiles selection model
-//        SingleSelectionModel<SignedObjectHolder<ClientProfile>> sm = profilesBox.getSelectionModel();
-//        // Store selected profile index
-//        sm.selectedIndexProperty().addListener((o, ov, nv) -> Settings.lastSelectedProfile = nv.intValue());
-//        // Restore selected item
-//        sm.select(Settings.lastSelectedProfile < profiles.size() ? Settings.lastSelectedProfile : 0);
+            String title = profile.object.getTitle();
+
+            try {
+                VBox statusBox = loadFXML("dialog/profileCell.fxml");
+                InputStream maybeLogo = Dialog.class.getResourceAsStream("/runtime/profiles/" + title + ".png");
+                ((ImageView) statusBox.lookup("#logo")).setImage(maybeLogo == null ? defaultLogo : new Image(maybeLogo));
+                ((Label) statusBox.lookup("#title")).setText(title);
+
+                statusBox.setOnMouseClicked(event -> {
+                    if (Overlay.current == null)
+                        doUpdate(profile, playerProfile, accessToken);
+                });
+
+                pingServer(((Circle) statusBox.lookup("#serverStatus")), profile);
+
+                Rectangle rect = new Rectangle(200, 300);
+                rect.setArcHeight(20);
+                rect.setArcWidth(20);
+                statusBox.setClip(rect);
+                profilesBox.getChildren().add(statusBox);
+
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     public static void verifyLauncher() {
@@ -485,21 +536,20 @@ public class Dialog {
                 }
             }
 
+            //Overlay.hide(0, null);
             doAuthLast();
-            Overlay.hide(0, null);
         }));
     }
 
     public static void doAuthLast() {
         if (Settings.lastSelectedAcc != null) {
             selectAccount(Settings.lastSelectedAcc).handle(null);
-            doAuthRequest(Settings.lastSelectedAcc, Settings.accounts.get(Settings.lastSelectedAcc));
         } else {
-            if (Settings.accounts.isEmpty()) {
-                currentPane = authPane;
-                rootPane.getChildren().add(authPane);
-                authPane.requestFocus();
-            }
+            Overlay.hide(0, null);
+            if (Settings.accounts.isEmpty())
+                changeState(State.auth);
+            else
+                changeState(State.accountSelection);
         }
     }
 }

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.text.*?>
 <?import javafx.scene.*?>
 <?import javafx.scene.effect.*?>
 <?import java.lang.*?>
@@ -32,10 +33,10 @@
        </ImageView>
    
        <!-- Overlay -->
-       <Pane fx:id="dim" prefHeight="510.0" prefWidth="800.0" visible="false" />
+       <Pane fx:id="dim" prefHeight="510.0" prefWidth="800.0" style="-fx-border-radius: 20; -fx-background-radius: 20;" visible="false" />
         <Hyperlink fx:id="link" alignment="CENTER" contentDisplay="CENTER" ellipsisString="" focusTraversable="false" graphicTextGap="0.0" pickOnBounds="false" prefHeight="0.0" prefWidth="123.0" text="Наш сайт" textAlignment="CENTER" textFill="WHITE" StackPane.alignment="BOTTOM_CENTER">
          <StackPane.margin>
-            <Insets bottom="15.0" />
+            <Insets bottom="10.0" />
          </StackPane.margin>
       </Hyperlink>
         <HBox fx:id="toolBar" alignment="TOP_RIGHT" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="50.0" prefWidth="120.0" spacing="20" StackPane.alignment="TOP_RIGHT">
@@ -63,6 +64,61 @@
             <Insets right="15.0" top="15.0" />
          </StackPane.margin>
         </HBox>
+      <HBox fx:id="profilesBox" alignment="CENTER" maxHeight="-Infinity" minHeight="-Infinity" prefHeight="300.0" prefWidth="200.0" spacing="30.0" visible="false" StackPane.alignment="CENTER">
+         <StackPane.margin>
+            <Insets top="30.0" />
+         </StackPane.margin>
+      </HBox>
+      <VBox fx:id="authPane" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="200.0" prefWidth="300.0" spacing="20.0" visible="false">
+         <children>
+            <TextField fx:id="login" alignment="CENTER" prefHeight="30.0" prefWidth="228.0" promptText="Логин">
+               <font>
+                  <Font size="13.0" />
+               </font>
+            </TextField>
+            <PasswordField fx:id="password" alignment="CENTER" prefHeight="30.0" prefWidth="228.0" promptText="Пароль">
+               <font>
+                  <Font size="14.0" />
+               </font>
+            </PasswordField>
+            <Button fx:id="goAuth" defaultButton="true" prefHeight="45.0" prefWidth="195.0" style="-fx-background-color: #7E7F7A;" text="Авторизация" textFill="WHITE">
+               <font>
+                  <Font size="20.0" />
+               </font>
+            </Button>
+         </children>
+      </VBox>
+      <HBox fx:id="accounts" alignment="CENTER" maxHeight="-Infinity" minHeight="-Infinity" prefHeight="300.0" prefWidth="200.0" spacing="10.0" visible="false">
+         <children>
+            <Button fx:id="newAccountButton" maxHeight="120.0" maxWidth="120.0" minHeight="120.0" minWidth="120.0" mnemonicParsing="false" prefHeight="120.0" prefWidth="120.0" style="-fx-background-radius: 20;">
+               <graphic>
+                  <ImageView fitHeight="80.0" fitWidth="80.0" pickOnBounds="true" preserveRatio="true">
+                      <image>
+                          <Image url="@plus.png" />
+                      </image>
+                  </ImageView>
+               </graphic>
+            </Button>
+         </children></HBox>
+      <Button fx:id="selectAccountButton" mnemonicParsing="false" style="-fx-background-radius: 10;" text="hohserg" StackPane.alignment="TOP_LEFT">
+         <StackPane.margin>
+            <Insets left="15.0" top="15.0" />
+         </StackPane.margin>
+         <font>
+            <Font name="System Bold" size="20.0" />
+         </font>
+         <graphic>
+            <StackPane prefHeight="52.0" prefWidth="52.0" style="-fx-background-color: white;">
+               <children>
+                  <ImageView fitHeight="48.0" fitWidth="48.0" pickOnBounds="true" preserveRatio="true">
+                      <image>
+                          <Image url="@../steve.png" />
+                      </image>
+                  </ImageView>
+               </children>
+            </StackPane>
+         </graphic>
+      </Button>
    </children>
    <opaqueInsets>
       <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />

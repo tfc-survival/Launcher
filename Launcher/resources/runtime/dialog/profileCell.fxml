@@ -1,24 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.*?>
+<?import javafx.scene.image.*?>
+<?import java.lang.*?>
+<?import java.net.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.*?>
 <?import java.net.URL?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.shape.Circle?>
 
-<HBox xmlns:fx="http://javafx.com/fxml/1" fx:id="cellBox">
-    <stylesheets>
-        <URL value="@profileCell.css" />
-    </stylesheets>
-
-    <!-- Left side -->
-    <Label fx:id="profileTitle">
-        <graphic><Circle radius="3.0" /></graphic>
-    </Label>
-
-    <!-- Separator -->
-    <Pane HBox.hgrow="ALWAYS" />
-
-    <!-- Right side -->
-    <Label fx:id="serverStatus" />
-</HBox>
+<VBox fx:id="cellBox" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="300.0" prefWidth="200.0" style="-fx-background-color: white;" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+   <stylesheets>
+      <URL value="@profileCell.css" />
+   </stylesheets>
+   <children>
+      <ImageView fx:id="logo" fitHeight="275.0" fitWidth="200.0" preserveRatio="true">
+         <image>
+            <Image url="@../profiles/default.png" />
+         </image>
+      </ImageView>
+      <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="10.0" style="-fx-background-color: white;">
+         <children>
+            <Label fx:id="title" alignment="CENTER" prefHeight="17.0" prefWidth="282.0" text="Игровой клиент: Lite" />
+            <Circle fx:id="serverStatus" fill="DODGERBLUE" radius="3.0" stroke="BLACK" strokeType="INSIDE" />
+         </children>
+         <padding>
+            <Insets left="17.0" right="10.0" />
+         </padding>
+      </HBox>
+   </children>
+</VBox>
