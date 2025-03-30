@@ -64,6 +64,7 @@ public class Dialog {
 
     //public static HBox authList;
     public static Pane dimPane;
+    public static Pane toolBar;
 
     public static TextField loginField;
     public static PasswordField passwordField;
@@ -82,6 +83,7 @@ public class Dialog {
     private static double relMouseX;
     private static double relMouseY;
     private static Button newAccountButton;
+    private static Button cancelAuthButton;
 
     enum State {
         auth {
@@ -90,6 +92,7 @@ public class Dialog {
                 selectAccountButton.setVisible(false);
                 authPane.setVisible(true);
                 authPane.requestFocus();
+                cancelAuthButton.setVisible(Settings.accounts.size() > 0);
             }
 
             @Override
@@ -147,11 +150,15 @@ public class Dialog {
         rootPane = loadFXML("dialog/dialog.fxml");
         authPane = (Pane) rootPane.lookup("#authPane");
         accounts = (Pane) rootPane.lookup("#accounts");
+        toolBar = (Pane) rootPane.lookup("#toolBar");
 
         //authList = (HBox) rootPane.lookup("#authList");
         Settings.accounts.keySet().forEach(Dialog::addAccButton);
         newAccountButton = (Button) accounts.lookup("#newAccountButton");
         newAccountButton.setOnAction(event -> changeState(State.auth));
+
+        cancelAuthButton = (Button) authPane.lookup("#cancelAuthButton");
+        cancelAuthButton.setOnAction(event -> changeState(State.accountSelection));
 
         //authList.setSpacing(5);
 

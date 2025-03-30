@@ -8,8 +8,7 @@ import javafx.scene.Node;
 import javafx.scene.layout.Pane;
 import javafx.util.Duration;
 
-import static launcher.runtime.dialog.Dialog.dimPane;
-import static launcher.runtime.dialog.Dialog.rootPane;
+import static launcher.runtime.dialog.Dialog.*;
 
 public class Overlay {
     public static Node current = null;
@@ -23,6 +22,7 @@ public class Overlay {
         // Show dim pane
         dimPane.setVisible(true);
         dimPane.toFront();
+        toolBar.toFront();
 
         // Fade dim pane
         fade(dimPane, 0, 0.0, 1.0, event -> {

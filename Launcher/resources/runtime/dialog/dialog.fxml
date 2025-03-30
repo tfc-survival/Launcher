@@ -69,7 +69,7 @@
             <Insets top="30.0" />
          </StackPane.margin>
       </HBox>
-      <VBox fx:id="authPane" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="200.0" prefWidth="300.0" spacing="20.0" visible="false">
+      <VBox fx:id="authPane" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="239.0" prefWidth="300.0" spacing="20.0">
          <children>
             <TextField fx:id="login" alignment="CENTER" prefHeight="30.0" prefWidth="228.0" promptText="Логин">
                <font>
@@ -86,6 +86,10 @@
                   <Font size="20.0" />
                </font>
             </Button>
+            <Button fx:id="cancelAuthButton" cancelButton="true" mnemonicParsing="false" prefHeight="43.0" prefWidth="100.0" style="-fx-background-color: #7E7F7A;" text="Отмена" textFill="WHITE">
+               <font>
+                  <Font size="20.0" />
+               </font></Button>
          </children>
       </VBox>
       <HBox fx:id="accounts" alignment="CENTER" maxHeight="-Infinity" minHeight="-Infinity" prefHeight="300.0" prefWidth="200.0" spacing="10.0" visible="false">

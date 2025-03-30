@@ -4,38 +4,22 @@
 #layout {
 }
 
-/*
-#layout > #authList {
-    -fx-background-color: rgba(0, 0, 0, 0);
-}
-
-#layout > #authPane > #password.hasSaved {
-    -fx-prompt-text-fill: black;
-}
-
-#layout > #authPane > #profiles > .arrow-button {
-    -fx-padding: 0;
-}
-
-#layout > #authPane > #profiles > .arrow-button > .arrow {
-    -fx-padding: 0;
-    -fx-shape: none;
-}
-
-#layout > #authPane > #profiles > .list-cell {
-    -fx-padding: 5px 5px 5px 8px;
-}
-
-#layout > #authPane > #goSettings {
-    -fx-padding: 0;
-    -fx-graphic: url(settings.png);
-}
- */
-
 /* Overlay styles */
 #layout > #dim {
     -fx-opacity: 0.0;
     -fx-background-color: rgba(0, 0, 0, 0.5);
+}
+
+#layout > #authPane > #cancelAuthButton {
+    -fx-font-size: 14pt;
+    -fx-text-fill: white;
+    -fx-font-weight: normal;
+}
+
+#layout > #authPane > #goAuth {
+    -fx-font-size: 14pt;
+    -fx-text-fill: white;
+    -fx-font-weight: normal;
 }
 
 #layout > #dim > #overlay {
